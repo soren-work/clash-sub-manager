@@ -1,0 +1,23 @@
+@page
+@model ClashSubManager.Pages.Admin.LogoutModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<LogoutModel> _localizer
+@{
+    ViewData["Title"] = _localizer["Logout"];
+}
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="text-center">@_localizer["Logout"]</h4>
+            </div>
+            <div class="card-body text-center">
+                <p class="mb-4">@_localizer["LogoutConfirmation"]</p>
+                <form method="post">
+                    <button type="submit" class="btn btn-secondary">@_localizer["ConfirmLogout"]</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

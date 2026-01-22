@@ -1,0 +1,11 @@
+<root>
+  <data name="Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="LogoutConfirmation" xml:space="preserve">
+    <value>Are you sure you want to logout?</value>
+  </data>
+  <data name="ConfirmLogout" xml:space="preserve">
+    <value>Confirm Logout</value>
+  </data>
+</root>
