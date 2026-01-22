@@ -9,6 +9,7 @@
 - **Technology Stack**: .NET 10 + ASP.NET Core Razor Pages
 - **Deployment Method**: Docker containerized deployment
 - **Data Storage**: Local file system
+- **Health Check**: Built-in `/health` endpoint with system metrics
 
 ### 1.2 System Requirements
 - **Operating System**: Linux (recommended) / Windows / macOS
@@ -26,11 +27,13 @@
 version: '3.8'
 
 services:
-  clashsubmanager:
-    image: clashsubmanager:latest
-    container_name: clashsubmanager
+  clash-sub-manager:
+    build: 
+      context: .
+      dockerfile: doc/deployment/Dockerfile
+    container_name: clash-sub-manager
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -39,12 +42,17 @@ services:
       - ADMIN_PASSWORD=your_secure_password_here
       - COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
       - SESSION_TIMEOUT_MINUTES=30
-    restart: unless-stopped
+      - DATA_PATH=/app/data
+    restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    resource_limits:
+      memory: 512M
+      cpus: '0.5'
 ```
 
 **Step 2: Start Service**

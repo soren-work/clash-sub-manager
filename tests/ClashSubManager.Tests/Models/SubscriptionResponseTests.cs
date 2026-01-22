@@ -15,7 +15,7 @@ namespace ClashSubManager.Tests.Models
             var yamlContent = "proxies:\n  - name: test\n    type: http\n    server: example.com";
 
             // Act
-            var response = SubscriptionResponse.CreateSuccess(yamlContent);
+            var response = SubscriptionResponse.CreateSuccessFromYaml(yamlContent);
 
             // Assert
             Assert.True(response.Success);
@@ -80,7 +80,7 @@ namespace ClashSubManager.Tests.Models
         public void CreateSuccess_EmptyYamlContent_ReturnsSuccessResponse(string? yamlContent)
         {
             // Act
-            var response = SubscriptionResponse.CreateSuccess(yamlContent);
+            var response = SubscriptionResponse.CreateSuccessFromYaml(yamlContent);
 
             // Assert
             Assert.True(response.Success);
@@ -110,7 +110,7 @@ namespace ClashSubManager.Tests.Models
             var beforeCreation = DateTime.UtcNow.AddSeconds(-1);
 
             // Act
-            var response = SubscriptionResponse.CreateSuccess("test yaml");
+            var response = SubscriptionResponse.CreateSuccess("Test message");
 
             // Assert
             Assert.True(response.Timestamp >= beforeCreation);
@@ -138,7 +138,7 @@ proxy-groups:
       - proxy2";
 
             // Act
-            var response = SubscriptionResponse.CreateSuccess(yamlContent);
+            var response = SubscriptionResponse.CreateSuccessFromYaml(yamlContent);
 
             // Assert
             Assert.True(response.Success);
@@ -169,7 +169,7 @@ proxy-groups:
         public void CreateSuccess_NullYamlContent_HandlesCorrectly()
         {
             // Act
-            var response = SubscriptionResponse.CreateSuccess(null!);
+            var response = SubscriptionResponse.CreateSuccessFromYaml(null!);
 
             // Assert
             Assert.True(response.Success);

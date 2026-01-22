@@ -1,0 +1,198 @@
+@page "/admin/user-config"
+@model UserConfigModel
+@{
+    ViewData["Title"] = "User Configuration Management";
+}
+
+<div class="container-fluid">
+    <h2>User Configuration Management</h2>
+    
+    @if (!string.IsNullOrEmpty(TempData["Success"] as string))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>@error.ErrorMessage</div>
+            }
+        </div>
+    }
+
+    <!-- User Selector -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="SelectedUserId" class="form-label">Select User</label>
+            <select asp-for="SelectedUserId" class="form-select" onchange="location.href='?SelectedUserId=' + this.value">
+                <option value="">-- Select User --</option>
+                @foreach (var user in Model.AvailableUsers)
+                {
+                    <option value="@user">@user</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SelectedUserId))
+    {
+        <!-- User Configuration Overview -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Configuration Overview for @Model.SelectedUserId</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Directory Status</h6>
+                                <p class="@(Model.UserConfig.DirectoryExists ? "text-success" : "text-danger")">
+                                    @(Model.UserConfig.DirectoryExists ? "Directory exists" : "Directory does not exist")
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Configuration Files</h6>
+                                <ul class="list-unstyled">
+                                    <li class="@(Model.UserConfig.HasIPConfiguration ? "text-success" : "text-muted")">
+                                        <i class="@(Model.UserConfig.HasIPConfiguration ? "bi bi-check-circle" : "bi bi-x-circle")"></i>
+                                        IP Configuration (cloudflare-ip.csv)
+                                    </li>
+                                    <li class="@(Model.UserConfig.HasTemplate ? "text-success" : "text-muted")">
+                                        <i class="@(Model.UserConfig.HasTemplate ? "bi bi-check-circle" : "bi bi-x-circle")"></i>
+                                        Clash Template (clash.yaml)
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        if (Model.UserConfig.HasIPConfiguration)
+        {
+            <!-- IP Configuration Details -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">IP Configuration Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <strong>File Path:</strong><br>
+                                    <code>@Model.UserConfig.IPFilePath</code>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>File Size:</strong><br>
+                                    @FormatFileSize(Model.UserConfig.IPFileSize)
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Last Modified:</strong><br>
+                                    @Model.UserConfig.IPFileLastModified.ToString("yyyy-MM-dd HH:mm:ss")
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>IP Count:</strong><br>
+                                    @Model.UserConfig.IPCount
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        if (Model.UserConfig.HasTemplate)
+        {
+            <!-- Template Configuration Details -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Template Configuration Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>File Path:</strong><br>
+                                    <code>@Model.UserConfig.TemplateFilePath</code>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>File Size:</strong><br>
+                                    @FormatFileSize(Model.UserConfig.TemplateFileSize)
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Last Modified:</strong><br>
+                                    @Model.UserConfig.TemplateFileLastModified.ToString("yyyy-MM-dd HH:mm:ss")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Actions -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Actions</h6>
+                        <div class="d-flex gap-2">
+                            <a href="/admin/default-ips?SelectedUserId=@Model.SelectedUserId" class="btn btn-primary">Manage IP Configuration</a>
+                            <a href="/admin/clash-template?SelectedUserId=@Model.SelectedUserId" class="btn btn-info">Manage Template</a>
+                            <form method="post" style="display: inline;">
+                                <input type="hidden" asp-for="SelectedUserId" />
+                                <button type="submit" asp-page-handler="DeleteUserConfig" class="btn btn-danger" 
+                                        onclick="return confirm('Are you sure you want to delete all configuration for this user?')">
+                                    Delete All Configuration
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- No User Selected -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h5>User Configuration Management</h5>
+                    <p>Please select a user from the dropdown above to view and manage their configuration files.</p>
+                    <p>This interface allows you to:</p>
+                    <ul>
+                        <li>View user-specific configuration status</li>
+                        <li>Check file existence and details</li>
+                        <li>Navigate to specific management pages</li>
+                        <li>Delete all user configuration if needed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

@@ -13,6 +13,8 @@ ClashSubManager is a lightweight Clash subscription configuration management ser
 - **Dynamic Configuration Overwriting**: Completely dynamic parsing and merging of Clash configurations, supporting future version compatibility
 - **Preferred IP Extension**: Automatically extends domain proxies to multiple preferred IP address proxies
 - **Personalized Configuration**: Supports flexible switching between user-specific configurations and default configurations
+- **Admin Management Interface**: Complete web-based management system for IP configurations, Clash templates, and user settings
+- **Internationalization Support**: Full English and Chinese interface support
 - **Lightweight Architecture**: Single application with minimal resource usage
 
 ### 🔧 Technology Stack

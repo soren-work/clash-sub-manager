@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Title" xml:space="preserve">
+    <value>Clash模板管理</value>
+  </data>
+  <data name="SelectUser" xml:space="preserve">
+    <value>选择用户</value>
+  </data>
+  <data name="GlobalTemplate" xml:space="preserve">
+    <value>全局模板</value>
+  </data>
+  <data name="CurrentStatus" xml:space="preserve">
+    <value>当前状态：</value>
+  </data>
+  <data name="FileExists" xml:space="preserve">
+    <value>文件存在</value>
+  </data>
+  <data name="FileNotExists" xml:space="preserve">
+    <value>文件不存在</value>
+  </data>
+  <data name="FilePath" xml:space="preserve">
+    <value>文件路径：</value>
+  </data>
+  <data name="YAMLTemplateContent" xml:space="preserve">
+    <value>YAML模板内容</value>
+  </data>
+  <data name="YAMLContentPlaceholder" xml:space="preserve">
+    <value>请输入YAML内容...</value>
+  </data>
+  <data name="YAMLContentHelp" xml:space="preserve">
+    <value>支持所有Clash配置字段，文件大小限制1MB</value>
+  </data>
+  <data name="SaveTemplate" xml:space="preserve">
+    <value>保存模板</value>
+  </data>
+  <data name="DeleteTemplate" xml:space="preserve">
+    <value>删除模板</value>
+  </data>
+  <data name="DeleteConfirm" xml:space="preserve">
+    <value>确定要删除这个模板吗？</value>
+  </data>
+  <data name="UploadFile" xml:space="preserve">
+    <value>上传文件</value>
+  </data>
+  <data name="OrUploadYAMLFile" xml:space="preserve">
+    <value>或上传YAML文件</value>
+  </data>
+  <data name="YAMLFileHelp" xml:space="preserve">
+    <value>支持.yaml和.yml文件，最大1MB</value>
+  </data>
+  <data name="YAMLContentRequired" xml:space="preserve">
+    <value>YAML内容不能为空</value>
+  </data>
+  <data name="InvalidYAMLFormat" xml:space="preserve">
+    <value>YAML格式无效</value>
+  </data>
+  <data name="TemplateSavedSuccessfully" xml:space="preserve">
+    <value>模板保存成功</value>
+  </data>
+  <data name="FailedToSaveTemplate" xml:space="preserve">
+    <value>模板保存失败</value>
+  </data>
+  <data name="FileUploadedSuccessfully" xml:space="preserve">
+    <value>文件上传成功</value>
+  </data>
+  <data name="FailedToUploadFile" xml:space="preserve">
+    <value>文件上传失败</value>
+  </data>
+  <data name="TemplateDeletedSuccessfully" xml:space="preserve">
+    <value>模板删除成功</value>
+  </data>
+  <data name="FailedToDeleteTemplate" xml:space="preserve">
+    <value>模板删除失败</value>
+  </data>
+  <data name="PleaseSelectFileToUpload" xml:space="preserve">
+    <value>请选择要上传的文件</value>
+  </data>
+  <data name="FileSizeExceedsLimit" xml:space="preserve">
+    <value>文件大小超过限制</value>
+  </data>
+</root>
