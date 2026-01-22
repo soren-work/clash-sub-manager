@@ -47,7 +47,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             Assert.Contains("user1", _model.AvailableUsers);
             Assert.Contains("user2", _model.AvailableUsers);
             Assert.Contains("user3", _model.AvailableUsers);
-            Assert.Null(_model.UserConfig.UserId);
+            Assert.Equal(string.Empty, _model.UserConfig.UserId);
         }
 
         [Fact]
@@ -202,7 +202,7 @@ namespace ClashSubManager.Tests.Pages.Admin
 
             // Assert
             Assert.NotNull(_model.UserConfig);
-            Assert.Null(_model.UserConfig.UserId);
+            Assert.Equal(string.Empty, _model.UserConfig.UserId);
         }
 
         [Fact]
