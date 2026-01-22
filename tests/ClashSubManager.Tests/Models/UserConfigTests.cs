@@ -28,13 +28,29 @@ namespace ClashSubManager.Tests.Models
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [InlineData(null)]
         public void IsValidUserId_EmptyUserId_ReturnsFalse(string userId)
         {
             // Arrange
             var userConfig = new UserConfig
             {
                 UserId = userId,
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsValidUserId_NullUserId_ReturnsFalse()
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = null!,
                 SubscriptionUrl = "https://example.com/subscribe"
             };
 
@@ -125,7 +141,6 @@ namespace ClashSubManager.Tests.Models
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [InlineData(null)]
         [InlineData("not-a-url")]
         [InlineData("ftp://example.com/subscribe")]
         public void IsValidSubscriptionUrl_InvalidUrls_ReturnsFalse(string url)
@@ -135,6 +150,23 @@ namespace ClashSubManager.Tests.Models
             {
                 UserId = "user123",
                 SubscriptionUrl = url
+            };
+
+            // Act
+            var result = userConfig.IsValidSubscriptionUrl();
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsValidSubscriptionUrl_NullUrl_ReturnsFalse()
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = "user123",
+                SubscriptionUrl = null!
             };
 
             // Act
@@ -292,6 +324,150 @@ namespace ClashSubManager.Tests.Models
 
             // Act
             var result = userConfig.IsValidSubscriptionUrl();
+
+            // Assert
+            Assert.True(result);
+        }
+
+        // Additional branch coverage tests - boundary conditions
+        [Theory]
+        [InlineData("1234567890123456789012345678901234567890123456789012345678901234")] // 64 characters
+        public void IsValidUserId_WithMaxLength64_ReturnsTrue(string userId)
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = userId,
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Theory]
+        [InlineData("12345678901234567890123456789012345678901234567890123456789012345")] // 65 characters
+        public void IsValidUserId_WithLength65_ReturnsFalse(string userId)
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = userId,
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData("user@invalid")]
+        [InlineData("user#invalid")]
+        [InlineData("user space")]
+        [InlineData("user.invalid")]
+        [InlineData("user+invalid")]
+        [InlineData("user*invalid")]
+        [InlineData("user%invalid")]
+        public void IsValidUserId_WithInvalidCharacters_ReturnsFalse(string userId)
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = userId,
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData("user_name")]
+        [InlineData("user_name123")]
+        [InlineData("test_user_123")]
+        [InlineData("_user")]
+        [InlineData("user_")]
+        [InlineData("__user__")]
+        public void IsValidUserId_WithUnderscore_ReturnsTrue(string userId)
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = userId,
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Theory]
+        [InlineData("user-name")]
+        [InlineData("user-name123")]
+        [InlineData("test-user-123")]
+        [InlineData("-user")]
+        [InlineData("user-")]
+        [InlineData("--user--")]
+        public void IsValidUserId_WithHyphen_ReturnsTrue(string userId)
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = userId,
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void IsValidUserId_WithLength0_ReturnsFalse()
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = "",
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData("a")] // Minimum length 1
+        [InlineData("Z")] // Single uppercase letter
+        [InlineData("9")] // Single digit
+        public void IsValidUserId_WithMinimumLength1_ReturnsTrue(string userId)
+        {
+            // Arrange
+            var userConfig = new UserConfig
+            {
+                UserId = userId,
+                SubscriptionUrl = "https://example.com/subscribe"
+            };
+
+            // Act
+            var result = userConfig.IsValidUserId();
 
             // Assert
             Assert.True(result);
