@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  clashsubmanager:
+    image: clashsubmanager:latest
+    container_name: clashsubmanager
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - COOKIE_SECRET_KEY=${COOKIE_SECRET_KEY}
+      - SESSION_TIMEOUT_MINUTES=${SESSION_TIMEOUT_MINUTES:-30}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - LOG_LEVEL=${LOG_LEVEL:-Information}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - clashsubmanager-network
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: clashsubmanager-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - clashsubmanager
+    restart: unless-stopped
+    networks:
+      - clashsubmanager-network
+    profiles:
+      - nginx
+
+  # Optional: Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: clashsubmanager-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - clashsubmanager-network
+    profiles:
+      - monitoring
+
+  # Optional: Log collection
+  fluentd:
+    image: fluent/fluentd:v1.16-debian-1
+    container_name: clashsubmanager-fluentd
+    volumes:
+      - ./logs:/fluentd/log
+      - ./fluentd/fluent.conf:/fluentd/etc/fluent.conf
+    restart: unless-stopped
+    networks:
+      - clashsubmanager-network
+    profiles:
+      - logging
+
+networks:
+  clashsubmanager-network:
+    driver: bridge
+
+volumes:
+  prometheus-data:
