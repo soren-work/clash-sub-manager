@@ -1,12 +1,15 @@
 @page "/health"
 @model ClashSubManager.Pages.HealthModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<HealthModel> _localizer
 @{
     Layout = null; // No layout for health endpoint
+    ViewData["Title"] = _localizer["HealthCheck"];
 }
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Health Check</title>
+    <title>@_localizer["HealthCheck"]</title>
 </head>
 <body>
     <!-- Health endpoint returns JSON, no HTML content needed -->

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="InvalidUserId" xml:space="preserve">
+    <value>用户ID无效</value>
+  </data>
+  <data name="UserConfigNotFound" xml:space="preserve">
+    <value>用户配置未找到</value>
+  </data>
+  <data name="UserIdValidationFailed" xml:space="preserve">
+    <value>用户ID验证失败</value>
+  </data>
+  <data name="SubscriptionUrlNotFound" xml:space="preserve">
+    <value>订阅URL未找到</value>
+  </data>
+  <data name="CSVContentRequired" xml:space="preserve">
+    <value>需要CSV内容</value>
+  </data>
+  <data name="EmptyCSVContent" xml:space="preserve">
+    <value>CSV内容为空</value>
+  </data>
+  <data name="InternalServerError" xml:space="preserve">
+    <value>服务器内部错误</value>
+  </data>
+  <data name="SubscriptionGenerationFailed" xml:space="preserve">
+    <value>订阅生成失败</value>
+  </data>
+  <data name="IPUpdateFailed" xml:space="preserve">
+    <value>IP更新失败</value>
+  </data>
+  <data name="UserConfigDeletionFailed" xml:space="preserve">
+    <value>用户配置删除失败</value>
+  </data>
+</root>

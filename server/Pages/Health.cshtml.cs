@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Localization;
 
 namespace ClashSubManager.Pages
 {
@@ -8,6 +9,12 @@ namespace ClashSubManager.Pages
     /// </summary>
     public class HealthModel : PageModel
     {
+        private readonly IStringLocalizer<HealthModel> _localizer;
+
+        public HealthModel(IStringLocalizer<HealthModel> localizer)
+        {
+            _localizer = localizer;
+        }
         /// <summary>
         /// GET /health - Health check endpoint
         /// </summary>

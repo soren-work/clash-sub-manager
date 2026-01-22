@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="HealthCheck" xml:space="preserve">
+    <value>健康检查</value>
+  </data>
+  <data name="SystemStatus" xml:space="preserve">
+    <value>系统状态</value>
+  </data>
+  <data name="Healthy" xml:space="preserve">
+    <value>健康</value>
+  </data>
+  <data name="Unhealthy" xml:space="preserve">
+    <value>异常</value>
+  </data>
+</root>
