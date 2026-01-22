@@ -21,4 +21,7 @@
   <data name="UserConfigDeleted" xml:space="preserve">
     <value>User configuration deleted successfully</value>
   </data>
+  <data name="SubscriptionUrlNotFound" xml:space="preserve">
+    <value>Subscription URL not found in user configuration</value>
+  </data>
 </root>

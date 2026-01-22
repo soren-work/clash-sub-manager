@@ -1,0 +1,166 @@
+using ClashSubManager.Models;
+using ClashSubManager.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
+
+namespace ClashSubManager.Tests.Services
+{
+    /// <summary>
+    /// SubscriptionService POST endpoint unit tests
+    /// </summary>
+    public class SubscriptionServicePostTests
+    {
+        private readonly Mock<IStringLocalizer<SubscriptionService>> _mockLocalizer;
+        private readonly Mock<FileService> _mockFileService;
+        private readonly Mock<ValidationService> _mockValidationService;
+        private readonly Mock<ConfigurationService> _mockConfigurationService;
+        private readonly Mock<ILogger<SubscriptionService>> _mockLogger;
+        private readonly SubscriptionService _subscriptionService;
+
+        public SubscriptionServicePostTests()
+        {
+            _mockLocalizer = new Mock<IStringLocalizer<SubscriptionService>>();
+            _mockFileService = new Mock<FileService>(Mock.Of<IConfiguration>(), Mock.Of<ILogger<FileService>>());
+            _mockValidationService = new Mock<ValidationService>(Mock.Of<ILogger<ValidationService>>());
+            _mockConfigurationService = new Mock<ConfigurationService>(Mock.Of<ILogger<ConfigurationService>>(), Mock.Of<HttpClient>());
+            _mockLogger = new Mock<ILogger<SubscriptionService>>();
+
+            _subscriptionService = new SubscriptionService(
+                _mockLocalizer.Object,
+                _mockFileService.Object,
+                _mockValidationService.Object,
+                _mockConfigurationService.Object,
+                _mockLogger.Object);
+        }
+
+        [Fact]
+        public async Task UpdateUserIPsAsync_InvalidUserId_ReturnsError()
+        {
+            // Arrange
+            var invalidUserId = "";
+            var csvContent = "192.168.1.1,443,0,50";
+            _mockValidationService.Setup(x => x.ValidateUserId(invalidUserId)).Returns(false);
+            _mockLocalizer.Setup(x => x["InvalidUserId"]).Returns(new LocalizedString("InvalidUserId", "Invalid user ID", false));
+
+            // Act
+            var result = await _subscriptionService.UpdateUserIPsAsync(invalidUserId, csvContent);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Invalid user ID", result.Message);
+            Assert.Equal("INVALID_USER_ID", result.ErrorCode);
+        }
+
+        [Fact]
+        public async Task UpdateUserIPsAsync_NoValidIPRecords_ReturnsError()
+        {
+            // Arrange
+            var userId = "test-user";
+            var csvContent = "invalid-ip-content";
+            var emptyIPList = new List<IPRecord>();
+            
+            _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
+            _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(emptyIPList);
+            _mockLocalizer.Setup(x => x["NoValidIPRecords"]).Returns(new LocalizedString("NoValidIPRecords", "No valid IP records found", false));
+
+            // Act
+            var result = await _subscriptionService.UpdateUserIPsAsync(userId, csvContent);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("No valid IP records found", result.Message);
+            Assert.Equal("NO_VALID_IP_RECORDS", result.ErrorCode);
+        }
+
+        [Fact]
+        public async Task UpdateUserIPsAsync_NewUser_ReturnsSuccess()
+        {
+            // Arrange
+            var userId = "test-user";
+            var csvContent = "192.168.1.1,443,0,50\n192.168.1.2,443,0,60";
+            var ipRecords = new List<IPRecord>
+            {
+                new() { IPAddress = "192.168.1.1", Port = 443, PacketLoss = 0, Latency = 50 },
+                new() { IPAddress = "192.168.1.2", Port = 443, PacketLoss = 0, Latency = 60 }
+            };
+            
+            _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
+            _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(ipRecords);
+            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ReturnsAsync((UserConfig?)null);
+            _mockFileService.Setup(x => x.SaveUserConfigAsync(It.IsAny<UserConfig>())).ReturnsAsync(true);
+            _mockLocalizer.Setup(x => x["UserIPsUpdated"]).Returns(new LocalizedString("UserIPsUpdated", "User IPs updated successfully", false));
+
+            // Act
+            var result = await _subscriptionService.UpdateUserIPsAsync(userId, csvContent);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal("User IPs updated successfully", result.Message);
+            _mockFileService.Verify(x => x.SaveUserConfigAsync(It.Is<UserConfig>(uc => 
+                uc.UserId == userId && 
+                uc.DedicatedIPs.Count == 2 && 
+                uc.DedicatedIPs[0].IPAddress == "192.168.1.1")), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateUserIPsAsync_ExistingUser_ReturnsSuccess()
+        {
+            // Arrange
+            var userId = "test-user";
+            var csvContent = "192.168.1.3,443,0,40";
+            var ipRecords = new List<IPRecord>
+            {
+                new() { IPAddress = "192.168.1.3", Port = 443, PacketLoss = 0, Latency = 40 }
+            };
+            var existingUserConfig = new UserConfig 
+            { 
+                UserId = userId, 
+                SubscriptionUrl = "https://example.com/sub",
+                DedicatedIPs = new List<IPRecord>
+                {
+                    new() { IPAddress = "192.168.1.1", Port = 443, PacketLoss = 0, Latency = 50 }
+                }
+            };
+            
+            _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
+            _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(ipRecords);
+            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ReturnsAsync(existingUserConfig);
+            _mockFileService.Setup(x => x.SaveUserConfigAsync(It.IsAny<UserConfig>())).ReturnsAsync(true);
+            _mockLocalizer.Setup(x => x["UserIPsUpdated"]).Returns(new LocalizedString("UserIPsUpdated", "User IPs updated successfully", false));
+
+            // Act
+            var result = await _subscriptionService.UpdateUserIPsAsync(userId, csvContent);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal("User IPs updated successfully", result.Message);
+            _mockFileService.Verify(x => x.SaveUserConfigAsync(It.Is<UserConfig>(uc => 
+                uc.UserId == userId && 
+                uc.SubscriptionUrl == "https://example.com/sub" &&
+                uc.DedicatedIPs.Count == 1 && 
+                uc.DedicatedIPs[0].IPAddress == "192.168.1.3")), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateUserIPsAsync_ExceptionThrown_ReturnsError()
+        {
+            // Arrange
+            var userId = "test-user";
+            var csvContent = "192.168.1.1,443,0,50";
+            _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
+            _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Throws(new Exception("Test exception"));
+            _mockLocalizer.Setup(x => x["InternalServerError"]).Returns(new LocalizedString("InternalServerError", "Internal server error", false));
+
+            // Act
+            var result = await _subscriptionService.UpdateUserIPsAsync(userId, csvContent);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Internal server error", result.Message);
+            Assert.Equal("INTERNAL_SERVER_ERROR", result.ErrorCode);
+        }
+    }
+}

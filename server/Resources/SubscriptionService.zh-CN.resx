@@ -21,4 +21,7 @@
   <data name="UserConfigDeleted" xml:space="preserve">
     <value>用户配置删除成功</value>
   </data>
+  <data name="SubscriptionUrlNotFound" xml:space="preserve">
+    <value>用户配置中未找到订阅URL</value>
+  </data>
 </root>
