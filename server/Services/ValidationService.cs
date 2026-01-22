@@ -27,7 +27,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Whether valid</returns>
-        public bool ValidateUserId(string userId)
+        public virtual bool ValidateUserId(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
                 return false;
@@ -128,7 +128,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="csvContent">CSV content</param>
         /// <returns>IP record list</returns>
-        public List<IPRecord> ParseCSVContent(string csvContent)
+        public virtual List<IPRecord> ParseCSVContent(string csvContent)
         {
             var ipRecords = new List<IPRecord>();
 

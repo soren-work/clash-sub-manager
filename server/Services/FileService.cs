@@ -27,7 +27,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>User configuration or null</returns>
-        public async Task<UserConfig?> LoadUserConfigAsync(string userId)
+        public virtual async Task<UserConfig?> LoadUserConfigAsync(string userId)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="userConfig">User configuration</param>
         /// <returns>Operation result</returns>
-        public async Task<bool> SaveUserConfigAsync(UserConfig userConfig)
+        public virtual async Task<bool> SaveUserConfigAsync(UserConfig userConfig)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Whether deletion was successful</returns>
-        public async Task<bool> DeleteUserConfigAsync(string userId)
+        public virtual async Task<bool> DeleteUserConfigAsync(string userId)
         {
             try
             {
@@ -129,7 +129,7 @@ namespace ClashSubManager.Services
         /// Load default IP list
         /// </summary>
         /// <returns>IP record list</returns>
-        public async Task<List<IPRecord>> LoadDefaultIPsAsync()
+        public virtual async Task<List<IPRecord>> LoadDefaultIPsAsync()
         {
             try
             {
@@ -208,7 +208,7 @@ namespace ClashSubManager.Services
         /// Load Clash template
         /// </summary>
         /// <returns>Template content</returns>
-        public async Task<string?> LoadClashTemplateAsync()
+        public virtual async Task<string?> LoadClashTemplateAsync()
         {
             try
             {

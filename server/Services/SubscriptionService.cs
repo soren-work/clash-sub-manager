@@ -57,7 +57,16 @@ namespace ClashSubManager.Services
                         "USER_CONFIG_NOT_FOUND");
                 }
 
-                // Get base template
+				// Subscription url validation
+                if (string.IsNullOrEmpty(userConfig.SubscriptionUrl))
+                {
+                    Console.WriteLine($"Subscription URL not found for user: {userId}");
+                    return SubscriptionResponse.CreateError(
+                        _localizer["SubscriptionUrlNotFound"], 
+                        "SUBSCRIPTION_URL_NOT_FOUND");
+                }
+
+				// Get base template
                 var template = await _fileService.LoadClashTemplateAsync();
                 if (string.IsNullOrEmpty(template))
                 {
