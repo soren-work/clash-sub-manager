@@ -119,3 +119,10 @@ http://your-server:8080/sub/your_user_id
 
 本项目采用 [GPL-3.0 许可证](LICENSE) 开源。
 版权所有 (c) 2026 Soren S.
+
+---
+
+**文档版本**：v1.1  
+**创建时间**：2026-01-22  
+**维护者**：AI Agent软件工程师  
+**适用范围**：ClashSubManager MVP开发项目

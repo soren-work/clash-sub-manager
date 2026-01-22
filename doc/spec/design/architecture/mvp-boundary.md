@@ -66,18 +66,19 @@
 ### 1.5 User-Specific Configuration Management Module
 
 **Must Implement Functions:**
-- Unified configuration management interface: Admin can manage user-specific IP and template configurations
-- User selector: Support selecting specific users to view and manage configurations
-- User list display: Show all visited user IDs for selection
-- Specific IP configuration viewing: View user's optimized IP configuration and statistics
-- Specific template configuration viewing: View user's Clash template configuration
-- Configuration modification: Modify user-specific IP and template configurations
-- Configuration deletion: Delete user configuration files (IP or template)
-- Configuration priority display: Clearly show specific configuration takes priority over default configuration
-- Configuration status display: Show whether user has configured specific IPs and templates
+- Unified configuration management interface: administrators can manage user-specific IP and template configurations
+- User selector: support selecting specific users to view and manage configurations
+- User list display: show all accessed user IDs for selection (read from users.txt)
+- Dedicated IP configuration viewing: view user's optimized IP configuration and statistics
+- Dedicated template configuration viewing: view user's Clash template configuration
+- Configuration modification: modify user-specific IP and template configurations
+- Configuration deletion: delete user configuration files (IP or template)
+- Configuration priority display: clearly show dedicated configurations take priority over default configurations
+- Configuration status display: show whether user has configured dedicated IPs and templates
 
 **Prohibited Functions:**
 - User information editing, batch user operations, user grouping, user search
+- Subscription URL management (moved to environment variable configuration)
 
 ## 2. Technology Stack Constraints
 
@@ -232,8 +233,19 @@
 ### 8.3 Data Format Specifications
 **POST /sub/[id] Request Format:**
 - Content-Type: `text/csv` or `text/plain`
-- Data format: CSV format or free text format, support CloudflareST output
-- Validation rules: Maximum 1 IP address per line, at least 1 IP address per submission
+- Data Format: CSV format or free text format, support CloudflareST output
+- Validation Rules: Maximum 1 IP address per line, at least 1 IP address per submission
+
+### 8.4 System Configuration Specifications
+**Subscription URL Configuration:**
+- Environment Variable: `SUBSCRIPTION_URL_TEMPLATE`
+- Support URL Templates: path parameters, query parameters, fixed URLs
+- Automatic Replacement: `{userId}` placeholder replaced with actual user ID
+
+**User Management:**
+- User Record File: `/app/data/users.txt`
+- Automatic Deduplication: automatically record user ID on first access
+- Simplified Management: only record user IDs, no complex configurations
 
 ### 8.4 Core Processing Logic
 **GET /sub/[user id] Processing Flow:**

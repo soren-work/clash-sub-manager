@@ -119,3 +119,10 @@ Issues and Pull Requests are welcome to improve the project.
 
 This project is licensed under the [GPL-3.0 License](LICENSE). 
 Copyright (c) 2026 Soren S.
+
+---
+
+**Document Version**: v1.1  
+**Created**: 2026-01-22  
+**Maintainer**: AI Agent Software Engineer  
+**Scope**: ClashSubManager MVP Development Project

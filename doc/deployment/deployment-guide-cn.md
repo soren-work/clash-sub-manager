@@ -9,6 +9,7 @@
 - **技术栈**：.NET 10 + ASP.NET Core Razor Pages
 - **部署方式**：Docker容器化部署
 - **数据存储**：本地文件系统
+- **健康检查**：内置 `/health` 端点，提供系统指标
 
 ### 1.2 系统要求
 - **操作系统**：Linux (推荐) / Windows / macOS
@@ -574,6 +575,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   # 可选：添加监控
   prometheus:
@@ -588,7 +597,7 @@ services:
 
 ---
 
-**文档版本**：v1.0  
-**创建时间**：2026-01-21  
+**文档版本**：v1.1  
+**创建时间**：2026-01-22  
 **维护人员**：运维工程师  
 **更新频率**：根据需要更新
