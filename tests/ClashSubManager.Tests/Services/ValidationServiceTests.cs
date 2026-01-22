@@ -38,7 +38,6 @@ namespace ClashSubManager.Tests.Services
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [InlineData(null)]
         [InlineData("user@123")]
         [InlineData("user.123")]
         [InlineData("user 123")]
@@ -47,6 +46,16 @@ namespace ClashSubManager.Tests.Services
         {
             // Act
             var result = _validationService.ValidateUserId(userId);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ValidateUserId_NullUserId_ReturnsFalse()
+        {
+            // Act
+            var result = _validationService.ValidateUserId(null!);
 
             // Assert
             Assert.False(result);
@@ -70,7 +79,6 @@ namespace ClashSubManager.Tests.Services
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [InlineData(null)]
         [InlineData("256.168.1.1")]
         [InlineData("192.168.1")]
         [InlineData("invalid.ip")]
@@ -79,6 +87,16 @@ namespace ClashSubManager.Tests.Services
         {
             // Act
             var result = _validationService.ValidateIPv4Address(ipAddress);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ValidateIPv4Address_NullIP_ReturnsFalse()
+        {
+            // Act
+            var result = _validationService.ValidateIPv4Address(null!);
 
             // Assert
             Assert.False(result);
@@ -100,13 +118,22 @@ namespace ClashSubManager.Tests.Services
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
-        [InlineData(null)]
         [InlineData("not-a-url")]
         [InlineData("ftp://example.com/subscribe")]
         public void ValidateSubscriptionUrl_InvalidUrls_ReturnsFalse(string url)
         {
             // Act
             var result = _validationService.ValidateSubscriptionUrl(url);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ValidateSubscriptionUrl_NullUrl_ReturnsFalse()
+        {
+            // Act
+            var result = _validationService.ValidateSubscriptionUrl(null!);
 
             // Assert
             Assert.False(result);
@@ -433,6 +460,185 @@ invalid.line
         {
             // Act
             var result = _validationService.ValidateYAMLContent(yamlContent);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        // 新增分支覆盖测试 - 边界条件
+        [Theory]
+        [InlineData("valid_user123")]
+        [InlineData("user-456")]
+        [InlineData("test_user_789")]
+        [InlineData("a")]
+        [InlineData("Z")]
+        [InlineData("9")]
+        public void ValidateUserId_WithValidCharacters_ReturnsTrue(string userId)
+        {
+            // Act
+            var result = _validationService.ValidateUserId(userId);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Theory]
+        [InlineData("192.168.1.1", "-1")]
+        [InlineData("192.168.1.1", "999999")]
+        [InlineData("192.168.1.1", "-100")]
+        public void ValidateIPRecord_WithInvalidLatency_ReturnsFalse(string ipAddress, string latency)
+        {
+            // Arrange
+            var ipRecord = new IPRecord
+            {
+                IPAddress = ipAddress,
+                Port = 443,
+                PacketLoss = 0,
+                Latency = decimal.TryParse(latency, out var lat) ? lat : -1
+            };
+
+            // Act
+            var result = _validationService.ValidateIPRecord(ipRecord);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData("not-a-url")]
+        [InlineData("ftp://example.com/subscribe")]
+        [InlineData("mailto:test@example.com")]
+        [InlineData("file:///path/to/file")]
+        public void ValidateSubscriptionUrl_WithNullOrInvalidUrl_ReturnsFalse(string url)
+        {
+            // Act
+            var result = _validationService.ValidateSubscriptionUrl(url);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData(null)]
+        public void ValidateYAMLContent_WithEmptyYaml_ReturnsFalse(string yamlContent)
+        {
+            // Act
+            var result = _validationService.ValidateYAMLContent(yamlContent);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData("key: value")]
+        [InlineData("array:\n  - item1\n  - item2")]
+        [InlineData("nested:\n  key: value\n  number: 123")]
+        [InlineData("list:\n  - name: test\n    value: 123")]
+        public void ValidateYAMLContent_WithValidYaml_ReturnsTrue(string yamlContent)
+        {
+            // Act
+            var result = _validationService.ValidateYAMLContent(yamlContent);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void ValidateIPRecord_WithNullIP_ReturnsFalse()
+        {
+            // Arrange
+            var ipRecord = new IPRecord
+            {
+                IPAddress = null!,
+                Port = 443,
+                PacketLoss = 0,
+                Latency = 50
+            };
+
+            // Act
+            var result = _validationService.ValidateIPRecord(ipRecord);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ValidateIPRecord_WithEmptyIP_ReturnsFalse()
+        {
+            // Arrange
+            var ipRecord = new IPRecord
+            {
+                IPAddress = "",
+                Port = 443,
+                PacketLoss = 0,
+                Latency = 50
+            };
+
+            // Act
+            var result = _validationService.ValidateIPRecord(ipRecord);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ValidateIPRecord_WithWhitespaceIP_ReturnsFalse()
+        {
+            // Arrange
+            var ipRecord = new IPRecord
+            {
+                IPAddress = "   ",
+                Port = 443,
+                PacketLoss = 0,
+                Latency = 50
+            };
+
+            // Act
+            var result = _validationService.ValidateIPRecord(ipRecord);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ParseCSVContent_WithNullContent_ReturnsEmptyList()
+        {
+            // Arrange
+            string csvContent = null;
+
+            // Act
+            var result = _validationService.ParseCSVContent(csvContent);
+
+            // Assert
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void ConvertToCSV_WithNullList_ReturnsEmptyString()
+        {
+            // Arrange
+            List<IPRecord> ipRecords = null;
+
+            // Act
+            var result = _validationService.ConvertToCSV(ipRecords);
+
+            // Assert
+            Assert.Equal(string.Empty, result);
+        }
+
+        [Theory]
+        [InlineData(0, 10)] // 0 bytes
+        [InlineData(-1, 10)] // Negative size
+        [InlineData(-100, 10)] // Large negative size
+        public void ValidateFileSize_WithNonPositiveSize_ReturnsFalse(long fileSize, int maxSizeMB)
+        {
+            // Act
+            var result = _validationService.ValidateFileSize(fileSize, maxSizeMB);
 
             // Assert
             Assert.False(result);
