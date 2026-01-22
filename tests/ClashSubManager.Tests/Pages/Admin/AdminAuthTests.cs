@@ -39,7 +39,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             
             var result = _loginModel.OnPost();
             
-            Assert.Null(result);
+            Assert.IsType<PageResult>(result);
             Assert.Equal("Username and password are required", _loginModel.ErrorMessage);
         }
 
@@ -54,7 +54,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             
             var result = _loginModel.OnPost();
             
-            Assert.Null(result);
+            Assert.IsType<PageResult>(result);
             Assert.Equal("Invalid username or password", _loginModel.ErrorMessage);
         }
 
@@ -65,6 +65,21 @@ namespace ClashSubManager.Tests.Pages.Admin
             Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "password");
             Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", "test-key-32-characters-long");
             Environment.SetEnvironmentVariable("SESSION_TIMEOUT_MINUTES", "30");
+            
+            // Setup mock HttpContext and Response
+            var httpContext = new Mock<HttpContext>();
+            var response = new Mock<HttpResponse>();
+            var cookies = new Mock<IResponseCookies>();
+            
+            response.Setup(r => r.Cookies).Returns(cookies.Object);
+            httpContext.Setup(c => c.Response).Returns(response.Object);
+            
+            // Use reflection to set the PageContext
+            var pageContext = new PageContext
+            {
+                HttpContext = httpContext.Object
+            };
+            typeof(PageModel).GetProperty("PageContext")?.SetValue(_loginModel, pageContext);
             
             _loginModel.Username = "admin";
             _loginModel.Password = "password";
