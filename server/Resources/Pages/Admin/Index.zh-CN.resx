@@ -1,0 +1,8 @@
+<root>
+  <data name="Admin Dashboard" xml:space="preserve">
+    <value>管理员控制台</value>
+  </data>
+  <data name="Welcome to admin panel" xml:space="preserve">
+    <value>欢迎来到管理面板</value>
+  </data>
+</root>

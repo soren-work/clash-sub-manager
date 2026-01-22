@@ -1,0 +1,8 @@
+<root>
+  <data name="Home" xml:space="preserve">
+    <value>首页</value>
+  </data>
+  <data name="Admin" xml:space="preserve">
+    <value>管理</value>
+  </data>
+</root>

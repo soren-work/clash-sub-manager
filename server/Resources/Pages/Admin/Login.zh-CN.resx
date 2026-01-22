@@ -1,0 +1,14 @@
+<root>
+  <data name="Admin Login" xml:space="preserve">
+    <value>管理员登录</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>登录</value>
+  </data>
+</root>
