@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Localization;
 using System.Globalization;
 using ClashSubManager.Services;
+using ClashSubManager.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRequestLocalization();
 app.UseRouting();
+app.UseAdminAuth();
 app.MapRazorPages();
 
 app.Run();

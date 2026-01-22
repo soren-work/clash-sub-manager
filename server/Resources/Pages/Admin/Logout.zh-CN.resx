@@ -1,0 +1,11 @@
+<root>
+  <data name="Logout" xml:space="preserve">
+    <value>登出</value>
+  </data>
+  <data name="LogoutConfirmation" xml:space="preserve">
+    <value>您确定要登出吗？</value>
+  </data>
+  <data name="ConfirmLogout" xml:space="preserve">
+    <value>确认登出</value>
+  </data>
+</root>
