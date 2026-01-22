@@ -66,7 +66,7 @@ namespace ClashSubManager.Pages.Sub
                 if (userConfig == null || string.IsNullOrEmpty(userConfig.SubscriptionUrl))
                 {
                     Console.WriteLine($"User config not found or subscription URL empty: {UserId}");
-                    return CreateErrorResponse("User config not found", "USER_CONFIG_NOT_FOUND", 404);
+                    return CreateErrorResponse(_localizer["UserConfigNotFound"], "USER_CONFIG_NOT_FOUND", 404);
                 }
 
                 // Validate user ID through actual subscription service
@@ -74,7 +74,7 @@ namespace ClashSubManager.Pages.Sub
                 if (!isValidUser)
                 {
                     Console.WriteLine($"User ID validation failed: {UserId}");
-                    return CreateErrorResponse("User ID validation failed", "USER_ID_VALIDATION_FAILED", 401);
+                    return CreateErrorResponse(_localizer["UserIdValidationFailed"], "USER_ID_VALIDATION_FAILED", 401);
                 }
 
                 // Get subscription configuration
@@ -89,7 +89,7 @@ namespace ClashSubManager.Pages.Sub
                         "INVALID_USER_ID" => 400,
                         _ => 500
                     };
-                    return CreateErrorResponse(subscriptionResponse.Message, subscriptionResponse.ErrorCode, statusCode);
+                    return CreateErrorResponse(_localizer["SubscriptionGenerationFailed"], subscriptionResponse.ErrorCode, statusCode);
                 }
 
                 Console.WriteLine($"Subscription generated successfully for user: {UserId}");
@@ -101,7 +101,7 @@ namespace ClashSubManager.Pages.Sub
             {
                 _logger.LogError(ex, "Error processing subscription request for user: {UserId}", UserId);
                 Console.WriteLine($"Error processing subscription request: {ex.Message}");
-                return CreateErrorResponse("Internal server error", "INTERNAL_SERVER_ERROR", 500);
+                return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
 
@@ -135,7 +135,7 @@ namespace ClashSubManager.Pages.Sub
                 if (string.IsNullOrWhiteSpace(csvContent))
                 {
                     Console.WriteLine("Empty CSV content received");
-                    return CreateErrorResponse("CSV content is required", "EMPTY_CSV_CONTENT", 400);
+                    return CreateErrorResponse(_localizer["EmptyCSVContent"], "EMPTY_CSV_CONTENT", 400);
                 }
 
                 // Update user IP configuration
@@ -149,7 +149,7 @@ namespace ClashSubManager.Pages.Sub
                         "NO_VALID_IP_RECORDS" => 400,
                         _ => 500
                     };
-                    return CreateErrorResponse(updateResponse.Message, updateResponse.ErrorCode, statusCode);
+                    return CreateErrorResponse(_localizer["IPUpdateFailed"], updateResponse.ErrorCode, statusCode);
                 }
 
                 Console.WriteLine($"User IPs updated successfully for user: {UserId}");
@@ -161,7 +161,7 @@ namespace ClashSubManager.Pages.Sub
             {
                 _logger.LogError(ex, "Error updating user IPs for user: {UserId}", UserId);
                 Console.WriteLine($"Error updating user IPs: {ex.Message}");
-                return CreateErrorResponse("Internal server error", "INTERNAL_SERVER_ERROR", 500);
+                return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
 
@@ -196,7 +196,7 @@ namespace ClashSubManager.Pages.Sub
                         "USER_CONFIG_NOT_FOUND" => 404,
                         _ => 500
                     };
-                    return CreateErrorResponse(deleteResponse.Message, deleteResponse.ErrorCode, statusCode);
+                    return CreateErrorResponse(_localizer["UserConfigDeletionFailed"], deleteResponse.ErrorCode, statusCode);
                 }
 
                 Console.WriteLine($"User config deleted successfully for user: {UserId}");
@@ -208,7 +208,7 @@ namespace ClashSubManager.Pages.Sub
             {
                 _logger.LogError(ex, "Error deleting user config for user: {UserId}", UserId);
                 Console.WriteLine($"Error deleting user config: {ex.Message}");
-                return CreateErrorResponse("Internal server error", "INTERNAL_SERVER_ERROR", 500);
+                return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
 
