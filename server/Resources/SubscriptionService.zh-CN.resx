@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="InvalidUserId" xml:space="preserve">
+    <value>用户ID格式无效</value>
+  </data>
+  <data name="UserConfigNotFound" xml:space="preserve">
+    <value>用户配置未找到</value>
+  </data>
+  <data name="TemplateNotFound" xml:space="preserve">
+    <value>Clash模板未找到</value>
+  </data>
+  <data name="InternalServerError" xml:space="preserve">
+    <value>内部服务器错误</value>
+  </data>
+  <data name="NoValidIPRecords" xml:space="preserve">
+    <value>CSV内容中未找到有效的IP记录</value>
+  </data>
+  <data name="UserIPsUpdated" xml:space="preserve">
+    <value>用户IP地址更新成功</value>
+  </data>
+  <data name="UserConfigDeleted" xml:space="preserve">
+    <value>用户配置删除成功</value>
+  </data>
+</root>

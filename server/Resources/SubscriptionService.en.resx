@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="InvalidUserId" xml:space="preserve">
+    <value>Invalid user ID format</value>
+  </data>
+  <data name="UserConfigNotFound" xml:space="preserve">
+    <value>User configuration not found</value>
+  </data>
+  <data name="TemplateNotFound" xml:space="preserve">
+    <value>Clash template not found</value>
+  </data>
+  <data name="InternalServerError" xml:space="preserve">
+    <value>Internal server error occurred</value>
+  </data>
+  <data name="NoValidIPRecords" xml:space="preserve">
+    <value>No valid IP records found in CSV content</value>
+  </data>
+  <data name="UserIPsUpdated" xml:space="preserve">
+    <value>User IP addresses updated successfully</value>
+  </data>
+  <data name="UserConfigDeleted" xml:space="preserve">
+    <value>User configuration deleted successfully</value>
+  </data>
+</root>
