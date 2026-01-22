@@ -2,6 +2,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 using Moq;
 using Xunit;
 
@@ -34,7 +35,7 @@ namespace ClashSubManager.Tests.Common
             var mock = new Mock<HttpContext>();
             var requestMock = new Mock<HttpRequest>();
             var responseMock = new Mock<HttpResponse>();
-            var cookiesMock = new Mock<IRequestCookies>();
+            var cookiesMock = new Mock<IRequestCookieCollection>();
             var responseCookiesMock = new Mock<IResponseCookies>();
             
             requestMock.Setup(x => x.Cookies).Returns(cookiesMock.Object);
