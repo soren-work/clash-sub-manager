@@ -100,11 +100,16 @@
 /app/data/
 ├── cloudflare-ip.csv     # 默认优选IP
 ├── clash.yaml           # 默认Clash模板
-├── users.txt            # 用户记录
+├── users.txt            # 用户ID记录（自动去重）
 └── [userId]/            # 用户专属配置
     ├── cloudflare-ip.csv
     └── clash.yaml
 ```
+
+**配置简化说明：**
+- 移除复杂的UserConfig JSON配置文件
+- 专属IP配置直接从CSV文件读取
+- 用户管理简化为ID记录和去重
 
 ### 4.5 数据验证规则
 - **用户ID**：1-64字符，支持[a-zA-Z0-9_-]
@@ -126,6 +131,8 @@
 - 用户ID验证机制
 - 文件存储操作（CSV/YAML读写）
 - 订阅服务集成（HTTP请求）
+- 用户ID管理（users.txt记录和去重）
+- 环境变量配置管理（订阅URL模板）
 
 ### 5.2 关键技术约束
 - **完全动态处理**：动态解析所有字段，严禁硬编码字段名称或结构

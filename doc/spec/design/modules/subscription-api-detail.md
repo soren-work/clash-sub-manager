@@ -101,11 +101,16 @@
 /app/data/
 ├── cloudflare-ip.csv     # Default optimized IPs
 ├── clash.yaml           # Default Clash template
-├── users.txt            # User records
+├── users.txt            # User ID records (auto-deduplication)
 └── [userId]/            # User-specific configuration
     ├── cloudflare-ip.csv
     └── clash.yaml
 ```
+
+**Configuration Simplification Description:**
+- Remove complex UserConfig JSON configuration file
+- User-specific IP configuration read directly from CSV file
+- User management simplified to ID recording and deduplication
 
 ### 4.5 Data Validation Rules
 - **User ID**: 1-64 characters, support [a-zA-Z0-9_-]
@@ -127,6 +132,8 @@
 - User ID validation mechanism
 - File storage operations (CSV/YAML read/write)
 - Subscription service integration (HTTP requests)
+- User ID management (users.txt recording and deduplication)
+- Environment variable configuration management (subscription URL template)
 
 ### 5.2 Key Technical Constraints
 - **Completely dynamic processing**: Dynamically parse all fields, strictly prohibit hardcoding field names or structures

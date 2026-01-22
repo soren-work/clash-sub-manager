@@ -54,6 +54,25 @@
 
 **Operation Result:** This operation will delete `/app/data/[user id]/cloudflare-ip.csv`
 
+## System Configuration Management
+
+### Subscription URL Configuration
+**Global Configuration Method:** External subscription URL is uniformly configured via Docker environment variables, with each project instance corresponding to one external subscription system.
+
+**Environment Variable:** `SUBSCRIPTION_URL_TEMPLATE`
+
+**URL Template Support:**
+- Path parameter replacement: `http://www.domain.com/sub/{userId}`
+- Query parameter replacement: `http://www.domain.com/sub?userId={userId}`
+- Fixed URL: `http://www.domain.com/sub/abcdefghijkl` (no replacement)
+
+**Replacement Mechanism:** System automatically replaces `{userId}` placeholder with actual user ID received by `/sub/[id]` interface.
+
+### User Management
+**User Recording Method:** Only record user IDs in `/app/data/users.txt` with deduplication support.
+
+**First Access Mechanism:** Automatically record to users.txt file when user calls `/sub/[id]` for the first time.
+
 ## Technical Implementation Points
 
 ### File Storage Structure
@@ -61,10 +80,16 @@
 /app/data/
 ├── cloudflare-ip.csv          # Global IP file
 ├── clash.yaml                 # Global configuration file
+├── users.txt                  # User ID records (auto-deduplication)
 └── [user id]/
     ├── cloudflare-ip.csv      # User-specific IP file
     └── clash.yaml             # User-specific configuration file
 ```
+
+**Configuration Simplification Description:**
+- Remove complex UserConfig JSON configuration file
+- User-specific IP configuration read directly from CSV file
+- User management simplified to ID recording and deduplication
 
 ### API Interface Design
 - `GET /sub/[user id]` - Get overwritten subscription data

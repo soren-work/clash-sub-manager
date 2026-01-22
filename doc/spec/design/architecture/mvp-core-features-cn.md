@@ -54,6 +54,25 @@
 
 **操作结果：** 此操作将删除`/app/data/[用户id]/cloudflare-ip.csv`
 
+## 系统配置管理
+
+### 订阅URL配置
+**全局配置方式：** 外部订阅URL通过Docker环境变量统一配置，每个项目实例对应一个外部订阅系统。
+
+**环境变量：** `SUBSCRIPTION_URL_TEMPLATE`
+
+**URL模板支持：**
+- 路径参数替换：`http://www.domain.com/sub/{userId}`
+- 查询参数替换：`http://www.domain.com/sub?userId={userId}`
+- 固定URL：`http://www.domain.com/sub/abcdefghijkl`（不进行替换）
+
+**替换机制：** 系统自动将 `{userId}` 占位符替换为 `/sub/[id]` 接口接收的实际用户ID。
+
+### 用户管理
+**用户记录方式：** 仅在 `/app/data/users.txt` 中记录用户ID，支持去重处理。
+
+**首次访问机制：** 用户第一次调用 `/sub/[id]` 时自动记录到users.txt文件中。
+
 ## 技术实现要点
 
 ### 文件存储结构
@@ -61,10 +80,16 @@
 /app/data/
 ├── cloudflare-ip.csv          # 全局IP文件
 ├── clash.yaml                 # 全局配置文件
+├── users.txt                  # 用户ID记录（自动去重）
 └── [用户id]/
     ├── cloudflare-ip.csv      # 用户专属IP文件
     └── clash.yaml             # 用户专属配置文件
 ```
+
+**配置简化说明：**
+- 移除复杂的UserConfig JSON配置文件
+- 专属IP配置直接从CSV文件读取
+- 用户管理简化为ID记录和去重
 
 ### API接口设计
 - `GET /sub/[用户id]` - 获取覆写后的订阅数据
