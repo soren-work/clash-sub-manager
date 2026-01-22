@@ -12,7 +12,7 @@ namespace ClashSubManager.Pages.Admin
         private readonly string _basePath = "/app/data";
 
         [BindProperty(SupportsGet = true)]
-        public string SelectedUserId { get; set; }
+        public string SelectedUserId { get; set; } = string.Empty;
 
         public List<string> AvailableUsers { get; set; } = new();
         public UserConfigurationInfo UserConfig { get; set; } = new();
@@ -151,12 +151,12 @@ namespace ClashSubManager.Pages.Admin
 
     public class UserConfigurationInfo
     {
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public bool DirectoryExists { get; set; }
         public bool HasIPConfiguration { get; set; }
         public bool HasTemplate { get; set; }
-        public string IPFilePath { get; set; }
-        public string TemplateFilePath { get; set; }
+        public string IPFilePath { get; set; } = string.Empty;
+        public string TemplateFilePath { get; set; } = string.Empty;
         public long IPFileSize { get; set; }
         public long TemplateFileSize { get; set; }
         public DateTime IPFileLastModified { get; set; }

@@ -57,7 +57,7 @@ external-controller: 127.0.0.1:9090";
             Assert.IsType<PageResult>(result);
             Assert.Equal(2, _model.AvailableUsers.Count);
             Assert.True(_model.FileExists);
-            Assert.True(_model.YAMLContent.Contains("port: 7890"));
+            Assert.Contains("port: 7890", _model.YAMLContent);
         }
 
         [Fact]
@@ -86,7 +86,7 @@ log-level: warning";
             // Assert
             Assert.IsType<PageResult>(result);
             Assert.True(_model.FileExists);
-            Assert.True(_model.YAMLContent.Contains("port: 8080"));
+            Assert.Contains("port: 8080", _model.YAMLContent);
         }
 
         [Fact]
@@ -110,7 +110,7 @@ log-level: info";
             var globalTemplateFile = Path.Combine(_testDataPath, "clash.yaml");
             Assert.True(File.Exists(globalTemplateFile));
             var savedContent = await File.ReadAllTextAsync(globalTemplateFile);
-            Assert.True(savedContent.Contains("port: 7890"));
+            Assert.Contains("port: 7890", savedContent);
         }
 
         [Fact]
@@ -170,7 +170,7 @@ mode: rule";
             var globalTemplateFile = Path.Combine(_testDataPath, "clash.yaml");
             Assert.True(File.Exists(globalTemplateFile));
             var savedContent = await File.ReadAllTextAsync(globalTemplateFile);
-            Assert.True(savedContent.Contains("port: 7890"));
+            Assert.Contains("port: 7890", savedContent);
         }
 
         [Fact]

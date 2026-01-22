@@ -15,15 +15,15 @@ namespace ClashSubManager.Pages.Admin
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
-        public string SelectedUserId { get; set; }
+        public string SelectedUserId { get; set; } = string.Empty;
 
         public List<string> AvailableUsers { get; set; } = new();
-        public string YAMLContent { get; set; }
+        public string YAMLContent { get; set; } = string.Empty;
         public bool FileExists { get; set; }
 
         [BindProperty]
         [Required(ErrorMessage = "YAML content is required")]
-        public string EditedContent { get; set; }
+        public string EditedContent { get; set; } = string.Empty;
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -191,7 +191,7 @@ namespace ClashSubManager.Pages.Admin
 
                 var filePath = GetFilePath(userId);
                 var directory = Path.GetDirectoryName(filePath);
-                if (!Directory.Exists(directory))
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }

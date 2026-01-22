@@ -28,7 +28,7 @@ namespace ClashSubManager.Middleware
                 }
 
                 var sessionCookie = context.Request.Cookies["AdminSession"];
-                if (!ValidateSessionCookie(sessionCookie))
+                if (string.IsNullOrEmpty(sessionCookie) || !ValidateSessionCookie(sessionCookie))
                 {
                     context.Response.Redirect("/admin/login");
                     return;
@@ -38,18 +38,44 @@ namespace ClashSubManager.Middleware
             await _next(context);
         }
         
+        /// <summary>
+        /// Validates the session cookie format, expiration, and HMAC signature
+        /// Cookie format: sessionId:timestamp:signature
+        /// </summary>
+        /// <param name="cookieValue">The session cookie value</param>
+        /// <returns>True if the cookie is valid and not expired</returns>
         private bool ValidateSessionCookie(string cookieValue)
         {
             if (string.IsNullOrEmpty(cookieValue)) return false;
             
             var parts = cookieValue.Split(':');
-            if (parts.Length != 2) return false;
+            if (parts.Length != 3) return false;
             
             var sessionId = parts[0];
-            var signature = parts[1];
+            var timestampStr = parts[1];
+            var signature = parts[2];
             
+            // Validate sessionId format (GUID)
+            if (!Guid.TryParseExact(sessionId, "N", out _))
+            {
+                return false;
+            }
+            
+            // Parse and validate expiration time
+            if (!DateTime.TryParseExact(timestampStr, "yyyyMMddHHmmss", null, System.Globalization.DateTimeStyles.AssumeUniversal, out var expiresAt))
+            {
+                return false;
+            }
+            
+            // Check if session has expired
+            if (DateTime.UtcNow > expiresAt)
+            {
+                return false;
+            }
+            
+            // Validate HMAC signature to prevent tampering
             using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_hmacKey));
-            var signatureData = $"{sessionId}|{DateTime.UtcNow:yyyyMMddHHmmss}";
+            var signatureData = $"{sessionId}|{timestampStr}";
             var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(signatureData));
             var expectedSignature = Convert.ToBase64String(hash);
             

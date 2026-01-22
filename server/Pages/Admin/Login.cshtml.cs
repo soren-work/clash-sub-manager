@@ -64,7 +64,8 @@ namespace ClashSubManager.Pages.Admin
             var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(signatureData));
             var signature = Convert.ToBase64String(hash);
             
-            var cookieValue = $"{sessionId}:{signature}";
+            // Include timestamp in cookie for proper validation
+            var cookieValue = $"{sessionId}:{expiresAt:yyyyMMddHHmmss}:{signature}";
             
             var cookieOptions = new CookieOptions
             {

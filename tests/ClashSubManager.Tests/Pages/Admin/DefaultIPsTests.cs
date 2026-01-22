@@ -52,7 +52,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             Assert.IsType<PageResult>(result);
             Assert.Equal(2, _model.AvailableUsers.Count);
             Assert.True(_model.FileExists);
-            Assert.Equal(1, _model.IPRecords.Count);
+            Assert.Single(_model.IPRecords);
             Assert.Equal("1.1.1.1", _model.IPRecords.First().IPAddress);
         }
 
@@ -77,7 +77,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             // Assert
             Assert.IsType<PageResult>(result);
             Assert.True(_model.FileExists);
-            Assert.Equal(1, _model.IPRecords.Count);
+            Assert.Single(_model.IPRecords);
             Assert.Equal("2.2.2.2", _model.IPRecords.First().IPAddress);
         }
 
@@ -96,8 +96,8 @@ namespace ClashSubManager.Tests.Pages.Admin
             var globalIpFile = Path.Combine(_testDataPath, "cloudflare-ip.csv");
             Assert.True(File.Exists(globalIpFile));
             var savedContent = await File.ReadAllTextAsync(globalIpFile);
-            Assert.True(savedContent.Contains("1.1.1.1"));
-            Assert.True(savedContent.Contains("2.2.2.2"));
+            Assert.Contains("1.1.1.1", savedContent);
+            Assert.Contains("2.2.2.2", savedContent);
         }
 
         [Fact]
@@ -219,7 +219,7 @@ namespace ClashSubManager.Tests.Pages.Admin
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(0, result.Count);
+            Assert.Empty(result);
         }
 
         [Fact]

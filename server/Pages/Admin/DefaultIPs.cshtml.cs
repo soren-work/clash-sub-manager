@@ -14,7 +14,7 @@ namespace ClashSubManager.Pages.Admin
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
-        public string SelectedUserId { get; set; }
+        public string SelectedUserId { get; set; } = string.Empty;
 
         public List<IPRecord> IPRecords { get; set; } = new();
         public List<string> AvailableUsers { get; set; } = new();
@@ -22,7 +22,7 @@ namespace ClashSubManager.Pages.Admin
 
         [BindProperty]
         [Required(ErrorMessage = "CSV content is required")]
-        public string CSVContent { get; set; }
+        public string CSVContent { get; set; } = string.Empty;
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -172,7 +172,7 @@ namespace ClashSubManager.Pages.Admin
 
                 var filePath = GetFilePath(userId);
                 var directory = Path.GetDirectoryName(filePath);
-                if (!Directory.Exists(directory))
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
@@ -265,7 +265,7 @@ namespace ClashSubManager.Pages.Admin
             return records;
         }
 
-        private IPRecord ParseLineToIPRecord(string line)
+        private IPRecord? ParseLineToIPRecord(string line)
         {
             var columns = line.Split(',');
             if (columns.Length < 1 || !IsValidIP(columns[0].Trim()))
