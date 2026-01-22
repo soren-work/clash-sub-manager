@@ -1,0 +1,255 @@
+using ClashSubManager.Models;
+using System.Text.Json;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+
+namespace ClashSubManager.Services
+{
+    /// <summary>
+    /// File operation service
+    /// </summary>
+    public class FileService
+    {
+        private readonly ILogger<FileService> _logger;
+        private readonly string _dataPath;
+
+        public FileService(IConfiguration configuration, ILogger<FileService> logger)
+        {
+            _logger = logger;
+            _dataPath = configuration["DataPath"] ?? "/app/data";
+            
+            // Ensure data directory exists
+            Directory.CreateDirectory(_dataPath);
+        }
+
+        /// <summary>
+        /// Load user configuration
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <returns>User configuration or null</returns>
+        public async Task<UserConfig?> LoadUserConfigAsync(string userId)
+        {
+            try
+            {
+                var userDir = Path.Combine(_dataPath, userId);
+                var configFile = Path.Combine(userDir, "config.json");
+
+                if (!File.Exists(configFile))
+                    return null;
+
+                var json = await File.ReadAllTextAsync(configFile);
+                return JsonSerializer.Deserialize<UserConfig>(json);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading user config for user: {UserId}", userId);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Save user configuration
+        /// </summary>
+        /// <param name="userConfig">User configuration</param>
+        /// <returns>Operation result</returns>
+        public async Task<bool> SaveUserConfigAsync(UserConfig userConfig)
+        {
+            try
+            {
+                var userDir = Path.Combine(_dataPath, userConfig.UserId);
+                var configFile = Path.Combine(userDir, "config.json");
+
+                // Create user directory
+                Directory.CreateDirectory(userDir);
+
+                // Serialize configuration
+                var json = JsonSerializer.Serialize(userConfig, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                // Atomic write: write to temp file first, then replace
+                var tempFile = configFile + ".tmp";
+                await File.WriteAllTextAsync(tempFile, json);
+                
+                // Replace original file
+                File.Move(tempFile, configFile, true);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving user config for user: {UserId}", userConfig.UserId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Delete user configuration
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <returns>Whether deletion was successful</returns>
+        public async Task<bool> DeleteUserConfigAsync(string userId)
+        {
+            try
+            {
+                var userDir = Path.Combine(_dataPath, userId);
+                var configFile = Path.Combine(userDir, "config.json");
+
+                if (!File.Exists(configFile))
+                    return false;
+
+                // Delete file
+                File.Delete(configFile);
+
+                // Try to delete user directory (if empty)
+                try
+                {
+                    if (Directory.GetFiles(userDir).Length == 0 && 
+                        Directory.GetDirectories(userDir).Length == 0)
+                    {
+                        Directory.Delete(userDir);
+                    }
+                }
+                catch
+                {
+                    // Directory deletion failure doesn't affect main functionality
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user config for user: {UserId}", userId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Load default IP list
+        /// </summary>
+        /// <returns>IP record list</returns>
+        public async Task<List<IPRecord>> LoadDefaultIPsAsync()
+        {
+            try
+            {
+                var csvFile = Path.Combine(_dataPath, "cloudflare-ip.csv");
+                
+                if (!File.Exists(csvFile))
+                    return new List<IPRecord>();
+
+                var csvLines = await File.ReadAllLinesAsync(csvFile);
+                var ipRecords = new List<IPRecord>();
+
+                foreach (var line in csvLines)
+                {
+                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                        continue;
+
+                    var parts = line.Split(',');
+                    if (parts.Length >= 4)
+                    {
+                        var ipRecord = new IPRecord
+                        {
+                            IPAddress = parts[0].Trim(),
+                            Port = int.TryParse(parts[1].Trim(), out var port) ? port : 443,
+                            PacketLoss = decimal.TryParse(parts[2].Trim(), out var loss) ? loss : 0,
+                            Latency = decimal.TryParse(parts[3].Trim(), out var latency) ? latency : 0
+                        };
+
+                        if (ipRecord.IsValid())
+                        {
+                            ipRecords.Add(ipRecord);
+                        }
+                    }
+                }
+
+                return ipRecords;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading default IPs");
+                return new List<IPRecord>();
+            }
+        }
+
+        /// <summary>
+        /// Save default IP list
+        /// </summary>
+        /// <param name="ipRecords">IP record list</param>
+        /// <returns>Operation result</returns>
+        public async Task<bool> SaveDefaultIPsAsync(List<IPRecord> ipRecords)
+        {
+            try
+            {
+                var csvFile = Path.Combine(_dataPath, "cloudflare-ip.csv");
+                
+                var csvLines = ipRecords.Select(ip => 
+                    $"{ip.IPAddress},{ip.Port},{ip.PacketLoss},{ip.Latency}");
+
+                var csvContent = string.Join(Environment.NewLine, csvLines);
+                
+                // Atomic write
+                var tempFile = csvFile + ".tmp";
+                await File.WriteAllTextAsync(tempFile, csvContent);
+                
+                File.Move(tempFile, csvFile, true);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving default IPs");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Load Clash template
+        /// </summary>
+        /// <returns>Template content</returns>
+        public async Task<string?> LoadClashTemplateAsync()
+        {
+            try
+            {
+                var templateFile = Path.Combine(_dataPath, "clash.yaml");
+                
+                if (!File.Exists(templateFile))
+                    return null;
+
+                return await File.ReadAllTextAsync(templateFile);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Clash template");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Save Clash template
+        /// </summary>
+        /// <param name="templateContent">Template content</param>
+        /// <returns>Operation result</returns>
+        public async Task<bool> SaveClashTemplateAsync(string templateContent)
+        {
+            try
+            {
+                var templateFile = Path.Combine(_dataPath, "clash.yaml");
+                
+                // Atomic write
+                var tempFile = templateFile + ".tmp";
+                await File.WriteAllTextAsync(tempFile, templateContent);
+                
+                File.Move(tempFile, templateFile, true);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving Clash template");
+                return false;
+            }
+        }
+    }
+}

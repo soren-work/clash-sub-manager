@@ -58,23 +58,23 @@
 ### 2.2 阶段一：项目基础搭建（预估1天）
 
 #### 任务1.1：项目初始化
-- [ ] 创建ClashSubManager.csproj项目
-- [ ] 配置Program.cs基础结构
-- [ ] 设置appsettings.json配置
-- [ ] 创建基础目录结构
-- [ ] 配置依赖注入容器
+- [x] 创建ClashSubManager.csproj项目
+- [x] 配置Program.cs基础结构
+- [x] 设置appsettings.json配置
+- [x] 创建基础目录结构
+- [x] 配置依赖注入容器
 
 #### 任务1.2：数据模型定义
-- [ ] 实现IPRecord.cs数据模型
-- [ ] 实现UserConfig.cs数据模型
-- [ ] 实现SubscriptionResponse.cs数据模型
-- [ ] 定义数据验证规则
+- [x] 实现IPRecord.cs数据模型
+- [x] 实现UserConfig.cs数据模型
+- [x] 实现SubscriptionResponse.cs数据模型
+- [x] 定义数据验证规则
 
 #### 任务1.3：核心服务层
-- [ ] 实现SubscriptionService.cs
-- [ ] 实现FileService.cs
-- [ ] 实现ValidationService.cs
-- [ ] 实现ConfigurationService.cs
+- [x] 实现SubscriptionService.cs
+- [x] 实现FileService.cs
+- [x] 实现ValidationService.cs
+- [x] 实现ConfigurationService.cs
 
 ### 2.2 阶段二：核心接口实现（预估2天）
 
