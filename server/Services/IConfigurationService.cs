@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using ClashSubManager.Models;
 
 namespace ClashSubManager.Services
 {
@@ -39,5 +40,25 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <returns>Environment type</returns>
         string GetEnvironmentType();
+
+        /// <summary>
+        /// Get subscription URL template
+        /// </summary>
+        /// <returns>Subscription URL template</returns>
+        string GetSubscriptionUrlTemplate();
+
+        /// <summary>
+        /// Generate subscription configuration
+        /// </summary>
+        /// <param name="template">Base template</param>
+        /// <param name="subscriptionUrl">Subscription URL</param>
+        /// <param name="defaultIPs">Default IP list</param>
+        /// <param name="dedicatedIPs">Dedicated IP list</param>
+        /// <returns>Generated YAML configuration</returns>
+        Task<string> GenerateSubscriptionConfigAsync(
+            string template, 
+            string subscriptionUrl, 
+            List<IPRecord> defaultIPs, 
+            List<IPRecord> dedicatedIPs);
     }
 }

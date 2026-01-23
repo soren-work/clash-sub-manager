@@ -3,7 +3,7 @@ using System.Globalization;
 using ClashSubManager.Services;
 using ClashSubManager.Middleware;
 
-// Check if the configuration file contains required configuration items
+// Check if configuration file contains required settings
 bool HasRequiredConfigurations(string configPath)
 {
     try
@@ -31,7 +31,7 @@ var builder = WebApplication.CreateBuilder(args);
 var environmentDetector = new EnvironmentDetector();
 var environmentType = environmentDetector.GetEnvironmentType();
 
-// Check if this is the first startup (appsettings.json does not exist or lacks key configurations)
+// Check if this is the first startup (appsettings.json doesn't exist or lacks key configurations)
 var appSettingsPath = Path.Combine(builder.Environment.ContentRootPath, "appsettings.json");
 var isFirstStart = !File.Exists(appSettingsPath) || !HasRequiredConfigurations(appSettingsPath);
 
@@ -101,7 +101,7 @@ builder.Services.AddSingleton<IConfigurationService, PlatformConfigurationServic
 // Register custom services
 builder.Services.AddSingleton<FileService>();
 builder.Services.AddSingleton<ValidationService>();
-builder.Services.AddSingleton<ConfigurationService>();
+builder.Services.AddSingleton<IUserManagementService, UserManagementService>();
 builder.Services.AddTransient<SubscriptionService>();
 
 // Configure localization

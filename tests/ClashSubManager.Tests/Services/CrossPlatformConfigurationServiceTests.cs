@@ -35,13 +35,15 @@ namespace ClashSubManager.Tests.Services
                 .Build();
 
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
+            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
             
             _service = new PlatformConfigurationService(
                 _configuration,
                 logger,
                 _mockDetector,
                 _mockPathResolver,
-                _mockValidator);
+                _mockValidator,
+                httpClient);
         }
 
         [Fact]
@@ -73,12 +75,14 @@ namespace ClashSubManager.Tests.Services
                 .Build();
 
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
+            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
             var service = new PlatformConfigurationService(
                 configurationWithoutDataPath,
                 logger,
                 _mockDetector,
                 _mockPathResolver,
-                _mockValidator);
+                _mockValidator,
+                httpClient);
 
             var expectedPath = "/default/data";
             _mockPathResolver.SetDefaultDataPathResult(expectedPath);

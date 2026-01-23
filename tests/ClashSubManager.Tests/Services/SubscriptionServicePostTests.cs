@@ -14,24 +14,27 @@ namespace ClashSubManager.Tests.Services
     public class SubscriptionServicePostTests
     {
         private readonly Mock<IStringLocalizer<SubscriptionService>> _mockLocalizer;
+        private readonly Mock<IUserManagementService> _mockUserManagementService;
         private readonly Mock<FileService> _mockFileService;
         private readonly Mock<ValidationService> _mockValidationService;
-        private readonly Mock<ConfigurationService> _mockConfigurationService;
+        private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly Mock<ILogger<SubscriptionService>> _mockLogger;
         private readonly SubscriptionService _subscriptionService;
 
         public SubscriptionServicePostTests()
         {
             _mockLocalizer = new Mock<IStringLocalizer<SubscriptionService>>();
+            _mockUserManagementService = new Mock<IUserManagementService>();
             var mockConfigService = new Mock<IConfigurationService>();
             mockConfigService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());
             _mockFileService = new Mock<FileService>(mockConfigService.Object, Mock.Of<ILogger<FileService>>());
             _mockValidationService = new Mock<ValidationService>(Mock.Of<ILogger<ValidationService>>());
-            _mockConfigurationService = new Mock<ConfigurationService>(Mock.Of<ILogger<ConfigurationService>>(), Mock.Of<HttpClient>());
+            _mockConfigurationService = new Mock<IConfigurationService>();
             _mockLogger = new Mock<ILogger<SubscriptionService>>();
 
             _subscriptionService = new SubscriptionService(
                 _mockLocalizer.Object,
+                _mockUserManagementService.Object,
                 _mockFileService.Object,
                 _mockValidationService.Object,
                 _mockConfigurationService.Object,
@@ -91,8 +94,8 @@ namespace ClashSubManager.Tests.Services
             
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
             _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(ipRecords);
-            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ReturnsAsync((UserConfig?)null);
-            _mockFileService.Setup(x => x.SaveUserConfigAsync(It.IsAny<UserConfig>())).ReturnsAsync(true);
+            _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
+            _mockFileService.Setup(x => x.SaveUserDedicatedIPsAsync(userId, ipRecords)).ReturnsAsync(true);
             _mockLocalizer.Setup(x => x["UserIPsUpdated"]).Returns(new LocalizedString("UserIPsUpdated", "User IPs updated successfully", false));
 
             // Act
@@ -101,10 +104,8 @@ namespace ClashSubManager.Tests.Services
             // Assert
             Assert.True(result.Success);
             Assert.Equal("User IPs updated successfully", result.Message);
-            _mockFileService.Verify(x => x.SaveUserConfigAsync(It.Is<UserConfig>(uc => 
-                uc.UserId == userId && 
-                uc.DedicatedIPs.Count == 2 && 
-                uc.DedicatedIPs[0].IPAddress == "192.168.1.1")), Times.Once);
+            _mockUserManagementService.Verify(x => x.RecordUserAccessAsync(userId), Times.Once);
+            _mockFileService.Verify(x => x.SaveUserDedicatedIPsAsync(userId, ipRecords), Times.Once);
         }
 
         [Fact]
@@ -117,20 +118,11 @@ namespace ClashSubManager.Tests.Services
             {
                 new() { IPAddress = "192.168.1.3", Port = 443, PacketLoss = 0, Latency = 40 }
             };
-            var existingUserConfig = new UserConfig 
-            { 
-                UserId = userId, 
-                SubscriptionUrl = "https://example.com/sub",
-                DedicatedIPs = new List<IPRecord>
-                {
-                    new() { IPAddress = "192.168.1.1", Port = 443, PacketLoss = 0, Latency = 50 }
-                }
-            };
             
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
             _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(ipRecords);
-            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ReturnsAsync(existingUserConfig);
-            _mockFileService.Setup(x => x.SaveUserConfigAsync(It.IsAny<UserConfig>())).ReturnsAsync(true);
+            _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
+            _mockFileService.Setup(x => x.SaveUserDedicatedIPsAsync(userId, ipRecords)).ReturnsAsync(true);
             _mockLocalizer.Setup(x => x["UserIPsUpdated"]).Returns(new LocalizedString("UserIPsUpdated", "User IPs updated successfully", false));
 
             // Act
@@ -139,11 +131,8 @@ namespace ClashSubManager.Tests.Services
             // Assert
             Assert.True(result.Success);
             Assert.Equal("User IPs updated successfully", result.Message);
-            _mockFileService.Verify(x => x.SaveUserConfigAsync(It.Is<UserConfig>(uc => 
-                uc.UserId == userId && 
-                uc.SubscriptionUrl == "https://example.com/sub" &&
-                uc.DedicatedIPs.Count == 1 && 
-                uc.DedicatedIPs[0].IPAddress == "192.168.1.3")), Times.Once);
+            _mockUserManagementService.Verify(x => x.RecordUserAccessAsync(userId), Times.Once);
+            _mockFileService.Verify(x => x.SaveUserDedicatedIPsAsync(userId, ipRecords), Times.Once);
         }
 
         [Fact]

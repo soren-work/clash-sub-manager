@@ -14,24 +14,32 @@ namespace ClashSubManager.Tests.Services
     public class SubscriptionServiceTests
     {
         private readonly Mock<IStringLocalizer<SubscriptionService>> _mockLocalizer;
+        private readonly Mock<IUserManagementService> _mockUserManagementService;
         private readonly Mock<FileService> _mockFileService;
         private readonly Mock<ValidationService> _mockValidationService;
-        private readonly Mock<ConfigurationService> _mockConfigurationService;
+        private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly Mock<ILogger<SubscriptionService>> _mockLogger;
         private readonly SubscriptionService _subscriptionService;
 
         public SubscriptionServiceTests()
         {
             _mockLocalizer = new Mock<IStringLocalizer<SubscriptionService>>();
+            _mockUserManagementService = new Mock<IUserManagementService>();
             var mockConfigService = new Mock<IConfigurationService>();
             mockConfigService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());
             _mockFileService = new Mock<FileService>(mockConfigService.Object, Mock.Of<ILogger<FileService>>());
             _mockValidationService = new Mock<ValidationService>(Mock.Of<ILogger<ValidationService>>());
-            _mockConfigurationService = new Mock<ConfigurationService>(Mock.Of<ILogger<ConfigurationService>>(), Mock.Of<HttpClient>());
+            _mockConfigurationService = new Mock<IConfigurationService>();
             _mockLogger = new Mock<ILogger<SubscriptionService>>();
+
+            _mockConfigurationService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());
+            _mockConfigurationService.Setup(x => x.GenerateSubscriptionConfigAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<List<IPRecord>>(), It.IsAny<List<IPRecord>>()))
+                .ReturnsAsync("port: 7890\nproxies: []");
 
             _subscriptionService = new SubscriptionService(
                 _mockLocalizer.Object,
+                _mockUserManagementService.Object,
                 _mockFileService.Object,
                 _mockValidationService.Object,
                 _mockConfigurationService.Object,
@@ -56,21 +64,22 @@ namespace ClashSubManager.Tests.Services
         }
 
         [Fact]
-        public async Task GetSubscriptionAsync_UserConfigNotFound_ReturnsError()
+        public async Task GetSubscriptionAsync_SubscriptionUrlTemplateNotConfigured_ReturnsError()
         {
             // Arrange
             var userId = "test-user";
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
-            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ReturnsAsync((UserConfig?)null);
-            _mockLocalizer.Setup(x => x["UserConfigNotFound"]).Returns(new LocalizedString("UserConfigNotFound", "User config not found", false));
+            _mockUserManagementService.Setup(x => x.GetUserSubscriptionUrlAsync(userId)).ReturnsAsync(string.Empty);
+            _mockLocalizer.Setup(x => x["SubscriptionUrlTemplateNotConfigured"])
+                .Returns(new LocalizedString("SubscriptionUrlTemplateNotConfigured", "Subscription URL template not configured", false));
 
             // Act
             var result = await _subscriptionService.GetSubscriptionAsync(userId);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("User config not found", result.Message);
-            Assert.Equal("USER_CONFIG_NOT_FOUND", result.ErrorCode);
+            Assert.Equal("Subscription URL template not configured", result.Message);
+            Assert.Equal("SUBSCRIPTION_URL_TEMPLATE_NOT_CONFIGURED", result.ErrorCode);
         }
 
         [Fact]
@@ -78,10 +87,11 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var userId = "test-user";
-            var userConfig = new UserConfig { UserId = userId, SubscriptionUrl = "https://example.com/sub" };
+            var subscriptionUrl = "https://example.com/sub";
             
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
-            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ReturnsAsync(userConfig);
+            _mockUserManagementService.Setup(x => x.GetUserSubscriptionUrlAsync(userId)).ReturnsAsync(subscriptionUrl);
+            _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
             _mockFileService.Setup(x => x.LoadClashTemplateAsync()).ReturnsAsync((string?)null);
             _mockLocalizer.Setup(x => x["TemplateNotFound"]).Returns(new LocalizedString("TemplateNotFound", "Template not found", false));
 
@@ -99,22 +109,21 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var userId = "test-user";
-            var userConfig = new UserConfig 
-            { 
-                UserId = userId, 
-                SubscriptionUrl = "https://example.com/sub",
-                DedicatedIPs = new List<IPRecord>()
-            };
+            var subscriptionUrl = "https://example.com/sub";
             var template = "port: 7890\nproxies: []";
             var defaultIPs = new List<IPRecord>();
-            var expectedYaml = "port: 7890\nproxies: []\nmixed-port: 7890";
+            var dedicatedIPs = new List<IPRecord>();
             
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
-            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ReturnsAsync(userConfig);
+            _mockUserManagementService.Setup(x => x.GetUserSubscriptionUrlAsync(userId)).ReturnsAsync(subscriptionUrl);
+            _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
             _mockFileService.Setup(x => x.LoadClashTemplateAsync()).ReturnsAsync(template);
             _mockFileService.Setup(x => x.LoadDefaultIPsAsync()).ReturnsAsync(defaultIPs);
-            _mockConfigurationService.Setup(x => x.GenerateSubscriptionConfigAsync(template, userConfig.SubscriptionUrl, defaultIPs, userConfig.DedicatedIPs))
-                .ReturnsAsync(expectedYaml);
+            _mockFileService.Setup(x => x.LoadUserDedicatedIPsAsync(userId)).ReturnsAsync(dedicatedIPs);
+            
+            var expectedYaml = "port: 7890\nproxies: []";
+            _mockConfigurationService.Setup(x => x.GenerateSubscriptionConfigAsync(
+                template, subscriptionUrl, defaultIPs, dedicatedIPs)).ReturnsAsync(expectedYaml);
 
             // Act
             var result = await _subscriptionService.GetSubscriptionAsync(userId);
@@ -130,7 +139,7 @@ namespace ClashSubManager.Tests.Services
             // Arrange
             var userId = "test-user";
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
-            _mockFileService.Setup(x => x.LoadUserConfigAsync(userId)).ThrowsAsync(new Exception("Test exception"));
+            _mockUserManagementService.Setup(x => x.GetUserSubscriptionUrlAsync(userId)).ThrowsAsync(new Exception("Test exception"));
             _mockLocalizer.Setup(x => x["InternalServerError"]).Returns(new LocalizedString("InternalServerError", "Internal server error", false));
 
             // Act
