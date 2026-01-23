@@ -89,6 +89,69 @@ Access `http://your-server:8080/admin` for configuration management:
 | `SESSION_TIMEOUT_MINUTES` | Session timeout | 60 |
 | `DATA_PATH` | Data directory | `/app/data` |
 
+## Configuration System
+
+ClashSubManager supports flexible cross-platform configuration management with multiple configuration methods:
+
+### Configuration Priority (High to Low)
+1. **Command Line Arguments** - Highest priority
+2. **Environment Variables** - Second priority
+3. **User Configuration File** - `appsettings.User.json`
+4. **Environment-Specific Configuration** - `appsettings.{Environment}.json`
+5. **Mode-Specific Configuration** - `appsettings.{Mode}.json`
+6. **Default Configuration File** - `appsettings.json`
+7. **Code Default Values** - Lowest priority
+
+### Automatic Environment Detection
+- **Docker Environment**: Automatically detects container environment, uses `/app/data` as default data path
+- **Standalone Mode**: Windows/Linux/macOS direct execution, uses `./data` path in program directory
+- **Development/Production Environment**: Automatically recognizes based on `ASPNETCORE_ENVIRONMENT` variable
+
+### Configuration Examples
+
+#### Docker Deployment (Recommended)
+```bash
+docker run -d \
+  -e ADMIN_USERNAME=admin \
+  -e ADMIN_PASSWORD=your_password \
+  -e COOKIE_SECRET_KEY=your_32_character_minimum_key \
+  -e SESSION_TIMEOUT_MINUTES=30 \
+  -p 8080:8080 \
+  clash-sub-manager
+```
+
+#### Standalone Execution
+```bash
+# Windows
+./ClashSubManager.exe
+
+# Linux/macOS
+./ClashSubManager
+
+# Custom data path
+./ClashSubManager --DataPath /custom/data/path
+```
+
+#### Configuration File
+Create `appsettings.User.json` file:
+```json
+{
+  "AdminUsername": "admin",
+  "AdminPassword": "your_password",
+  "CookieSecretKey": "your_32_character_minimum_key",
+  "SessionTimeoutMinutes": 30,
+  "DataPath": "/custom/data/path"
+}
+```
+
+### Configuration Validation
+The system automatically validates the following required configurations on startup:
+- `AdminUsername` - Administrator username (required)
+- `AdminPassword` - Administrator password (required)
+- `CookieSecretKey` - Cookie secret key (required, minimum 32 characters)
+- `SessionTimeoutMinutes` - Session timeout (5-1440 minutes)
+- `DataPath` - Data path (must be creatable/writable)
+
 ## Performance Characteristics
 
 - **Response Time**: < 100ms

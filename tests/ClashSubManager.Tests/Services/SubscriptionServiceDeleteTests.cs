@@ -23,7 +23,9 @@ namespace ClashSubManager.Tests.Services
         public SubscriptionServiceDeleteTests()
         {
             _mockLocalizer = new Mock<IStringLocalizer<SubscriptionService>>();
-            _mockFileService = new Mock<FileService>(Mock.Of<IConfiguration>(), Mock.Of<ILogger<FileService>>());
+            var mockConfigService = new Mock<IConfigurationService>();
+            mockConfigService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());
+            _mockFileService = new Mock<FileService>(mockConfigService.Object, Mock.Of<ILogger<FileService>>());
             _mockValidationService = new Mock<ValidationService>(Mock.Of<ILogger<ValidationService>>());
             _mockConfigurationService = new Mock<ConfigurationService>(Mock.Of<ILogger<ConfigurationService>>(), Mock.Of<HttpClient>());
             _mockLogger = new Mock<ILogger<SubscriptionService>>();
