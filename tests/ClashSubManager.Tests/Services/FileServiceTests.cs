@@ -14,21 +14,21 @@ namespace ClashSubManager.Tests.Services
     public class FileServiceTests : IDisposable
     {
         private readonly Mock<ILogger<FileService>> _loggerMock;
-        private readonly Mock<IConfiguration> _configMock;
+        private readonly Mock<IConfigurationService> _configServiceMock;
         private readonly string _testDirectory;
         private readonly FileService _fileService;
 
         public FileServiceTests()
         {
             _loggerMock = new Mock<ILogger<FileService>>();
-            _configMock = new Mock<IConfiguration>();
+            _configServiceMock = new Mock<IConfigurationService>();
             _testDirectory = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", Guid.NewGuid().ToString());
             
             Directory.CreateDirectory(_testDirectory);
             
-            _configMock.Setup(x => x["DataPath"]).Returns(_testDirectory);
+            _configServiceMock.Setup(x => x.GetDataPath()).Returns(_testDirectory);
             
-            _fileService = new FileService(_configMock.Object, _loggerMock.Object);
+            _fileService = new FileService(_configServiceMock.Object, _loggerMock.Object);
         }
 
         public void Dispose()

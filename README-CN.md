@@ -89,6 +89,69 @@ http://your-server:8080/sub/your_user_id
 | `SESSION_TIMEOUT_MINUTES` | 会话超时时间 | 60 |
 | `DATA_PATH` | 数据目录 | `/app/data` |
 
+## 配置系统
+
+ClashSubManager 支持灵活的跨平台配置管理，支持多种配置方式：
+
+### 配置优先级（从高到低）
+1. **命令行参数** - 最高优先级
+2. **环境变量** - 次优先级
+3. **用户配置文件** - `appsettings.User.json`
+4. **环境特定配置** - `appsettings.{Environment}.json`
+5. **模式特定配置** - `appsettings.{Mode}.json`
+6. **默认配置文件** - `appsettings.json`
+7. **代码默认值** - 最低优先级
+
+### 环境自动检测
+- **Docker环境**：自动检测容器环境，使用 `/app/data` 作为默认数据路径
+- **独立模式**：Windows/Linux/macOS 直接运行，使用程序同目录下的 `./data` 路径
+- **开发/生产环境**：基于 `ASPNETCORE_ENVIRONMENT` 变量自动识别
+
+### 配置方式示例
+
+#### Docker 部署（推荐）
+```bash
+docker run -d \
+  -e ADMIN_USERNAME=admin \
+  -e ADMIN_PASSWORD=your_password \
+  -e COOKIE_SECRET_KEY=your_32_character_minimum_key \
+  -e SESSION_TIMEOUT_MINUTES=30 \
+  -p 8080:8080 \
+  clash-sub-manager
+```
+
+#### 独立运行
+```bash
+# Windows
+./ClashSubManager.exe
+
+# Linux/macOS
+./ClashSubManager
+
+# 自定义数据路径
+./ClashSubManager --DataPath /custom/data/path
+```
+
+#### 配置文件
+创建 `appsettings.User.json` 文件：
+```json
+{
+  "AdminUsername": "admin",
+  "AdminPassword": "your_password",
+  "CookieSecretKey": "your_32_character_minimum_key",
+  "SessionTimeoutMinutes": 30,
+  "DataPath": "/custom/data/path"
+}
+```
+
+### 配置验证
+系统启动时会自动验证以下必需配置：
+- `AdminUsername` - 管理员用户名（必需）
+- `AdminPassword` - 管理员密码（必需）
+- `CookieSecretKey` - Cookie密钥（必需，最少32字符）
+- `SessionTimeoutMinutes` - 会话超时时间（5-1440分钟）
+- `DataPath` - 数据路径（必须可创建/可写）
+
 ## 性能特性
 
 - **响应时间**：< 100ms
@@ -122,7 +185,8 @@ http://your-server:8080/sub/your_user_id
 
 ---
 
-**文档版本**：v1.1  
+**文档版本**：v1.2  
 **创建时间**：2026-01-22  
+**更新时间**：2026-01-23  
 **维护者**：AI Agent软件工程师  
 **适用范围**：ClashSubManager MVP开发项目

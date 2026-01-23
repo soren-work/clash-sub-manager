@@ -11,12 +11,14 @@ namespace ClashSubManager.Services
     public class FileService
     {
         private readonly ILogger<FileService> _logger;
+        private readonly IConfigurationService _configurationService;
         private readonly string _dataPath;
 
-        public FileService(IConfiguration configuration, ILogger<FileService> logger)
+        public FileService(IConfigurationService configurationService, ILogger<FileService> logger)
         {
+            _configurationService = configurationService;
             _logger = logger;
-            _dataPath = configuration["DataPath"] ?? "/app/data";
+            _dataPath = _configurationService.GetDataPath();
             
             // Ensure data directory exists
             Directory.CreateDirectory(_dataPath);
