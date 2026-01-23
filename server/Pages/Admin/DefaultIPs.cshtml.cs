@@ -1,5 +1,5 @@
 using ClashSubManager.Models;
-using Microsoft.AspNetCore.Authorization;
+using ClashSubManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
@@ -7,14 +7,13 @@ using System.Text;
 
 namespace ClashSubManager.Pages.Admin
 {
-    [Authorize(Roles = "Admin")]
     public class DefaultIPsModel : PageModel
     {
-        private readonly string _basePath = "/app/data";
+        private readonly IConfigurationService _configurationService;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
-        public string SelectedUserId { get; set; } = string.Empty;
+        public string? SelectedUserId { get; set; }
 
         public List<IPRecord> IPRecords { get; set; } = new();
         public List<string> AvailableUsers { get; set; } = new();
@@ -23,6 +22,11 @@ namespace ClashSubManager.Pages.Admin
         [BindProperty]
         [Required(ErrorMessage = "CSV content is required")]
         public string CSVContent { get; set; } = string.Empty;
+
+        public DefaultIPsModel(IConfigurationService configurationService)
+        {
+            _configurationService = configurationService;
+        }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -121,7 +125,8 @@ namespace ClashSubManager.Pages.Admin
         {
             try
             {
-                var usersPath = Path.Combine(_basePath, "users.txt");
+                var basePath = _configurationService.GetDataPath();
+                var usersPath = Path.Combine(basePath, "users.txt");
                 if (System.IO.File.Exists(usersPath))
                 {
                     var content = await System.IO.File.ReadAllTextAsync(usersPath, Encoding.UTF8);
@@ -225,9 +230,10 @@ namespace ClashSubManager.Pages.Admin
 
         private string GetFilePath(string userId)
         {
+            var basePath = _configurationService.GetDataPath();
             return string.IsNullOrEmpty(userId) 
-                ? Path.Combine(_basePath, "cloudflare-ip.csv")
-                : Path.Combine(_basePath, userId, "cloudflare-ip.csv");
+                ? Path.Combine(basePath, "cloudflare-ip.csv")
+                : Path.Combine(basePath, userId, "cloudflare-ip.csv");
         }
 
         private List<IPRecord> ParseCSVContent(string csvContent)

@@ -15,7 +15,7 @@ namespace ClashSubManager.Pages.Sub
         private readonly SubscriptionService _subscriptionService;
         private readonly ValidationService _validationService;
         private readonly IUserManagementService _userManagementService;
-        private readonly IStringLocalizer<IndexModel> _localizer;
+        private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ILogger<IndexModel> _logger;
         private readonly HttpClient _httpClient;
 
@@ -23,7 +23,7 @@ namespace ClashSubManager.Pages.Sub
             SubscriptionService subscriptionService,
             ValidationService validationService,
             IUserManagementService userManagementService,
-            IStringLocalizer<IndexModel> localizer,
+            IStringLocalizer<SharedResources> localizer,
             ILogger<IndexModel> logger,
             HttpClient httpClient)
         {
@@ -50,14 +50,14 @@ namespace ClashSubManager.Pages.Sub
         {
             try
             {
-                Console.WriteLine($"Processing subscription request for user: {id}");
+                _logger.LogInformation("Processing subscription request for user: {UserId}", id);
                 
                 UserId = id ?? string.Empty;
 
                 // Input validation
                 if (!_validationService.ValidateUserId(UserId))
                 {
-                    Console.WriteLine($"Invalid user ID: {UserId}");
+                    _logger.LogWarning("Invalid user ID: {UserId}", UserId);
                     return CreateErrorResponse("Invalid user ID", "INVALID_USER_ID", 400);
                 }
 
@@ -65,7 +65,7 @@ namespace ClashSubManager.Pages.Sub
                 var subscriptionUrl = await _userManagementService.GetUserSubscriptionUrlAsync(UserId);
                 if (string.IsNullOrEmpty(subscriptionUrl))
                 {
-                    Console.WriteLine($"Subscription URL template not configured for user: {UserId}");
+                    _logger.LogWarning("Subscription URL template not configured for user: {UserId}", UserId);
                     return CreateErrorResponse(_localizer["SubscriptionUrlTemplateNotConfigured"], "SUBSCRIPTION_URL_TEMPLATE_NOT_CONFIGURED", 404);
                 }
 
@@ -73,7 +73,7 @@ namespace ClashSubManager.Pages.Sub
                 var isValidUser = await ValidateUserIdWithSubscriptionService(subscriptionUrl, UserId);
                 if (!isValidUser)
                 {
-                    Console.WriteLine($"User ID validation failed: {UserId}");
+                    _logger.LogWarning("User ID validation failed: {UserId}", UserId);
                     return CreateErrorResponse(_localizer["UserIdValidationFailed"], "USER_ID_VALIDATION_FAILED", 401);
                 }
 
@@ -81,7 +81,7 @@ namespace ClashSubManager.Pages.Sub
                 var subscriptionResponse = await _subscriptionService.GetSubscriptionAsync(UserId);
                 if (!subscriptionResponse.Success)
                 {
-                    Console.WriteLine($"Subscription generation failed: {subscriptionResponse.Message}");
+                    _logger.LogError("Subscription generation failed: {Message}", subscriptionResponse.Message);
                     var statusCode = subscriptionResponse.ErrorCode switch
                     {
                         "USER_CONFIG_NOT_FOUND" => 404,
@@ -92,7 +92,7 @@ namespace ClashSubManager.Pages.Sub
                     return CreateErrorResponse(_localizer["SubscriptionGenerationFailed"], subscriptionResponse.ErrorCode, statusCode);
                 }
 
-                Console.WriteLine($"Subscription generated successfully for user: {UserId}");
+                _logger.LogInformation("Subscription generated successfully for user: {UserId}", UserId);
                 
                 // Return YAML content
                 return Content(subscriptionResponse.YAMLContent ?? string.Empty, "text/yaml");
@@ -100,7 +100,7 @@ namespace ClashSubManager.Pages.Sub
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing subscription request for user: {UserId}", UserId);
-                Console.WriteLine($"Error processing subscription request: {ex.Message}");
+                _logger.LogError("Error processing subscription request: {Message}", ex.Message);
                 return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
@@ -114,14 +114,14 @@ namespace ClashSubManager.Pages.Sub
         {
             try
             {
-                Console.WriteLine($"Processing IP update request for user: {id}");
+                _logger.LogInformation("Processing IP update request for user: {UserId}", id);
                 
                 UserId = id ?? string.Empty;
 
                 // Input validation
                 if (!_validationService.ValidateUserId(UserId))
                 {
-                    Console.WriteLine($"Invalid user ID: {UserId}");
+                    _logger.LogWarning("Invalid user ID: {UserId}", UserId);
                     return CreateErrorResponse("Invalid user ID", "INVALID_USER_ID", 400);
                 }
 
@@ -134,7 +134,7 @@ namespace ClashSubManager.Pages.Sub
 
                 if (string.IsNullOrWhiteSpace(csvContent))
                 {
-                    Console.WriteLine("Empty CSV content received");
+                    _logger.LogWarning("Empty CSV content received");
                     return CreateErrorResponse(_localizer["EmptyCSVContent"], "EMPTY_CSV_CONTENT", 400);
                 }
 
@@ -142,7 +142,7 @@ namespace ClashSubManager.Pages.Sub
                 var updateResponse = await _subscriptionService.UpdateUserIPsAsync(UserId, csvContent);
                 if (!updateResponse.Success)
                 {
-                    Console.WriteLine($"IP update failed: {updateResponse.Message}");
+                    _logger.LogError("IP update failed: {Message}", updateResponse.Message);
                     var statusCode = updateResponse.ErrorCode switch
                     {
                         "INVALID_USER_ID" => 400,
@@ -152,7 +152,7 @@ namespace ClashSubManager.Pages.Sub
                     return CreateErrorResponse(_localizer["IPUpdateFailed"], updateResponse.ErrorCode, statusCode);
                 }
 
-                Console.WriteLine($"User IPs updated successfully for user: {UserId}");
+                _logger.LogInformation("User IPs updated successfully for user: {UserId}", UserId);
                 
                 // Return success response
                 return CreateJsonResponse(true, updateResponse.Message);
@@ -160,7 +160,7 @@ namespace ClashSubManager.Pages.Sub
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user IPs for user: {UserId}", UserId);
-                Console.WriteLine($"Error updating user IPs: {ex.Message}");
+                _logger.LogError("Error updating user IPs: {Message}", ex.Message);
                 return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
@@ -174,14 +174,14 @@ namespace ClashSubManager.Pages.Sub
         {
             try
             {
-                Console.WriteLine($"Processing user config deletion request for user: {id}");
+                _logger.LogInformation("Processing user config deletion request for user: {UserId}", id);
                 
                 UserId = id ?? string.Empty;
 
                 // Input validation
                 if (!_validationService.ValidateUserId(UserId))
                 {
-                    Console.WriteLine($"Invalid user ID: {UserId}");
+                    _logger.LogWarning("Invalid user ID: {UserId}", UserId);
                     return CreateErrorResponse("Invalid user ID", "INVALID_USER_ID", 400);
                 }
 
@@ -189,7 +189,7 @@ namespace ClashSubManager.Pages.Sub
                 var deleteResponse = await _subscriptionService.DeleteUserConfigAsync(UserId);
                 if (!deleteResponse.Success)
                 {
-                    Console.WriteLine($"User config deletion failed: {deleteResponse.Message}");
+                    _logger.LogError("User config deletion failed: {Message}", deleteResponse.Message);
                     var statusCode = deleteResponse.ErrorCode switch
                     {
                         "INVALID_USER_ID" => 400,
@@ -199,7 +199,7 @@ namespace ClashSubManager.Pages.Sub
                     return CreateErrorResponse(_localizer["UserConfigDeletionFailed"], deleteResponse.ErrorCode, statusCode);
                 }
 
-                Console.WriteLine($"User config deleted successfully for user: {UserId}");
+                _logger.LogInformation("User config deleted successfully for user: {UserId}", UserId);
                 
                 // Return success response
                 return CreateJsonResponse(true, deleteResponse.Message);
@@ -207,7 +207,7 @@ namespace ClashSubManager.Pages.Sub
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting user config for user: {UserId}", UserId);
-                Console.WriteLine($"Error deleting user config: {ex.Message}");
+                _logger.LogError("Error deleting user config: {Message}", ex.Message);
                 return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
@@ -224,7 +224,8 @@ namespace ClashSubManager.Pages.Sub
             {
                 // Build validation URL
                 var validationUrl = $"{subscriptionUrl.TrimEnd('/')}/{userId}";
-                Console.WriteLine($"Validating user ID with subscription service: {validationUrl}");
+                _logger.LogInformation("Validating user ID with subscription service: {ValidationUrl}", validationUrl);
+                
                 // Send request to subscription service
                 var response = await _httpClient.GetAsync(validationUrl);
                 
@@ -234,18 +235,18 @@ namespace ClashSubManager.Pages.Sub
                     var contentType = response.Content.Headers.ContentType?.MediaType;
                     if (contentType == "text/yaml" || contentType == "application/x-yaml" || contentType == "text/plain")
                     {
-                        Console.WriteLine($"User ID validation successful: {userId}");
+                        _logger.LogInformation("User ID validation successful: {UserId}", userId);
                         return true;
                     }
                 }
 
-                Console.WriteLine($"User ID validation failed: {userId}, Status: {response.StatusCode}");
+                _logger.LogWarning("User ID validation failed: {UserId}, Status: {StatusCode}", userId, response.StatusCode);
                 return false;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error validating user ID with subscription service: {UserId}", userId);
-                Console.WriteLine($"Error validating user ID: {ex.Message}");
+                _logger.LogError("Error validating user ID: {Message}", ex.Message);
                 return false;
             }
         }

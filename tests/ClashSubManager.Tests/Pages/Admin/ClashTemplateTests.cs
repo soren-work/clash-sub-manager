@@ -1,4 +1,5 @@
 using ClashSubManager.Pages.Admin;
+using ClashSubManager.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -12,17 +13,19 @@ namespace ClashSubManager.Tests.Pages.Admin
     {
         private ClashTemplateModel _model;
         private string _testDataPath;
+        private Mock<IConfigurationService> _mockConfigService;
 
         public ClashTemplateTests()
         {
-            _model = new ClashTemplateModel();
+            _mockConfigService = new Mock<IConfigurationService>();
+            _mockConfigService.Setup(x => x.GetDataPath()).Returns(_testDataPath);
+            
+            _model = new ClashTemplateModel(_mockConfigService.Object);
             _testDataPath = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", "ClashTemplate");
             Directory.CreateDirectory(_testDataPath);
             
-            // Use reflection to set the private _basePath field
-            var basePathField = typeof(ClashTemplateModel).GetField("_basePath", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            basePathField?.SetValue(_model, _testDataPath);
+            // Update mock to return actual test path
+            _mockConfigService.Setup(x => x.GetDataPath()).Returns(_testDataPath);
         }
 
         public void Dispose()

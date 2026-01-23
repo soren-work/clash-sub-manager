@@ -1,20 +1,20 @@
-@page "/admin/default-ips"
+@page "/admin/cloudflare-ip"
 @using ClashSubManager.Models
 @model DefaultIPsModel
 @{
-    ViewData["Title"] = "Preferred IP Management";
+    ViewData["Title"] = @Localizer["PageTitle"];
     Layout = "_Layout";
 }
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-hdd-network"></i> Preferred IP Management</h2>
+        <h2><i class="bi bi-hdd-network"></i> @Localizer["PageTitle"]</h2>
         <div class="d-flex gap-2">
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="refreshData()">
-                <i class="bi bi-arrow-clockwise"></i> Refresh
+                <i class="bi bi-arrow-clockwise"></i> @Localizer["Refresh"]
             </button>
             <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportData()">
-                <i class="bi bi-download"></i> Export
+                <i class="bi bi-download"></i> @Localizer["Export"]
             </button>
         </div>
     </div>
@@ -40,9 +40,9 @@
     <!-- User Selector -->
     <div class="row mb-3">
         <div class="col-md-6">
-            <label asp-for="SelectedUserId" class="form-label">Select User</label>
+            <label asp-for="SelectedUserId" class="form-label">@Localizer["SelectUser"]</label>
             <select asp-for="SelectedUserId" class="form-select" onchange="location.href='?SelectedUserId=' + this.value">
-                <option value="">Global Configuration</option>
+                <option value="">@Localizer["GlobalConfiguration"]</option>
                 @foreach (var user in Model.AvailableUsers)
                 {
                     <option value="@user">@user</option>
@@ -61,19 +61,19 @@
                             <i class="bi @(Model.FileExists ? "bi-check-circle-fill text-success" : "bi-exclamation-circle-fill text-warning")" style="font-size: 1.5rem;"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">File Status</h6>
+                            <h6 class="card-title mb-1">@Localizer["FileStatus"]</h6>
                             <p class="card-text mb-0">
                                 <span class="badge @(Model.FileExists ? "bg-success" : "bg-warning")">
-                                    @(Model.FileExists ? "File exists" : "File does not exist")
+                                    @(Model.FileExists ? Localizer["FileExists"] : Localizer["FileNotExists"])
                                 </span>
                                 @if (Model.FileExists)
                                 {
                                     <span class="ms-2">
-                                        <i class="bi bi-hdd"></i> IP Count: <strong>@Model.IPRecords.Count</strong>
+                                        <i class="bi bi-hdd"></i> @Localizer["IPCount"] <strong>@Model.IPRecords.Count</strong>
                                         @if (Model.IPRecords.Any())
                                         {
                                             <span class="ms-3">
-                                                <i class="bi bi-speedometer2"></i> Average Latency: <strong>@Math.Round(Model.IPRecords.Where(x => x.Latency > 0).DefaultIfEmpty(new IPRecord { Latency = 0 }).Average(x => x.Latency), 2)ms</strong>
+                                                <i class="bi bi-speedometer2"></i> @Localizer["AverageLatency"]: <strong>@Math.Round(Model.IPRecords.Where(x => x.Latency > 0).DefaultIfEmpty(new IPRecord { Latency = 0 }).Average(x => x.Latency), 2)ms</strong>
                                             </span>
                                         }
                                     </span>
@@ -92,16 +92,16 @@
             <form method="post">
                 <input type="hidden" asp-for="SelectedUserId" />
                 <div class="mb-3">
-                    <label asp-for="CSVContent" class="form-label">CSV Content (CloudflareST format supported)</label>
+                    <label asp-for="CSVContent" class="form-label">@Localizer["CSVContent"]</label>
                     <textarea asp-for="CSVContent" class="form-control font-monospace" rows="10" 
-                              placeholder="Please paste CSV content or upload result.csv file..."></textarea>
-                    <div class="form-text">Supports CloudflareST program output result.csv format, file size limited to 10MB</div>
+                              placeholder="@Localizer["CSVContentPlaceholder"]"></textarea>
+                    <div class="form-text">@Localizer["CSVContentHelp"]</div>
                     <span asp-validation-for="CSVContent" class="text-danger"></span>
                 </div>
                 <div class="d-flex gap-2 mb-3">
-                    <button type="submit" asp-page-handler="SetIPs" class="btn btn-primary">Save Configuration</button>
+                    <button type="submit" asp-page-handler="SetIPs" class="btn btn-primary">@Localizer["SaveConfiguration"]</button>
                     <button type="submit" asp-page-handler="DeleteIPs" class="btn btn-danger" 
-                            onclick="return confirm('Are you sure you want to delete this configuration?')">Delete Configuration</button>
+                            onclick="return confirm('@Localizer["DeleteConfirm"]')">@Localizer["DeleteConfiguration"]</button>
                 </div>
             </form>
         </div>
@@ -113,11 +113,11 @@
             <form method="post" enctype="multipart/form-data">
                 <input type="hidden" asp-for="SelectedUserId" />
                 <div class="mb-3">
-                    <label class="form-label">Or Upload CSV File</label>
+                    <label class="form-label">@Localizer["OrUploadCSVFile"]</label>
                     <input type="file" name="file" class="form-control" accept=".csv" />
-                    <div class="form-text">Supports .csv files, maximum 10MB</div>
+                    <div class="form-text">@Localizer["CSVFileHelp"]</div>
                 </div>
-                <button type="submit" asp-page-handler="Upload" class="btn btn-secondary">Upload File</button>
+                <button type="submit" asp-page-handler="Upload" class="btn btn-secondary">@Localizer["UploadFile"]</button>
             </form>
         </div>
     </div>
@@ -127,16 +127,16 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Current IP List (@Model.IPRecords.Count items)</h5>
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> @Localizer["CurrentIPList"] (@Model.IPRecords.Count @Localizer["Items"])</h5>
                     @if (Model.IPRecords.Any())
                     {
                         <div class="d-flex gap-2">
-                            <input type="text" id="ipSearch" class="form-control form-control-sm" placeholder="Search IP..." style="width: 200px;">
+                            <input type="text" id="ipSearch" class="form-control form-control-sm" placeholder="@Localizer["SearchIP"]" style="width: 200px;">
                             <select id="sortBy" class="form-select form-select-sm" style="width: 150px;">
-                                <option value="ip">Sort by IP</option>
-                                <option value="latency">Sort by Latency</option>
-                                <option value="loss">Sort by Loss Rate</option>
-                                <option value="speed">Sort by Speed</option>
+                                <option value="ip">@Localizer["SortByIP"]</option>
+                                <option value="latency">@Localizer["SortByLatency"]</option>
+                                <option value="loss">@Localizer["SortByLossRate"]</option>
+                                <option value="speed">@Localizer["SortBySpeed"]</option>
                             </select>
                         </div>
                     }
@@ -148,14 +148,14 @@
                             <table class="table table-striped table-hover" id="ipTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th><i class="bi bi-hash"></i> ID</th>
-                                        <th><i class="bi bi-globe"></i> IP Address</th>
-                                        <th><i class="bi bi-arrow-up-circle"></i> Sent</th>
-                                        <th><i class="bi bi-arrow-down-circle"></i> Received</th>
-                                        <th><i class="bi bi-exclamation-triangle"></i> Packet Loss Rate</th>
-                                        <th><i class="bi bi-speedometer2"></i> Average Latency</th>
-                                        <th><i class="bi bi-download"></i> Download Speed</th>
-                                        <th><i class="bi bi-star"></i> Quality</th>
+                                        <th><i class="bi bi-hash"></i> @Localizer["ID"]</th>
+                                        <th><i class="bi bi-globe"></i> @Localizer["IPAddress"]</th>
+                                        <th><i class="bi bi-arrow-up-circle"></i> @Localizer["Sent"]</th>
+                                        <th><i class="bi bi-arrow-down-circle"></i> @Localizer["Received"]</th>
+                                        <th><i class="bi bi-exclamation-triangle"></i> @Localizer["PacketLossRate"]</th>
+                                        <th><i class="bi bi-speedometer2"></i> @Localizer["AverageLatency"]</th>
+                                        <th><i class="bi bi-download"></i> @Localizer["DownloadSpeed"]</th>
+                                        <th><i class="bi bi-star"></i> @Localizer["Quality"]</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -189,8 +189,8 @@
                     {
                         <div class="text-center text-muted py-4">
                             <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-                            <p class="mt-2">No IP configuration available</p>
-                            <small>Upload a CSV file or paste CSV content to get started</small>
+                            <p class="mt-2">@Localizer["NoIPConfiguration"]</p>
+                            <small>@Localizer["UploadCSVHint"]</small>
                         </div>
                     }
                 </div>

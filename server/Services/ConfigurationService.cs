@@ -67,13 +67,13 @@ namespace ClashSubManager.Services
 
                 var result = serializer.Serialize(rootNode);
                 
-                Console.WriteLine($"Configuration generated successfully, total IPs: {defaultIPs.Count + dedicatedIPs.Count}");
+                _logger.LogInformation("Configuration generated successfully, total IPs: {TotalIPs}", defaultIPs.Count + dedicatedIPs.Count);
                 return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating subscription configuration");
-                Console.WriteLine($"Error generating configuration: {ex.Message}");
+                _logger.LogError("Error generating configuration: {Message}", ex.Message);
                 throw;
             }
         }
@@ -87,20 +87,20 @@ namespace ClashSubManager.Services
         {
             try
             {
-                Console.WriteLine($"Fetching remote subscription from: {subscriptionUrl}");
+                _logger.LogInformation("Fetching remote subscription from: {SubscriptionUrl}", subscriptionUrl);
                 
                 var response = await _httpClient.GetAsync(subscriptionUrl);
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Remote subscription fetched successfully, length: {content.Length}");
+                _logger.LogInformation("Remote subscription fetched successfully, length: {Length}", content.Length);
                 
                 return content;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching remote subscription from: {Url}", subscriptionUrl);
-                Console.WriteLine($"Error fetching remote subscription: {ex.Message}");
+                _logger.LogError("Error fetching remote subscription: {Message}", ex.Message);
                 
                 // Return empty content as fallback
                 return string.Empty;
@@ -130,7 +130,7 @@ namespace ClashSubManager.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error parsing remote YAML configuration");
-                Console.WriteLine($"Error parsing remote YAML: {ex.Message}");
+                _logger.LogError("Error parsing remote YAML: {Message}", ex.Message);
                 return new YamlMappingNode();
             }
         }
@@ -233,7 +233,7 @@ namespace ClashSubManager.Services
                 
                 if (!allIPs.Any())
                 {
-                    Console.WriteLine("No IP records available for extension");
+                    _logger.LogWarning("No IP records available for extension");
                     return;
                 }
 
@@ -286,12 +286,12 @@ namespace ClashSubManager.Services
                 // Replace proxies node
                 rootNode.Children["proxies"] = new YamlSequenceNode(extendedProxies);
                 
-                Console.WriteLine($"Extended proxies with {allIPs.Count} IP addresses, total proxies: {extendedProxies.Count}");
+                _logger.LogInformation("Extended proxies with {AllIPsCount} IP addresses, total proxies: {TotalProxies}", allIPs.Count, extendedProxies.Count);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error extending IP addresses");
-                Console.WriteLine($"Error extending IPs: {ex.Message}");
+                _logger.LogError("Error extending IPs: {Message}", ex.Message);
             }
         }
 

@@ -1,20 +1,18 @@
 using ClashSubManager.Models;
 using ClashSubManager.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text;
 
 namespace ClashSubManager.Pages.Admin
 {
-    [Authorize(Roles = "Admin")]
     public class UserConfigModel : PageModel
     {
         private readonly IUserManagementService _userManagementService;
         private readonly IConfigurationService _configurationService;
 
         [BindProperty(SupportsGet = true)]
-        public string SelectedUserId { get; set; } = string.Empty;
+        public string? SelectedUserId { get; set; }
 
         public List<string> AvailableUsers { get; set; } = new();
         public UserConfigurationInfo UserConfig { get; set; } = new();

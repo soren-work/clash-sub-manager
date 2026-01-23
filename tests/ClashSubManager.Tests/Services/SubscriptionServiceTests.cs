@@ -13,7 +13,7 @@ namespace ClashSubManager.Tests.Services
     /// </summary>
     public class SubscriptionServiceTests
     {
-        private readonly Mock<IStringLocalizer<SubscriptionService>> _mockLocalizer;
+        private readonly Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
         private readonly Mock<IUserManagementService> _mockUserManagementService;
         private readonly Mock<FileService> _mockFileService;
         private readonly Mock<ValidationService> _mockValidationService;
@@ -23,7 +23,7 @@ namespace ClashSubManager.Tests.Services
 
         public SubscriptionServiceTests()
         {
-            _mockLocalizer = new Mock<IStringLocalizer<SubscriptionService>>();
+            _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
             _mockUserManagementService = new Mock<IUserManagementService>();
             var mockConfigService = new Mock<IConfigurationService>();
             mockConfigService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());

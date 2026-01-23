@@ -1,12 +1,12 @@
 @page "/admin/user-config"
 @model UserConfigModel
 @{
-    ViewData["Title"] = "User Configuration Management";
+    ViewData["Title"] = Localizer["UserConfigurationManagement"];
     Layout = "_Layout";
 }
 
 <div class="container-fluid">
-    <h2>User Configuration Management</h2>
+    <h2>@Localizer["UserConfigurationManagement"]</h2>
     
     @if (!string.IsNullOrEmpty(TempData["Success"] as string))
     {
@@ -29,9 +29,9 @@
     <!-- User Selector -->
     <div class="row mb-3">
         <div class="col-md-6">
-            <label asp-for="SelectedUserId" class="form-label">Select User</label>
+            <label asp-for="SelectedUserId" class="form-label">@Localizer["SelectUser"]</label>
             <select asp-for="SelectedUserId" class="form-select" onchange="location.href='?SelectedUserId=' + this.value">
-                <option value="">-- Select User --</option>
+                <option value="">@Localizer["SelectUserPlaceholder"]</option>
                 @foreach (var user in Model.AvailableUsers)
                 {
                     <option value="@user">@user</option>
@@ -47,26 +47,26 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Configuration Overview for @Model.SelectedUserId</h5>
+                        <h5 class="card-title mb-0">@Localizer["ConfigurationOverview"] @Model.SelectedUserId</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <h6>Directory Status</h6>
+                                <h6>@Localizer["DirectoryStatus"]</h6>
                                 <p class="@(Model.UserConfig.DirectoryExists ? "text-success" : "text-danger")">
-                                    @(Model.UserConfig.DirectoryExists ? "Directory exists" : "Directory does not exist")
+                                    @(Model.UserConfig.DirectoryExists ? Localizer["DirectoryExists"] : Localizer["DirectoryNotExists"])
                                 </p>
                             </div>
                             <div class="col-md-6">
-                                <h6>Configuration Files</h6>
+                                <h6>@Localizer["ConfigurationFiles"]</h6>
                                 <ul class="list-unstyled">
                                     <li class="@(Model.UserConfig.HasIPConfiguration ? "text-success" : "text-muted")">
                                         <i class="@(Model.UserConfig.HasIPConfiguration ? "bi bi-check-circle" : "bi bi-x-circle")"></i>
-                                        IP Configuration (cloudflare-ip.csv)
+                                        @Localizer["IPConfiguration"]
                                     </li>
                                     <li class="@(Model.UserConfig.HasTemplate ? "text-success" : "text-muted")">
                                         <i class="@(Model.UserConfig.HasTemplate ? "bi bi-check-circle" : "bi bi-x-circle")"></i>
-                                        Clash Template (clash.yaml)
+                                        @Localizer["ClashTemplateFile"]
                                     </li>
                                 </ul>
                             </div>
@@ -83,24 +83,24 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h6 class="card-title mb-0">IP Configuration Details</h6>
+                            <h6 class="card-title mb-0">@Localizer["IPConfigurationDetails"]</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-3">
-                                    <strong>File Path:</strong><br>
+                                    <strong>@Localizer["FilePath"]</strong><br>
                                     <code>@Model.UserConfig.IPFilePath</code>
                                 </div>
                                 <div class="col-md-3">
-                                    <strong>File Size:</strong><br>
+                                    <strong>@Localizer["FileSize"]</strong><br>
                                     @FormatFileSize(Model.UserConfig.IPFileSize)
                                 </div>
                                 <div class="col-md-3">
-                                    <strong>Last Modified:</strong><br>
+                                    <strong>@Localizer["LastModified"]</strong><br>
                                     @Model.UserConfig.IPFileLastModified.ToString("yyyy-MM-dd HH:mm:ss")
                                 </div>
                                 <div class="col-md-3">
-                                    <strong>IP Count:</strong><br>
+                                    <strong>@Localizer["IPCount"]</strong><br>
                                     @Model.UserConfig.IPCount
                                 </div>
                             </div>
@@ -117,20 +117,20 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h6 class="card-title mb-0">Template Configuration Details</h6>
+                            <h6 class="card-title mb-0">@Localizer["TemplateConfigurationDetails"]</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <strong>File Path:</strong><br>
+                                    <strong>@Localizer["FilePath"]</strong><br>
                                     <code>@Model.UserConfig.TemplateFilePath</code>
                                 </div>
                                 <div class="col-md-4">
-                                    <strong>File Size:</strong><br>
+                                    <strong>@Localizer["FileSize"]</strong><br>
                                     @FormatFileSize(Model.UserConfig.TemplateFileSize)
                                 </div>
                                 <div class="col-md-4">
-                                    <strong>Last Modified:</strong><br>
+                                    <strong>@Localizer["LastModified"]</strong><br>
                                     @Model.UserConfig.TemplateFileLastModified.ToString("yyyy-MM-dd HH:mm:ss")
                                 </div>
                             </div>
@@ -145,15 +145,15 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <h6>Actions</h6>
+                        <h6>@Localizer["Actions"]</h6>
                         <div class="d-flex gap-2">
-                            <a href="/admin/default-ips?SelectedUserId=@Model.SelectedUserId" class="btn btn-primary">Manage IP Configuration</a>
-                            <a href="/admin/clash-template?SelectedUserId=@Model.SelectedUserId" class="btn btn-info">Manage Template</a>
+                            <a href="/admin/default-ips?SelectedUserId=@Model.SelectedUserId" class="btn btn-primary">@Localizer["ManageIPConfiguration"]</a>
+                            <a href="/admin/clash-template?SelectedUserId=@Model.SelectedUserId" class="btn btn-info">@Localizer["ManageTemplate"]</a>
                             <form method="post" style="display: inline;">
                                 <input type="hidden" asp-for="SelectedUserId" />
                                 <button type="submit" asp-page-handler="DeleteUserConfig" class="btn btn-danger" 
-                                        onclick="return confirm('Are you sure you want to delete all configuration for this user?')">
-                                    Delete All Configuration
+                                        onclick="return confirm('@Localizer["DeleteAllConfigurationConfirm"]')">
+                                    @Localizer["DeleteAllConfiguration"]
                                 </button>
                             </form>
                         </div>
@@ -168,14 +168,14 @@
         <div class="row">
             <div class="col-12">
                 <div class="alert alert-info">
-                    <h5>User Configuration Management</h5>
-                    <p>Please select a user from the dropdown above to view and manage their configuration files.</p>
-                    <p>This interface allows you to:</p>
+                    <h5>@Localizer["UserConfigurationManagement"]</h5>
+                    <p>@Localizer["SelectUserInstruction"]</p>
+                    <p>@Localizer["InterfaceDescription"]</p>
                     <ul>
-                        <li>View user-specific configuration status</li>
-                        <li>Check file existence and details</li>
-                        <li>Navigate to specific management pages</li>
-                        <li>Delete all user configuration if needed</li>
+                        <li>@Localizer["ViewUserSpecificConfiguration"]</li>
+                        <li>@Localizer["CheckFileExistence"]</li>
+                        <li>@Localizer["NavigateToManagementPages"]</li>
+                        <li>@Localizer["DeleteAllUserConfiguration"]</li>
                     </ul>
                 </div>
             </div>

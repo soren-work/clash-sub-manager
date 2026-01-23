@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,20 +9,19 @@ namespace ClashSubManager.Middleware
         private readonly RequestDelegate _next;
         private readonly string _hmacKey;
 
-        public AdminAuthMiddleware(RequestDelegate next)
+        public AdminAuthMiddleware(RequestDelegate next, IConfiguration configuration)
         {
             _next = next;
-            _hmacKey = Environment.GetEnvironmentVariable("COOKIE_SECRET_KEY") ?? "default-key";
+            _hmacKey = configuration["CookieSecretKey"] ?? "default-key";
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var path = context.Request.Path.Value;
+            var path = context.Request.Path.Value?.ToLowerInvariant();
             
-            if (path?.StartsWith("/admin", StringComparison.OrdinalIgnoreCase) == true)
+            if (path?.StartsWith("/admin") == true)
             {
-                if (path.Equals("/admin/login", StringComparison.OrdinalIgnoreCase) ||
-                    path.Equals("/admin/logout", StringComparison.OrdinalIgnoreCase))
+                if (path == "/admin/login" || path == "/admin/logout")
                 {
                     await _next(context);
                     return;
@@ -30,7 +30,7 @@ namespace ClashSubManager.Middleware
                 var sessionCookie = context.Request.Cookies["AdminSession"];
                 if (string.IsNullOrEmpty(sessionCookie) || !ValidateSessionCookie(sessionCookie))
                 {
-                    context.Response.Redirect("/admin/login");
+                    context.Response.Redirect("/Admin/Login");
                     return;
                 }
             }

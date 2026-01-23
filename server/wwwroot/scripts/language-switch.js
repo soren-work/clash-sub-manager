@@ -1,8 +1,9 @@
 function switchLanguage(lang) {
-    document.cookie = `language=${lang}; path=/; max-age=31536000`;
+    document.cookie = `.AspNetCore.Culture=c=${lang}|uic=${lang}; path=/; max-age=31536000`;
     location.reload();
 }
 
 function getCurrentLanguage() {
-    return document.cookie.replace(/(?:(?:^|.*;\s*)language\s*\=\s*([^;]*).*$)|^.*$/, "$1") || 'en';
+    const match = document.cookie.match(/\.AspNetCore\.Culture=c=([^|]+)\|/);
+    return match ? match[1] : 'en-US';
 }

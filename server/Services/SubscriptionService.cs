@@ -9,7 +9,7 @@ namespace ClashSubManager.Services
     /// </summary>
     public class SubscriptionService
     {
-        private readonly IStringLocalizer<SubscriptionService> _localizer;
+        private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly IUserManagementService _userManagementService;
         private readonly FileService _fileService;
         private readonly ValidationService _validationService;
@@ -17,7 +17,7 @@ namespace ClashSubManager.Services
         private readonly ILogger<SubscriptionService> _logger;
 
         public SubscriptionService(
-            IStringLocalizer<SubscriptionService> localizer,
+            IStringLocalizer<SharedResources> localizer,
             IUserManagementService userManagementService,
             FileService fileService,
             ValidationService validationService,
@@ -44,7 +44,7 @@ namespace ClashSubManager.Services
                 // Input validation
                 if (!_validationService.ValidateUserId(userId))
                 {
-                    Console.WriteLine($"Invalid user ID: {userId}");
+                    _logger.LogWarning("Invalid user ID: {UserId}", userId);
                     return SubscriptionResponse.CreateError(
                         _localizer["InvalidUserId"], 
                         "INVALID_USER_ID");
@@ -57,7 +57,7 @@ namespace ClashSubManager.Services
                 var subscriptionUrl = await _userManagementService.GetUserSubscriptionUrlAsync(userId);
                 if (string.IsNullOrEmpty(subscriptionUrl))
                 {
-                    Console.WriteLine($"Subscription URL template not configured for user: {userId}");
+                    _logger.LogWarning("Subscription URL template not configured for user: {UserId}", userId);
                     return SubscriptionResponse.CreateError(
                         _localizer["SubscriptionUrlTemplateNotConfigured"], 
                         "SUBSCRIPTION_URL_TEMPLATE_NOT_CONFIGURED");
@@ -67,7 +67,7 @@ namespace ClashSubManager.Services
                 var template = await _fileService.LoadClashTemplateAsync();
                 if (string.IsNullOrEmpty(template))
                 {
-                    Console.WriteLine("Clash template not found");
+                    _logger.LogWarning("Clash template not found");
                     return SubscriptionResponse.CreateError(
                         _localizer["TemplateNotFound"], 
                         "TEMPLATE_NOT_FOUND");
@@ -86,13 +86,12 @@ namespace ClashSubManager.Services
                     defaultIPs, 
                     dedicatedIPs);
 
-                Console.WriteLine($"Subscription generated successfully for user: {userId}");
+                _logger.LogInformation("Subscription generated successfully for user: {UserId}", userId);
                 return SubscriptionResponse.CreateSuccessFromYaml(yamlContent);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting subscription for user: {UserId}", userId);
-                Console.WriteLine($"Error getting subscription: {ex.Message}");
                 return SubscriptionResponse.CreateError(
                     _localizer["InternalServerError"], 
                     "INTERNAL_SERVER_ERROR");
@@ -112,7 +111,7 @@ namespace ClashSubManager.Services
                 // Input validation
                 if (!_validationService.ValidateUserId(userId))
                 {
-                    Console.WriteLine($"Invalid user ID: {userId}");
+                    _logger.LogWarning("Invalid user ID: {UserId}", userId);
                     return SubscriptionResponse.CreateError(
                         _localizer["InvalidUserId"], 
                         "INVALID_USER_ID");
@@ -122,7 +121,7 @@ namespace ClashSubManager.Services
                 var ipRecords = _validationService.ParseCSVContent(csvContent);
                 if (!ipRecords.Any())
                 {
-                    Console.WriteLine($"No valid IP records found in CSV content");
+                    _logger.LogWarning("No valid IP records found in CSV content");
                     return SubscriptionResponse.CreateError(
                         _localizer["NoValidIPRecords"], 
                         "NO_VALID_IP_RECORDS");
@@ -134,14 +133,13 @@ namespace ClashSubManager.Services
                 // Save user-specific IP list
                 await _fileService.SaveUserDedicatedIPsAsync(userId, ipRecords);
 
-                Console.WriteLine($"User IPs updated successfully for user: {userId}, count: {ipRecords.Count}");
+                _logger.LogInformation("User IPs updated successfully for user: {UserId}, count: {Count}", userId, ipRecords.Count);
                 return SubscriptionResponse.CreateSuccess(
                     _localizer["UserIPsUpdated"].ToString());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user IPs for user: {UserId}", userId);
-                Console.WriteLine($"Error updating user IPs: {ex.Message}");
                 return SubscriptionResponse.CreateError(
                     _localizer["InternalServerError"], 
                     "INTERNAL_SERVER_ERROR");
@@ -160,7 +158,7 @@ namespace ClashSubManager.Services
                 // Input validation
                 if (!_validationService.ValidateUserId(userId))
                 {
-                    Console.WriteLine($"Invalid user ID: {userId}");
+                    _logger.LogWarning("Invalid user ID: {UserId}", userId);
                     return SubscriptionResponse.CreateError(
                         _localizer["InvalidUserId"], 
                         "INVALID_USER_ID");
@@ -170,20 +168,19 @@ namespace ClashSubManager.Services
                 var deleted = await _userManagementService.DeleteUserAsync(userId);
                 if (!deleted)
                 {
-                    Console.WriteLine($"User not found for deletion: {userId}");
+                    _logger.LogWarning("User not found for deletion: {UserId}", userId);
                     return SubscriptionResponse.CreateError(
                         _localizer["UserNotFound"], 
                         "USER_NOT_FOUND");
                 }
 
-                Console.WriteLine($"User config deleted successfully for user: {userId}");
+                _logger.LogInformation("User config deleted successfully for user: {UserId}", userId);
                 return SubscriptionResponse.CreateSuccess(
                     _localizer["UserConfigDeleted"].ToString());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting user config for user: {UserId}", userId);
-                Console.WriteLine($"Error deleting user config: {ex.Message}");
                 return SubscriptionResponse.CreateError(
                     _localizer["InternalServerError"], 
                     "INTERNAL_SERVER_ERROR");
