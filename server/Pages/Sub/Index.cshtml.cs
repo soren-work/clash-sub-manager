@@ -14,7 +14,7 @@ namespace ClashSubManager.Pages.Sub
     {
         private readonly SubscriptionService _subscriptionService;
         private readonly ValidationService _validationService;
-        private readonly FileService _fileService;
+        private readonly IUserManagementService _userManagementService;
         private readonly IStringLocalizer<IndexModel> _localizer;
         private readonly ILogger<IndexModel> _logger;
         private readonly HttpClient _httpClient;
@@ -22,14 +22,14 @@ namespace ClashSubManager.Pages.Sub
         public IndexModel(
             SubscriptionService subscriptionService,
             ValidationService validationService,
-            FileService fileService,
+            IUserManagementService userManagementService,
             IStringLocalizer<IndexModel> localizer,
             ILogger<IndexModel> logger,
             HttpClient httpClient)
         {
             _subscriptionService = subscriptionService;
             _validationService = validationService;
-            _fileService = fileService;
+            _userManagementService = userManagementService;
             _localizer = localizer;
             _logger = logger;
             _httpClient = httpClient;
@@ -62,15 +62,15 @@ namespace ClashSubManager.Pages.Sub
                 }
 
                 // Validate user ID - verify through actual subscription address
-                var userConfig = await _fileService.LoadUserConfigAsync(UserId);
-                if (userConfig == null || string.IsNullOrEmpty(userConfig.SubscriptionUrl))
+                var subscriptionUrl = await _userManagementService.GetUserSubscriptionUrlAsync(UserId);
+                if (string.IsNullOrEmpty(subscriptionUrl))
                 {
-                    Console.WriteLine($"User config not found or subscription URL empty: {UserId}");
-                    return CreateErrorResponse(_localizer["UserConfigNotFound"], "USER_CONFIG_NOT_FOUND", 404);
+                    Console.WriteLine($"Subscription URL template not configured for user: {UserId}");
+                    return CreateErrorResponse(_localizer["SubscriptionUrlTemplateNotConfigured"], "SUBSCRIPTION_URL_TEMPLATE_NOT_CONFIGURED", 404);
                 }
 
                 // Validate user ID through actual subscription service
-                var isValidUser = await ValidateUserIdWithSubscriptionService(userConfig.SubscriptionUrl, UserId);
+                var isValidUser = await ValidateUserIdWithSubscriptionService(subscriptionUrl, UserId);
                 if (!isValidUser)
                 {
                     Console.WriteLine($"User ID validation failed: {UserId}");
@@ -225,7 +225,6 @@ namespace ClashSubManager.Pages.Sub
                 // Build validation URL
                 var validationUrl = $"{subscriptionUrl.TrimEnd('/')}/{userId}";
                 Console.WriteLine($"Validating user ID with subscription service: {validationUrl}");
-
                 // Send request to subscription service
                 var response = await _httpClient.GetAsync(validationUrl);
                 

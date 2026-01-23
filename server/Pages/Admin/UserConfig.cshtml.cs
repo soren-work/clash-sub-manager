@@ -1,4 +1,5 @@
 using ClashSubManager.Models;
+using ClashSubManager.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,13 +10,22 @@ namespace ClashSubManager.Pages.Admin
     [Authorize(Roles = "Admin")]
     public class UserConfigModel : PageModel
     {
-        private readonly string _basePath = "/app/data";
+        private readonly IUserManagementService _userManagementService;
+        private readonly IConfigurationService _configurationService;
 
         [BindProperty(SupportsGet = true)]
         public string SelectedUserId { get; set; } = string.Empty;
 
         public List<string> AvailableUsers { get; set; } = new();
         public UserConfigurationInfo UserConfig { get; set; } = new();
+
+        public UserConfigModel(
+            IUserManagementService userManagementService,
+            IConfigurationService configurationService)
+        {
+            _userManagementService = userManagementService;
+            _configurationService = configurationService;
+        }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -33,7 +43,7 @@ namespace ClashSubManager.Pages.Admin
                 return Page();
             }
 
-            var result = await DeleteUserConfigurationAsync(SelectedUserId);
+            var result = await _userManagementService.DeleteUserAsync(SelectedUserId);
             
             if (result)
             {
@@ -54,15 +64,7 @@ namespace ClashSubManager.Pages.Admin
         {
             try
             {
-                var usersPath = Path.Combine(_basePath, "users.txt");
-                if (System.IO.File.Exists(usersPath))
-                {
-                    var content = await System.IO.File.ReadAllTextAsync(usersPath, Encoding.UTF8);
-                    AvailableUsers = content.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-                                        .Select(line => line.Trim())
-                                        .Where(line => !string.IsNullOrEmpty(line))
-                                        .ToList();
-                }
+                AvailableUsers = await _userManagementService.GetAllUsersAsync();
             }
             catch
             {
@@ -80,7 +82,8 @@ namespace ClashSubManager.Pages.Admin
 
             try
             {
-                var userDir = Path.Combine(_basePath, SelectedUserId);
+                var dataPath = _configurationService.GetDataPath();
+                var userDir = Path.Combine(dataPath, SelectedUserId);
                 if (!Directory.Exists(userDir))
                 {
                     UserConfig = new UserConfigurationInfo
@@ -128,23 +131,6 @@ namespace ClashSubManager.Pages.Admin
             catch
             {
                 UserConfig = new UserConfigurationInfo { UserId = SelectedUserId };
-            }
-        }
-
-        private async Task<bool> DeleteUserConfigurationAsync(string userId)
-        {
-            try
-            {
-                var userDir = Path.Combine(_basePath, userId);
-                if (System.IO.Directory.Exists(userDir))
-                {
-                    System.IO.Directory.Delete(userDir, true);
-                }
-                return true;
-            }
-            catch
-            {
-                return false;
             }
         }
     }

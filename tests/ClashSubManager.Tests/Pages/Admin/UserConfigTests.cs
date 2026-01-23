@@ -1,7 +1,9 @@
 using ClashSubManager.Pages.Admin;
 using ClashSubManager.Models;
+using ClashSubManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Moq;
 using Xunit;
 
 namespace ClashSubManager.Tests.Pages.Admin
@@ -10,17 +12,18 @@ namespace ClashSubManager.Tests.Pages.Admin
     {
         private UserConfigModel _model;
         private string _testDataPath;
+        private Mock<IUserManagementService> _mockUserManagementService;
+        private Mock<IConfigurationService> _mockConfigurationService;
 
         public UserConfigTests()
         {
-            _model = new UserConfigModel();
+            _mockUserManagementService = new Mock<IUserManagementService>();
+            _mockConfigurationService = new Mock<IConfigurationService>();
+            _mockConfigurationService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());
+            
+            _model = new UserConfigModel(_mockUserManagementService.Object, _mockConfigurationService.Object);
             _testDataPath = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", "UserConfig");
             Directory.CreateDirectory(_testDataPath);
-            
-            // Use reflection to set the private _basePath field
-            var basePathField = typeof(UserConfigModel).GetField("_basePath", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            basePathField?.SetValue(_model, _testDataPath);
         }
 
         public void Dispose()

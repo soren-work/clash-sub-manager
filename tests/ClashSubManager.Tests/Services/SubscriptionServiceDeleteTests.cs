@@ -14,24 +14,27 @@ namespace ClashSubManager.Tests.Services
     public class SubscriptionServiceDeleteTests
     {
         private readonly Mock<IStringLocalizer<SubscriptionService>> _mockLocalizer;
+        private readonly Mock<IUserManagementService> _mockUserManagementService;
         private readonly Mock<FileService> _mockFileService;
         private readonly Mock<ValidationService> _mockValidationService;
-        private readonly Mock<ConfigurationService> _mockConfigurationService;
+        private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly Mock<ILogger<SubscriptionService>> _mockLogger;
         private readonly SubscriptionService _subscriptionService;
 
         public SubscriptionServiceDeleteTests()
         {
             _mockLocalizer = new Mock<IStringLocalizer<SubscriptionService>>();
+            _mockUserManagementService = new Mock<IUserManagementService>();
             var mockConfigService = new Mock<IConfigurationService>();
             mockConfigService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());
             _mockFileService = new Mock<FileService>(mockConfigService.Object, Mock.Of<ILogger<FileService>>());
             _mockValidationService = new Mock<ValidationService>(Mock.Of<ILogger<ValidationService>>());
-            _mockConfigurationService = new Mock<ConfigurationService>(Mock.Of<ILogger<ConfigurationService>>(), Mock.Of<HttpClient>());
+            _mockConfigurationService = new Mock<IConfigurationService>();
             _mockLogger = new Mock<ILogger<SubscriptionService>>();
 
             _subscriptionService = new SubscriptionService(
                 _mockLocalizer.Object,
+                _mockUserManagementService.Object,
                 _mockFileService.Object,
                 _mockValidationService.Object,
                 _mockConfigurationService.Object,
@@ -56,21 +59,21 @@ namespace ClashSubManager.Tests.Services
         }
 
         [Fact]
-        public async Task DeleteUserConfigAsync_UserConfigNotFound_ReturnsError()
+        public async Task DeleteUserConfigAsync_UserNotFound_ReturnsError()
         {
             // Arrange
             var userId = "test-user";
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
-            _mockFileService.Setup(x => x.DeleteUserConfigAsync(userId)).ReturnsAsync(false);
-            _mockLocalizer.Setup(x => x["UserConfigNotFound"]).Returns(new LocalizedString("UserConfigNotFound", "User config not found", false));
+            _mockUserManagementService.Setup(x => x.DeleteUserAsync(userId)).ReturnsAsync(false);
+            _mockLocalizer.Setup(x => x["UserNotFound"]).Returns(new LocalizedString("UserNotFound", "User not found", false));
 
             // Act
             var result = await _subscriptionService.DeleteUserConfigAsync(userId);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("User config not found", result.Message);
-            Assert.Equal("USER_CONFIG_NOT_FOUND", result.ErrorCode);
+            Assert.Equal("User not found", result.Message);
+            Assert.Equal("USER_NOT_FOUND", result.ErrorCode);
         }
 
         [Fact]
@@ -79,7 +82,7 @@ namespace ClashSubManager.Tests.Services
             // Arrange
             var userId = "test-user";
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
-            _mockFileService.Setup(x => x.DeleteUserConfigAsync(userId)).ReturnsAsync(true);
+            _mockUserManagementService.Setup(x => x.DeleteUserAsync(userId)).ReturnsAsync(true);
             _mockLocalizer.Setup(x => x["UserConfigDeleted"]).Returns(new LocalizedString("UserConfigDeleted", "User config deleted successfully", false));
 
             // Act
@@ -88,7 +91,7 @@ namespace ClashSubManager.Tests.Services
             // Assert
             Assert.True(result.Success);
             Assert.Equal("User config deleted successfully", result.Message);
-            _mockFileService.Verify(x => x.DeleteUserConfigAsync(userId), Times.Once);
+            _mockUserManagementService.Verify(x => x.DeleteUserAsync(userId), Times.Once);
         }
 
         [Fact]
@@ -97,7 +100,7 @@ namespace ClashSubManager.Tests.Services
             // Arrange
             var userId = "test-user";
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
-            _mockFileService.Setup(x => x.DeleteUserConfigAsync(userId)).ThrowsAsync(new Exception("Test exception"));
+            _mockUserManagementService.Setup(x => x.DeleteUserAsync(userId)).ThrowsAsync(new Exception("Test exception"));
             _mockLocalizer.Setup(x => x["InternalServerError"]).Returns(new LocalizedString("InternalServerError", "Internal server error", false));
 
             // Act

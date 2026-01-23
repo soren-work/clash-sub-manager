@@ -25,84 +25,108 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Load user configuration
+        /// Load user-specific IP list
         /// </summary>
         /// <param name="userId">User ID</param>
-        /// <returns>User configuration or null</returns>
-        public virtual async Task<UserConfig?> LoadUserConfigAsync(string userId)
+        /// <returns>IP record list</returns>
+        public virtual async Task<List<IPRecord>> LoadUserDedicatedIPsAsync(string userId)
         {
             try
             {
                 var userDir = Path.Combine(_dataPath, userId);
-                var configFile = Path.Combine(userDir, "config.json");
+                var csvFile = Path.Combine(userDir, "cloudflare-ip.csv");
+                
+                if (!File.Exists(csvFile))
+                    return new List<IPRecord>();
 
-                if (!File.Exists(configFile))
-                    return null;
+                var csvLines = await File.ReadAllLinesAsync(csvFile);
+                var ipRecords = new List<IPRecord>();
 
-                var json = await File.ReadAllTextAsync(configFile);
-                return JsonSerializer.Deserialize<UserConfig>(json);
+                foreach (var line in csvLines)
+                {
+                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                        continue;
+
+                    var parts = line.Split(',');
+                    if (parts.Length >= 4)
+                    {
+                        var ipRecord = new IPRecord
+                        {
+                            IPAddress = parts[0].Trim(),
+                            Port = int.TryParse(parts[1].Trim(), out var port) ? port : 443,
+                            PacketLoss = decimal.TryParse(parts[2].Trim(), out var loss) ? loss : 0,
+                            Latency = decimal.TryParse(parts[3].Trim(), out var latency) ? latency : 0
+                        };
+
+                        if (ipRecord.IsValid())
+                        {
+                            ipRecords.Add(ipRecord);
+                        }
+                    }
+                }
+
+                return ipRecords;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading user config for user: {UserId}", userId);
-                return null;
+                _logger.LogError(ex, "Error loading user dedicated IPs for user: {UserId}", userId);
+                return new List<IPRecord>();
             }
         }
 
         /// <summary>
-        /// Save user configuration
+        /// Save user-specific IP list
         /// </summary>
-        /// <param name="userConfig">User configuration</param>
+        /// <param name="userId">User ID</param>
+        /// <param name="ipRecords">IP record list</param>
         /// <returns>Operation result</returns>
-        public virtual async Task<bool> SaveUserConfigAsync(UserConfig userConfig)
+        public virtual async Task<bool> SaveUserDedicatedIPsAsync(string userId, List<IPRecord> ipRecords)
         {
             try
             {
-                var userDir = Path.Combine(_dataPath, userConfig.UserId);
-                var configFile = Path.Combine(userDir, "config.json");
+                var userDir = Path.Combine(_dataPath, userId);
+                var csvFile = Path.Combine(userDir, "cloudflare-ip.csv");
 
                 // Create user directory
                 Directory.CreateDirectory(userDir);
-
-                // Serialize configuration
-                var json = JsonSerializer.Serialize(userConfig, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
-
-                // Atomic write: write to temp file first, then replace
-                var tempFile = configFile + ".tmp";
-                await File.WriteAllTextAsync(tempFile, json);
                 
-                // Replace original file
-                File.Move(tempFile, configFile, true);
+                var csvLines = ipRecords.Select(ip => 
+                    $"{ip.IPAddress},{ip.Port},{ip.PacketLoss},{ip.Latency}");
+
+                var csvContent = string.Join(Environment.NewLine, csvLines);
+                
+                // Atomic write
+                var tempFile = csvFile + ".tmp";
+                await File.WriteAllTextAsync(tempFile, csvContent);
+                
+                File.Move(tempFile, csvFile, true);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving user config for user: {UserId}", userConfig.UserId);
+                _logger.LogError(ex, "Error saving user dedicated IPs for user: {UserId}", userId);
                 return false;
             }
         }
 
         /// <summary>
-        /// Delete user configuration
+        /// Delete user-specific IP list
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Whether deletion was successful</returns>
-        public virtual async Task<bool> DeleteUserConfigAsync(string userId)
+        public virtual async Task<bool> DeleteUserDedicatedIPsAsync(string userId)
         {
             try
             {
                 var userDir = Path.Combine(_dataPath, userId);
-                var configFile = Path.Combine(userDir, "config.json");
+                var csvFile = Path.Combine(userDir, "cloudflare-ip.csv");
 
-                if (!File.Exists(configFile))
+                if (!File.Exists(csvFile))
                     return false;
 
                 // Delete file
-                File.Delete(configFile);
+                File.Delete(csvFile);
 
                 // Try to delete user directory (if empty)
                 try
@@ -122,7 +146,7 @@ namespace ClashSubManager.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting user config for user: {UserId}", userId);
+                _logger.LogError(ex, "Error deleting user dedicated IPs for user: {UserId}", userId);
                 return false;
             }
         }

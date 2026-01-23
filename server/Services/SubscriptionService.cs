@@ -10,19 +10,22 @@ namespace ClashSubManager.Services
     public class SubscriptionService
     {
         private readonly IStringLocalizer<SubscriptionService> _localizer;
+        private readonly IUserManagementService _userManagementService;
         private readonly FileService _fileService;
         private readonly ValidationService _validationService;
-        private readonly ConfigurationService _configurationService;
+        private readonly IConfigurationService _configurationService;
         private readonly ILogger<SubscriptionService> _logger;
 
         public SubscriptionService(
             IStringLocalizer<SubscriptionService> localizer,
+            IUserManagementService userManagementService,
             FileService fileService,
             ValidationService validationService,
-            ConfigurationService configurationService,
+            IConfigurationService configurationService,
             ILogger<SubscriptionService> logger)
         {
             _localizer = localizer;
+            _userManagementService = userManagementService;
             _fileService = fileService;
             _validationService = validationService;
             _configurationService = configurationService;
@@ -47,26 +50,20 @@ namespace ClashSubManager.Services
                         "INVALID_USER_ID");
                 }
 
-                // Get user configuration
-                var userConfig = await _fileService.LoadUserConfigAsync(userId);
-                if (userConfig == null)
+                // Record user access
+                await _userManagementService.RecordUserAccessAsync(userId);
+
+                // Get user subscription URL
+                var subscriptionUrl = await _userManagementService.GetUserSubscriptionUrlAsync(userId);
+                if (string.IsNullOrEmpty(subscriptionUrl))
                 {
-                    Console.WriteLine($"User config not found: {userId}");
+                    Console.WriteLine($"Subscription URL template not configured for user: {userId}");
                     return SubscriptionResponse.CreateError(
-                        _localizer["UserConfigNotFound"], 
-                        "USER_CONFIG_NOT_FOUND");
+                        _localizer["SubscriptionUrlTemplateNotConfigured"], 
+                        "SUBSCRIPTION_URL_TEMPLATE_NOT_CONFIGURED");
                 }
 
-				// Subscription url validation
-                if (string.IsNullOrEmpty(userConfig.SubscriptionUrl))
-                {
-                    Console.WriteLine($"Subscription URL not found for user: {userId}");
-                    return SubscriptionResponse.CreateError(
-                        _localizer["SubscriptionUrlNotFound"], 
-                        "SUBSCRIPTION_URL_NOT_FOUND");
-                }
-
-				// Get base template
+                // Get base template
                 var template = await _fileService.LoadClashTemplateAsync();
                 if (string.IsNullOrEmpty(template))
                 {
@@ -79,15 +76,18 @@ namespace ClashSubManager.Services
                 // Get default IP list
                 var defaultIPs = await _fileService.LoadDefaultIPsAsync();
                 
+                // Get user-specific IP list
+                var dedicatedIPs = await _fileService.LoadUserDedicatedIPsAsync(userId);
+                
                 // Merge configuration and generate YAML
                 var yamlContent = await _configurationService.GenerateSubscriptionConfigAsync(
                     template, 
-                    userConfig.SubscriptionUrl, 
+                    subscriptionUrl, 
                     defaultIPs, 
-                    userConfig.DedicatedIPs);
+                    dedicatedIPs);
 
                 Console.WriteLine($"Subscription generated successfully for user: {userId}");
-                return SubscriptionResponse.CreateSuccess(yamlContent);
+                return SubscriptionResponse.CreateSuccessFromYaml(yamlContent);
             }
             catch (Exception ex)
             {
@@ -128,27 +128,15 @@ namespace ClashSubManager.Services
                         "NO_VALID_IP_RECORDS");
                 }
 
-                // Get or create user configuration
-                var userConfig = await _fileService.LoadUserConfigAsync(userId);
-                if (userConfig == null)
-                {
-                    userConfig = new UserConfig
-                    {
-                        UserId = userId,
-                        SubscriptionUrl = string.Empty // Needs to be set later
-                    };
-                }
+                // Record user access
+                await _userManagementService.RecordUserAccessAsync(userId);
 
-                // Update IP list
-                userConfig.DedicatedIPs = ipRecords;
-                userConfig.UpdatedAt = DateTime.UtcNow;
-
-                // Save configuration
-                await _fileService.SaveUserConfigAsync(userConfig);
+                // Save user-specific IP list
+                await _fileService.SaveUserDedicatedIPsAsync(userId, ipRecords);
 
                 Console.WriteLine($"User IPs updated successfully for user: {userId}, count: {ipRecords.Count}");
                 return SubscriptionResponse.CreateSuccess(
-                    _localizer["UserIPsUpdated"]);
+                    _localizer["UserIPsUpdated"].ToString());
             }
             catch (Exception ex)
             {
@@ -178,19 +166,19 @@ namespace ClashSubManager.Services
                         "INVALID_USER_ID");
                 }
 
-                // Delete user configuration file
-                var deleted = await _fileService.DeleteUserConfigAsync(userId);
+                // Delete user configuration
+                var deleted = await _userManagementService.DeleteUserAsync(userId);
                 if (!deleted)
                 {
-                    Console.WriteLine($"User config not found for deletion: {userId}");
+                    Console.WriteLine($"User not found for deletion: {userId}");
                     return SubscriptionResponse.CreateError(
-                        _localizer["UserConfigNotFound"], 
-                        "USER_CONFIG_NOT_FOUND");
+                        _localizer["UserNotFound"], 
+                        "USER_NOT_FOUND");
                 }
 
                 Console.WriteLine($"User config deleted successfully for user: {userId}");
                 return SubscriptionResponse.CreateSuccess(
-                    _localizer["UserConfigDeleted"]);
+                    _localizer["UserConfigDeleted"].ToString());
             }
             catch (Exception ex)
             {

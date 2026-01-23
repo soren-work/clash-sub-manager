@@ -24,4 +24,10 @@
   <data name="SubscriptionUrlNotFound" xml:space="preserve">
     <value>用户配置中未找到订阅URL</value>
   </data>
+  <data name="SubscriptionUrlTemplateNotConfigured" xml:space="preserve">
+    <value>订阅URL模板未配置</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>用户未找到</value>
+  </data>
 </root>

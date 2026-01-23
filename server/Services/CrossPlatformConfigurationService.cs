@@ -1,4 +1,8 @@
 using Microsoft.Extensions.Configuration;
+using ClashSubManager.Models;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.RepresentationModel;
 
 namespace ClashSubManager.Services
 {
@@ -12,6 +16,7 @@ namespace ClashSubManager.Services
         private readonly IEnvironmentDetector _environmentDetector;
         private readonly IPathResolver _pathResolver;
         private readonly IConfigurationValidator _configurationValidator;
+        private readonly HttpClient _httpClient;
         private string? _cachedDataPath;
 
         public PlatformConfigurationService(
@@ -19,13 +24,16 @@ namespace ClashSubManager.Services
             ILogger<PlatformConfigurationService> logger,
             IEnvironmentDetector environmentDetector,
             IPathResolver pathResolver,
-            IConfigurationValidator configurationValidator)
+            IConfigurationValidator configurationValidator,
+            HttpClient httpClient)
         {
             _configuration = configuration;
             _logger = logger;
             _environmentDetector = environmentDetector;
             _pathResolver = pathResolver;
             _configurationValidator = configurationValidator;
+            _httpClient = httpClient;
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash");
         }
 
         /// <summary>
@@ -118,6 +126,315 @@ namespace ClashSubManager.Services
         public string GetEnvironmentType()
         {
             return _environmentDetector.GetEnvironmentType();
+        }
+
+        /// <summary>
+        /// Get subscription URL template
+        /// </summary>
+        /// <returns>Subscription URL template</returns>
+        public string GetSubscriptionUrlTemplate()
+        {
+            // Get from environment variable first
+            var template = Environment.GetEnvironmentVariable("SUBSCRIPTION_URL_TEMPLATE");
+            if (!string.IsNullOrEmpty(template))
+            {
+                _logger.LogDebug("Subscription URL template from environment: {Template}", template);
+                return template;
+            }
+
+            // Get from configuration file
+            template = GetValue<string>("SubscriptionUrlTemplate");
+            if (!string.IsNullOrEmpty(template))
+            {
+                _logger.LogDebug("Subscription URL template from configuration: {Template}", template);
+                return template;
+            }
+
+            _logger.LogWarning("Subscription URL template not configured");
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Generate subscription configuration
+        /// </summary>
+        /// <param name="template">Base template</param>
+        /// <param name="subscriptionUrl">Subscription URL</param>
+        /// <param name="defaultIPs">Default IP list</param>
+        /// <param name="dedicatedIPs">Dedicated IP list</param>
+        /// <returns>Generated YAML configuration</returns>
+        public async Task<string> GenerateSubscriptionConfigAsync(
+            string template, 
+            string subscriptionUrl, 
+            List<IPRecord> defaultIPs, 
+            List<IPRecord> dedicatedIPs)
+        {
+            try
+            {
+                // Parse the base YAML template into a manipulable structure
+                var yamlStream = new YamlStream();
+                using (var reader = new StringReader(template))
+                {
+                    yamlStream.Load(reader);
+                }
+
+                var rootNode = yamlStream.Documents[0].RootNode as YamlMappingNode;
+                if (rootNode == null)
+                {
+                    throw new InvalidOperationException("Invalid YAML template format");
+                }
+
+                // Fetch the remote subscription content from the user's subscription service
+                var remoteConfig = await FetchRemoteSubscriptionAsync(subscriptionUrl);
+                var remoteYaml = ParseRemoteYAML(remoteConfig);
+
+                // Merge remote configuration into the template (template takes priority)
+                MergeYAMLNodes(rootNode, remoteYaml);
+
+                // Extend proxy nodes with optimized IP addresses
+                await ExtendIPAddressesAsync(rootNode, defaultIPs, dedicatedIPs);
+
+                // Serialize the final configuration back to YAML string
+                var serializer = new SerializerBuilder()
+                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                    .Build();
+
+                var result = serializer.Serialize(rootNode);
+                
+                Console.WriteLine($"Configuration generated successfully, total IPs: {defaultIPs.Count + dedicatedIPs.Count}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating subscription configuration");
+                Console.WriteLine($"Error generating configuration: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Fetch remote subscription content
+        /// </summary>
+        /// <param name="subscriptionUrl">Subscription URL</param>
+        /// <returns>Subscription content</returns>
+        private async Task<string> FetchRemoteSubscriptionAsync(string subscriptionUrl)
+        {
+            try
+            {
+                Console.WriteLine($"Fetching remote subscription from: {subscriptionUrl}");
+                
+                var response = await _httpClient.GetAsync(subscriptionUrl);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Remote subscription fetched successfully, length: {content.Length}");
+                
+                return content;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching remote subscription from: {Url}", subscriptionUrl);
+                Console.WriteLine($"Error fetching remote subscription: {ex.Message}");
+                
+                // Return empty content as fallback
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Parse remote YAML configuration
+        /// </summary>
+        /// <param name="remoteConfig">Remote configuration content</param>
+        /// <returns>Parsed YAML node</returns>
+        private YamlMappingNode ParseRemoteYAML(string remoteConfig)
+        {
+            if (string.IsNullOrWhiteSpace(remoteConfig))
+                return new YamlMappingNode();
+
+            try
+            {
+                var yamlStream = new YamlStream();
+                using (var reader = new StringReader(remoteConfig))
+                {
+                    yamlStream.Load(reader);
+                }
+
+                return yamlStream.Documents[0].RootNode as YamlMappingNode ?? new YamlMappingNode();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing remote YAML configuration");
+                Console.WriteLine($"Error parsing remote YAML: {ex.Message}");
+                return new YamlMappingNode();
+            }
+        }
+
+        /// <summary>
+        /// Merges YAML nodes from source into target with special handling for arrays
+        /// Template fields take priority over remote subscription fields
+        /// </summary>
+        /// <param name="target">Target YAML node (template)</param>
+        /// <param name="source">Source YAML node (remote subscription)</param>
+        private void MergeYAMLNodes(YamlMappingNode target, YamlMappingNode source)
+        {
+            if (source == null)
+                return;
+
+            foreach (var entry in source.Children)
+            {
+                var key = entry.Key as YamlScalarNode;
+                if (key == null)
+                    continue;
+
+                var keyText = key.Value?.ToString();
+                if (string.IsNullOrEmpty(keyText))
+                    continue;
+
+                // If the target already has this key, decide how to merge based on type
+                if (target.Children.ContainsKey(key))
+                {
+                    var targetValue = target.Children[key];
+                    var sourceValue = entry.Value;
+
+                    // Special handling for proxy arrays - merge them instead of overwriting
+                    if (keyText == "proxies" || keyText == "proxy-groups")
+                    {
+                        MergeArrayNodes(targetValue as YamlSequenceNode, sourceValue as YamlSequenceNode);
+                    }
+                    else
+                    {
+                        // For other fields, template (target) takes priority over remote (source)
+                        // So we keep the target value and don't overwrite it
+                    }
+                }
+                else
+                {
+                    // New field from source - add it to target
+                    target.Children[key] = entry.Value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Merge array nodes
+        /// </summary>
+        /// <param name="target">Target array</param>
+        /// <param name="source">Source array</param>
+        private void MergeArrayNodes(YamlSequenceNode? target, YamlSequenceNode? source)
+        {
+            if (source == null)
+                return;
+
+            if (target == null)
+            {
+                // If target array doesn't exist, use source array directly
+                target = source;
+                return;
+            }
+
+            // Merge array content, avoid duplicates
+            foreach (var item in source.Children)
+            {
+                if (!target.Children.Contains(item))
+                {
+                    target.Children.Add(item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extend IP addresses to proxy configuration
+        /// </summary>
+        /// <param name="rootNode">Root YAML node</param>
+        /// <param name="defaultIPs">Default IP list</param>
+        /// <param name="dedicatedIPs">Dedicated IP list</param>
+        private async Task ExtendIPAddressesAsync(YamlMappingNode rootNode, List<IPRecord> defaultIPs, List<IPRecord> dedicatedIPs)
+        {
+            try
+            {
+                var proxiesNode = rootNode.Children.FirstOrDefault(c => 
+                    (c.Key as YamlScalarNode)?.Value == "proxies").Value as YamlSequenceNode;
+
+                if (proxiesNode == null || !proxiesNode.Children.Any())
+                    return;
+
+                var allIPs = dedicatedIPs.Any() ? dedicatedIPs : defaultIPs;
+                if (!allIPs.Any())
+                    return;
+
+                var newProxies = new YamlSequenceNode();
+                foreach (var proxyNode in proxiesNode.Children)
+                {
+                    if (proxyNode is YamlMappingNode proxyMapping)
+                    {
+                        var serverNode = proxyMapping.Children.FirstOrDefault(c => 
+                            (c.Key as YamlScalarNode)?.Value == "server");
+
+                        if (serverNode.Value is YamlScalarNode serverScalar)
+                        {
+                            var originalServer = serverScalar.Value;
+                            
+                            // Create a new proxy configuration for each IP address
+                            foreach (var ip in allIPs)
+                            {
+                                var newProxy = CloneProxyNode(proxyMapping);
+                                var newServerNode = newProxy.Children.FirstOrDefault(c => 
+                                    (c.Key as YamlScalarNode)?.Value == "server");
+                                
+                                if (newServerNode.Value is YamlScalarNode newServerScalar)
+                                {
+                                    newServerScalar.Value = ip.IPAddress;
+                                    
+                                    // Update port
+                                    var portNode = newProxy.Children.FirstOrDefault(c => 
+                                        (c.Key as YamlScalarNode)?.Value == "port");
+                                    if (portNode.Value is YamlScalarNode portScalar)
+                                    {
+                                        portScalar.Value = ip.Port.ToString();
+                                    }
+                                    
+                                    // Add quality information to name
+                                    var nameNode = newProxy.Children.FirstOrDefault(c => 
+                                        (c.Key as YamlScalarNode)?.Value == "name");
+                                    if (nameNode.Value is YamlScalarNode nameScalar)
+                                    {
+                                        var suffix = $"({ip.Latency}ms/{ip.PacketLoss}%)";
+                                        nameScalar.Value = nameScalar.Value + suffix;
+                                    }
+                                }
+                                
+                                newProxies.Add(newProxy);
+                            }
+                        }
+                    }
+                }
+
+                // Replace original proxies node
+                var proxiesKey = rootNode.Children.FirstOrDefault(c => 
+                    (c.Key as YamlScalarNode)?.Value == "proxies").Key;
+                rootNode.Children[proxiesKey] = newProxies;
+
+                Console.WriteLine($"Extended proxies with {allIPs.Count} IP addresses");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error extending IP addresses");
+                Console.WriteLine($"Error extending IPs: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Clone proxy node
+        /// </summary>
+        /// <param name="original">Original node</param>
+        /// <returns>Cloned node</returns>
+        private YamlMappingNode CloneProxyNode(YamlMappingNode original)
+        {
+            var clone = new YamlMappingNode();
+            foreach (var child in original.Children)
+            {
+                clone.Children.Add(child.Key, child.Value);
+            }
+            return clone;
         }
     }
 }
