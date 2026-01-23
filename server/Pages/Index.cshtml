@@ -1,0 +1,77 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+    Layout = "_Layout";
+}
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i class="bi bi-cloud-arrow-down"></i> ClashSubManager
+                </h1>
+                <p class="lead text-muted">@Localizer["ProjectDescription"]</p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-globe text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">@Localizer["FeatureSubscriptionTitle"]</h5>
+                            <p class="card-text text-muted">@Localizer["FeatureSubscriptionDesc"]</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-hdd-network text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">@Localizer["FeatureIPTitle"]</h5>
+                            <p class="card-text text-muted">@Localizer["FeatureIPDesc"]</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-file-earmark-code text-info" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">@Localizer["FeatureTemplateTitle"]</h5>
+                            <p class="card-text text-muted">@Localizer["FeatureTemplateDesc"]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-3">
+                        <i class="bi bi-info-circle"></i> @Localizer["HowToUseTitle"]
+                    </h4>
+                    <ol class="mb-0">
+                        <li class="mb-2">@Localizer["HowToUseStep1"]</li>
+                        <li class="mb-2">@Localizer["HowToUseStep2"]</li>
+                        <li class="mb-2">@Localizer["HowToUseStep3"]</li>
+                        <li class="mb-2">@Localizer["HowToUseStep4"]</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a asp-page="/Admin/Index" class="btn btn-primary btn-lg">
+                    <i class="bi bi-gear"></i> @Localizer["GoToAdmin"]
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">

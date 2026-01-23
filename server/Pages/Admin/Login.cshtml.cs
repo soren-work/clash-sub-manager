@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,6 +9,7 @@ namespace ClashSubManager.Pages.Admin
 {
     public class LoginModel : PageModel
     {
+        private readonly IConfiguration _configuration;
         private readonly IStringLocalizer<LoginModel> _localizer;
 
         [BindProperty(SupportsGet = false)]
@@ -18,8 +20,9 @@ namespace ClashSubManager.Pages.Admin
         
         public string? ErrorMessage { get; set; }
 
-        public LoginModel(IStringLocalizer<LoginModel> localizer)
+        public LoginModel(IConfiguration configuration, IStringLocalizer<LoginModel> localizer)
         {
+            _configuration = configuration;
             _localizer = localizer;
         }
 
@@ -47,18 +50,18 @@ namespace ClashSubManager.Pages.Admin
         
         private bool ValidateCredentials(string username, string password)
         {
-            var configUsername = Environment.GetEnvironmentVariable("ADMIN_USERNAME");
-            var configPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+            var configUsername = _configuration["AdminUsername"];
+            var configPassword = _configuration["AdminPassword"];
             return username == configUsername && password == configPassword;
         }
         
         private void SetAuthCookie()
         {
             var sessionId = Guid.NewGuid().ToString("N");
-            var timeoutMinutes = int.Parse(Environment.GetEnvironmentVariable("SESSION_TIMEOUT_MINUTES") ?? "30");
+            var timeoutMinutes = int.Parse(_configuration["SessionTimeoutMinutes"] ?? "30");
             var expiresAt = DateTime.UtcNow.AddMinutes(timeoutMinutes);
             
-            var hmacKey = Environment.GetEnvironmentVariable("COOKIE_SECRET_KEY") ?? "default-key";
+            var hmacKey = _configuration["CookieSecretKey"] ?? "default-key";
             using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(hmacKey));
             var signatureData = $"{sessionId}|{expiresAt:yyyyMMddHHmmss}";
             var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(signatureData));
@@ -73,7 +76,7 @@ namespace ClashSubManager.Pages.Admin
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = expiresAt,
-                Path = "/admin"
+                Path = "/"
             };
             
             Response.Cookies.Append("AdminSession", cookieValue, cookieOptions);

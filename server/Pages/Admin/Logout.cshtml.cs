@@ -15,7 +15,7 @@ namespace ClashSubManager.Pages.Admin
 
         public IActionResult OnPost()
         {
-            Response.Cookies.Delete("AdminSession", new CookieOptions { Path = "/admin" });
+            Response.Cookies.Delete("AdminSession");
             return RedirectToPage("/Admin/Login");
         }
         

@@ -1,5 +1,6 @@
 using ClashSubManager.Middleware;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -9,12 +10,13 @@ using System.Text;
 namespace ClashSubManager.Tests.Middleware
 {
     /// <summary>
-    /// Unit tests for AdminAuthMiddleware
+    /// AdminAuthMiddleware unit tests
     /// </summary>
     public class AdminAuthMiddlewareTests : IDisposable
     {
         private readonly Mock<RequestDelegate> _nextMock;
         private readonly Mock<ILogger<AdminAuthMiddleware>> _loggerMock;
+        private readonly Mock<IConfiguration> _configurationMock;
         private readonly AdminAuthMiddleware _middleware;
         private readonly string _testHmacKey = "test-hmac-key-32-characters-minimum";
 
@@ -22,39 +24,42 @@ namespace ClashSubManager.Tests.Middleware
         {
             _nextMock = new Mock<RequestDelegate>();
             _loggerMock = new Mock<ILogger<AdminAuthMiddleware>>();
+            _configurationMock = new Mock<IConfiguration>();
             
-            // Set test environment variable
-            Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", _testHmacKey);
+            // Setup mock configuration
+            _configurationMock.Setup(c => c["CookieSecretKey"]).Returns(_testHmacKey);
             
-            _middleware = new AdminAuthMiddleware(_nextMock.Object);
+            _middleware = new AdminAuthMiddleware(_nextMock.Object, _configurationMock.Object);
         }
 
         public void Dispose()
         {
-            // Clean up test environment variable
-            Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", null);
+            // Cleanup resources
         }
 
         #region Constructor Tests
 
         [Fact]
-        public void AdminAuthMiddleware_Constructor_WithValidEnvironment_CreatesInstance()
+        public void AdminAuthMiddleware_Constructor_WithValidParameters_CreatesInstance()
         {
             // Arrange & Act
-            var middleware = new AdminAuthMiddleware(_nextMock.Object);
+            var configMock = new Mock<IConfiguration>();
+            configMock.Setup(c => c["CookieSecretKey"]).Returns(_testHmacKey);
+            var middleware = new AdminAuthMiddleware(_nextMock.Object, configMock.Object);
 
             // Assert
             Assert.NotNull(middleware);
         }
 
         [Fact]
-        public void AdminAuthMiddleware_Constructor_WithNullEnvironment_UsesDefaultKey()
+        public void AdminAuthMiddleware_Constructor_WithNullConfiguration_UsesDefaultKey()
         {
             // Arrange
-            Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", null);
+            var configMock = new Mock<IConfiguration>();
+            configMock.Setup(c => c["CookieSecretKey"]).Returns((string)null);
 
             // Act
-            var middleware = new AdminAuthMiddleware(_nextMock.Object);
+            var middleware = new AdminAuthMiddleware(_nextMock.Object, configMock.Object);
 
             // Assert
             Assert.NotNull(middleware);
@@ -114,7 +119,7 @@ namespace ClashSubManager.Tests.Middleware
             cookies.Setup(x => x["AdminSession"]).Returns((string)null);
             
             var responseMock = new Mock<HttpResponse>();
-            responseMock.Setup(x => x.Redirect("/admin/login")).Verifiable();
+            responseMock.Setup(x => x.Redirect("/Admin/Login")).Verifiable();
             
             var httpContextMock = new Mock<HttpContext>();
             httpContextMock.Setup(x => x.Request.Path).Returns("/admin/index");
@@ -125,7 +130,7 @@ namespace ClashSubManager.Tests.Middleware
             await _middleware.InvokeAsync(httpContextMock.Object);
 
             // Assert
-            responseMock.Verify(x => x.Redirect("/admin/login"), Times.Once);
+            responseMock.Verify(x => x.Redirect("/Admin/Login"), Times.Once);
             _nextMock.Verify(x => x(It.IsAny<HttpContext>()), Times.Never);
         }
 
@@ -137,7 +142,7 @@ namespace ClashSubManager.Tests.Middleware
             cookies.Setup(x => x["AdminSession"]).Returns("invalid-cookie-format");
             
             var responseMock = new Mock<HttpResponse>();
-            responseMock.Setup(x => x.Redirect("/admin/login")).Verifiable();
+            responseMock.Setup(x => x.Redirect("/Admin/Login")).Verifiable();
             
             var httpContextMock = new Mock<HttpContext>();
             httpContextMock.Setup(x => x.Request.Path).Returns("/admin/index");
@@ -148,7 +153,7 @@ namespace ClashSubManager.Tests.Middleware
             await _middleware.InvokeAsync(httpContextMock.Object);
 
             // Assert
-            responseMock.Verify(x => x.Redirect("/admin/login"), Times.Once);
+            responseMock.Verify(x => x.Redirect("/Admin/Login"), Times.Once);
             _nextMock.Verify(x => x(It.IsAny<HttpContext>()), Times.Never);
         }
 
@@ -181,7 +186,7 @@ namespace ClashSubManager.Tests.Middleware
             cookies.Setup(x => x["AdminSession"]).Returns((string)null);
             
             var responseMock = new Mock<HttpResponse>();
-            responseMock.Setup(x => x.Redirect("/admin/login")).Verifiable();
+            responseMock.Setup(x => x.Redirect("/Admin/Login")).Verifiable();
             
             var httpContextMock = new Mock<HttpContext>();
             httpContextMock.Setup(x => x.Request.Path).Returns("/ADMIN/index");
@@ -192,7 +197,7 @@ namespace ClashSubManager.Tests.Middleware
             await _middleware.InvokeAsync(httpContextMock.Object);
 
             // Assert
-            responseMock.Verify(x => x.Redirect("/admin/login"), Times.Once);
+            responseMock.Verify(x => x.Redirect("/Admin/Login"), Times.Once);
             _nextMock.Verify(x => x(It.IsAny<HttpContext>()), Times.Never);
         }
 
@@ -288,7 +293,7 @@ namespace ClashSubManager.Tests.Middleware
             // Arrange
             var middleware = CreateTestMiddleware();
             var sessionId = Guid.NewGuid().ToString("N");
-            // Create an explicitly expired timestamp - use yesterday's time to ensure absolute expiration
+            // Create a clearly expired timestamp - use yesterday's time to ensure absolute expiration
             var yesterday = DateTime.UtcNow.AddDays(-1);
             var expiredTimestamp = yesterday.ToString("yyyyMMddHHmmss");
             var signature = GenerateSignature(sessionId, expiredTimestamp, _testHmacKey);
@@ -342,12 +347,14 @@ namespace ClashSubManager.Tests.Middleware
 
         private AdminAuthMiddleware CreateTestMiddleware()
         {
-            return new AdminAuthMiddleware(_nextMock.Object);
+            var configMock = new Mock<IConfiguration>();
+            configMock.Setup(c => c["CookieSecretKey"]).Returns(_testHmacKey);
+            return new AdminAuthMiddleware(_nextMock.Object, configMock.Object);
         }
 
         private bool TestValidateSessionCookie(AdminAuthMiddleware middleware, string? cookieValue)
         {
-            // Use reflection to invoke private method for testing
+            // Use reflection to call private method for testing
             var method = typeof(AdminAuthMiddleware).GetMethod("ValidateSessionCookie", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             

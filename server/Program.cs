@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using ClashSubManager.Services;
 using ClashSubManager.Middleware;
@@ -51,7 +52,10 @@ if (isFirstStart)
     try
     {
         await validator.WriteDefaultConfigurationAsync(builder.Configuration, appSettingsPath);
-        Console.WriteLine("Default configuration has been generated successfully.");
+        
+        // Log success message using ILogger
+        var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Default configuration has been generated successfully.");
         
         // Recreate builder to reload configuration
         builder = WebApplication.CreateBuilder(args);
@@ -67,7 +71,8 @@ if (isFirstStart)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Failed to generate default configuration: {ex.Message}");
+        var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Failed to generate default configuration");
     }
 }
 
@@ -76,21 +81,31 @@ var finalValidator = new ConfigurationValidator();
 try
 {
     finalValidator.Validate(builder.Configuration);
-    Console.WriteLine($"Configuration validation passed for environment: {environmentType}");
+    
+    // Log validation success message using ILogger
+    var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Configuration validation passed for environment: {EnvironmentType}", environmentType);
 }
 catch (ConfigurationException ex)
 {
-    Console.WriteLine($"Configuration validation failed: {string.Join(", ", ex.ValidationErrors)}");
-    Console.WriteLine("Please set the required environment variables or update the configuration file:");
-    Console.WriteLine("- ADMIN_USERNAME: Administrator username");
-    Console.WriteLine("- ADMIN_PASSWORD: Administrator password");
-    Console.WriteLine("- COOKIE_SECRET_KEY: Cookie secret key (minimum 32 characters)");
+    var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Configuration validation failed: {ValidationErrors}", string.Join(", ", ex.ValidationErrors));
+    logger.LogInformation("Please set the required environment variables or update the configuration file:");
+    logger.LogInformation("- ADMIN_USERNAME: Administrator username");
+    logger.LogInformation("- ADMIN_PASSWORD: Administrator password");
+    logger.LogInformation("- COOKIE_SECRET_KEY: Cookie secret key (minimum 32 characters)");
     throw;
 }
 
 // Add services to the container
-builder.Services.AddRazorPages();
+// IMPORTANT: AddLocalization must be called before AddRazorPages
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddRazorPages()
+    .AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
+    .AddDataAnnotationsLocalization();
+
+// Register HttpClient for services that need it
+builder.Services.AddHttpClient();
 
 // Register cross-platform configuration services
 builder.Services.AddSingleton<IEnvironmentDetector, EnvironmentDetector>();
@@ -111,6 +126,12 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.DefaultRequestCulture = new RequestCulture("en-US");
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
+    
+    // Add CookieRequestCultureProvider to support language switching via cookie
+    options.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider
+    {
+        CookieName = CookieRequestCultureProvider.DefaultCookieName
+    });
 });
 
 var app = builder.Build();

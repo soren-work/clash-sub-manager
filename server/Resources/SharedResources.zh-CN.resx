@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Layout Navigation -->
+  <data name="Home" xml:space="preserve">
+    <value>首页</value>
+  </data>
+  <data name="Admin" xml:space="preserve">
+    <value>管理</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Chinese" xml:space="preserve">
+    <value>中文</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>控制台</value>
+  </data>
+  <data name="DefaultIPs" xml:space="preserve">
+    <value>默认IP管理</value>
+  </data>
+  <data name="CloudflareIP" xml:space="preserve">
+    <value>Cloudflare 优选IP</value>
+  </data>
+  <data name="ClashTemplate" xml:space="preserve">
+    <value>Clash模板</value>
+  </data>
+  <data name="UserConfig" xml:space="preserve">
+    <value>用户配置</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>注销</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <!-- Index Page -->
+  <data name="ProjectDescription" xml:space="preserve">
+    <value>轻量级 Clash 订阅管理系统，支持 Cloudflare IP 优选和自定义模板</value>
+  </data>
+  <data name="FeatureSubscriptionTitle" xml:space="preserve">
+    <value>订阅管理</value>
+  </data>
+  <data name="FeatureSubscriptionDesc" xml:space="preserve">
+    <value>为每个用户生成个性化的 Clash 订阅配置</value>
+  </data>
+  <data name="FeatureIPTitle" xml:space="preserve">
+    <value>Cloudflare IP 优选</value>
+  </data>
+  <data name="FeatureIPDesc" xml:space="preserve">
+    <value>支持全局和用户专属的 Cloudflare 优选 IP 配置</value>
+  </data>
+  <data name="FeatureTemplateTitle" xml:space="preserve">
+    <value>自定义模板</value>
+  </data>
+  <data name="FeatureTemplateDesc" xml:space="preserve">
+    <value>灵活的 Clash YAML 模板管理，适应不同场景</value>
+  </data>
+  <data name="HowToUseTitle" xml:space="preserve">
+    <value>使用方法</value>
+  </data>
+  <data name="HowToUseStep1" xml:space="preserve">
+    <value>使用管理员账号登录管理面板</value>
+  </data>
+  <data name="HowToUseStep2" xml:space="preserve">
+    <value>配置全局或用户专属的 Cloudflare IP 列表</value>
+  </data>
+  <data name="HowToUseStep3" xml:space="preserve">
+    <value>根据需要设置 Clash YAML 模板</value>
+  </data>
+  <data name="HowToUseStep4" xml:space="preserve">
+    <value>访问订阅地址：/sub/{用户ID}</value>
+  </data>
+  <data name="GoToAdmin" xml:space="preserve">
+    <value>进入管理面板</value>
+  </data>
+  <!-- Admin Index Page -->
+  <data name="Admin Dashboard" xml:space="preserve">
+    <value>管理员控制台</value>
+  </data>
+  <data name="Welcome to admin panel" xml:space="preserve">
+    <value>欢迎来到管理面板</value>
+  </data>
+  <!-- Admin Login Page -->
+  <data name="Admin Login" xml:space="preserve">
+    <value>管理员登录</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="UsernameAndPasswordRequired" xml:space="preserve">
+    <value>用户名和密码不能为空</value>
+  </data>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>用户名或密码错误</value>
+  </data>
+  <!-- DefaultIPs Page -->
+  <data name="Title" xml:space="preserve">
+    <value>优选IP管理</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Cloudflare 优选IP</value>
+  </data>
+  <data name="SelectUser" xml:space="preserve">
+    <value>选择用户</value>
+  </data>
+  <data name="GlobalConfiguration" xml:space="preserve">
+    <value>全局配置</value>
+  </data>
+  <data name="CurrentStatus" xml:space="preserve">
+    <value>当前状态：</value>
+  </data>
+  <data name="FileExists" xml:space="preserve">
+    <value>文件存在</value>
+  </data>
+  <data name="FileNotExists" xml:space="preserve">
+    <value>文件不存在</value>
+  </data>
+  <data name="IPCount" xml:space="preserve">
+    <value>IP数量：</value>
+  </data>
+  <data name="CSVContent" xml:space="preserve">
+    <value>CSV内容（支持CloudflareST格式）</value>
+  </data>
+  <data name="CSVContentPlaceholder" xml:space="preserve">
+    <value>请粘贴CSV内容或上传result.csv文件...</value>
+  </data>
+  <data name="CSVContentHelp" xml:space="preserve">
+    <value>支持CloudflareST程序输出的result.csv格式，文件大小限制10MB</value>
+  </data>
+  <data name="SaveConfiguration" xml:space="preserve">
+    <value>保存配置</value>
+  </data>
+  <data name="DeleteConfiguration" xml:space="preserve">
+    <value>删除配置</value>
+  </data>
+  <data name="DeleteConfirm" xml:space="preserve">
+    <value>确定要删除这个配置吗？</value>
+  </data>
+  <data name="UploadFile" xml:space="preserve">
+    <value>上传文件</value>
+  </data>
+  <data name="OrUploadCSVFile" xml:space="preserve">
+    <value>或上传CSV文件</value>
+  </data>
+  <data name="CSVFileHelp" xml:space="preserve">
+    <value>支持.csv文件，最大10MB</value>
+  </data>
+  <data name="CurrentIPList" xml:space="preserve">
+    <value>当前IP列表</value>
+  </data>
+  <data name="Items" xml:space="preserve">
+    <value>个</value>
+  </data>
+  <data name="NoIPConfiguration" xml:space="preserve">
+    <value>暂无IP配置</value>
+  </data>
+  <data name="ID" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="IPAddress" xml:space="preserve">
+    <value>IP地址</value>
+  </data>
+  <data name="Sent" xml:space="preserve">
+    <value>已发送</value>
+  </data>
+  <data name="Received" xml:space="preserve">
+    <value>已接收</value>
+  </data>
+  <data name="PacketLossRate" xml:space="preserve">
+    <value>丢包率</value>
+  </data>
+  <data name="AverageLatency" xml:space="preserve">
+    <value>平均延迟</value>
+  </data>
+  <data name="DownloadSpeed" xml:space="preserve">
+    <value>下载速度</value>
+  </data>
+  <data name="NoData" xml:space="preserve">
+    <value>无数据</value>
+  </data>
+  <data name="IPConfigurationSaved" xml:space="preserve">
+    <value>IP配置保存成功</value>
+  </data>
+  <data name="FailedToSaveIPConfiguration" xml:space="preserve">
+    <value>IP配置保存失败</value>
+  </data>
+  <data name="FileUploadedSuccessfully" xml:space="preserve">
+    <value>文件上传成功</value>
+  </data>
+  <data name="FailedToUploadFile" xml:space="preserve">
+    <value>文件上传失败</value>
+  </data>
+  <data name="ConfigurationDeletedSuccessfully" xml:space="preserve">
+    <value>配置删除成功</value>
+  </data>
+  <data name="FailedToDeleteConfiguration" xml:space="preserve">
+    <value>配置删除失败</value>
+  </data>
+  <data name="PleaseSelectFileToUpload" xml:space="preserve">
+    <value>请选择要上传的文件</value>
+  </data>
+  <data name="FileSizeExceedsLimit" xml:space="preserve">
+    <value>文件大小超过限制</value>
+  </data>
+  <!-- ClashTemplate Page -->
+  <data name="GlobalTemplate" xml:space="preserve">
+    <value>全局模板</value>
+  </data>
+  <data name="FilePath" xml:space="preserve">
+    <value>文件路径：</value>
+  </data>
+  <data name="YAMLTemplateContent" xml:space="preserve">
+    <value>YAML模板内容</value>
+  </data>
+  <data name="YAMLContentPlaceholder" xml:space="preserve">
+    <value>请输入YAML内容...</value>
+  </data>
+  <data name="YAMLContentHelp" xml:space="preserve">
+    <value>支持所有Clash配置字段，文件大小限制1MB</value>
+  </data>
+  <data name="SaveTemplate" xml:space="preserve">
+    <value>保存模板</value>
+  </data>
+  <data name="DeleteTemplate" xml:space="preserve">
+    <value>删除模板</value>
+  </data>
+  <data name="OrUploadYAMLFile" xml:space="preserve">
+    <value>或上传YAML文件</value>
+  </data>
+  <data name="YAMLFileHelp" xml:space="preserve">
+    <value>支持.yaml和.yml文件，最大1MB</value>
+  </data>
+  <data name="YAMLContentRequired" xml:space="preserve">
+    <value>YAML内容不能为空</value>
+  </data>
+  <data name="InvalidYAMLFormat" xml:space="preserve">
+    <value>YAML格式无效</value>
+  </data>
+  <data name="TemplateSavedSuccessfully" xml:space="preserve">
+    <value>模板保存成功</value>
+  </data>
+  <data name="FailedToSaveTemplate" xml:space="preserve">
+    <value>模板保存失败</value>
+  </data>
+  <data name="TemplateDeletedSuccessfully" xml:space="preserve">
+    <value>模板删除成功</value>
+  </data>
+  <data name="FailedToDeleteTemplate" xml:space="preserve">
+    <value>模板删除失败</value>
+  </data>
+  <!-- UserConfig Page -->
+  <data name="SelectUserPlaceholder" xml:space="preserve">
+    <value>-- 选择用户 --</value>
+  </data>
+  <data name="ConfigurationOverview" xml:space="preserve">
+    <value>配置概览</value>
+  </data>
+  <data name="DirectoryStatus" xml:space="preserve">
+    <value>目录状态</value>
+  </data>
+  <data name="DirectoryExists" xml:space="preserve">
+    <value>目录存在</value>
+  </data>
+  <data name="DirectoryNotExists" xml:space="preserve">
+    <value>目录不存在</value>
+  </data>
+  <data name="ConfigurationFiles" xml:space="preserve">
+    <value>配置文件</value>
+  </data>
+  <data name="IPConfiguration" xml:space="preserve">
+    <value>IP配置 (cloudflare-ip.csv)</value>
+  </data>
+  <data name="IPConfigurationDetails" xml:space="preserve">
+    <value>IP配置详情</value>
+  </data>
+  <data name="TemplateConfigurationDetails" xml:space="preserve">
+    <value>模板配置详情</value>
+  </data>
+  <data name="FileSize" xml:space="preserve">
+    <value>文件大小：</value>
+  </data>
+  <data name="LastModified" xml:space="preserve">
+    <value>最后修改：</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="ManageIPConfiguration" xml:space="preserve">
+    <value>管理IP配置</value>
+  </data>
+  <data name="ManageTemplate" xml:space="preserve">
+    <value>管理模板</value>
+  </data>
+  <data name="DeleteAllConfiguration" xml:space="preserve">
+    <value>删除所有配置</value>
+  </data>
+  <data name="DeleteAllConfigurationConfirm" xml:space="preserve">
+    <value>确定要删除此用户的所有配置吗？</value>
+  </data>
+  <data name="UserConfigurationManagement" xml:space="preserve">
+    <value>用户配置管理</value>
+  </data>
+  <data name="SelectUserInstruction" xml:space="preserve">
+    <value>请从上方下拉列表中选择用户以查看和管理其配置文件。</value>
+  </data>
+  <data name="InterfaceDescription" xml:space="preserve">
+    <value>此界面允许您：</value>
+  </data>
+  <data name="ViewUserSpecificConfiguration" xml:space="preserve">
+    <value>查看用户特定配置状态</value>
+  </data>
+  <data name="CheckFileExistence" xml:space="preserve">
+    <value>检查文件存在性和详细信息</value>
+  </data>
+  <data name="NavigateToManagementPages" xml:space="preserve">
+    <value>导航到特定管理页面</value>
+  </data>
+  <data name="DeleteAllUserConfiguration" xml:space="preserve">
+    <value>根据需要删除所有用户配置</value>
+  </data>
+  <data name="PleaseSelectUser" xml:space="preserve">
+    <value>请选择用户</value>
+  </data>
+  <data name="UserConfigurationDeletedSuccessfully" xml:space="preserve">
+    <value>用户配置删除成功</value>
+  </data>
+  <data name="FailedToDeleteUserConfiguration" xml:space="preserve">
+    <value>用户配置删除失败</value>
+  </data>
+  <!-- Additional DefaultIPs Page Keys -->
+  <data name="Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="FileStatus" xml:space="preserve">
+    <value>文件状态</value>
+  </data>
+  <data name="SearchIP" xml:space="preserve">
+    <value>搜索IP...</value>
+  </data>
+  <data name="SortByIP" xml:space="preserve">
+    <value>按IP排序</value>
+  </data>
+  <data name="SortByLatency" xml:space="preserve">
+    <value>按延迟排序</value>
+  </data>
+  <data name="SortByLossRate" xml:space="preserve">
+    <value>按丢包率排序</value>
+  </data>
+  <data name="SortBySpeed" xml:space="preserve">
+    <value>按速度排序</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>质量</value>
+  </data>
+  <data name="UploadCSVHint" xml:space="preserve">
+    <value>上传CSV文件或粘贴CSV内容开始使用</value>
+  </data>
+  <!-- ClashTemplate Page Keys -->
+  <data name="ClashTemplateManagement" xml:space="preserve">
+    <value>Clash模板管理</value>
+  </data>
+  <data name="Format" xml:space="preserve">
+    <value>格式化</value>
+  </data>
+  <data name="Validate" xml:space="preserve">
+    <value>验证</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="CurrentFilePreview" xml:space="preserve">
+    <value>当前文件预览</value>
+  </data>
+  <data name="Characters" xml:space="preserve">
+    <value>字符数</value>
+  </data>
+  <data name="Lines" xml:space="preserve">
+    <value>行数</value>
+  </data>
+  <data name="WordWrap" xml:space="preserve">
+    <value>自动换行</value>
+  </data>
+  <data name="YAMLEditorHint" xml:space="preserve">
+    <value>使用Tab缩进，Ctrl+F搜索</value>
+  </data>
+  <data name="DeleteTemplateConfirm" xml:space="preserve">
+    <value>确定要删除此模板吗？</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="YAMLTemplatePreview" xml:space="preserve">
+    <value>YAML模板预览</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <!-- UserConfig Page Keys -->
+  <data name="ClashTemplateFile" xml:space="preserve">
+    <value>Clash模板 (clash.yaml)</value>
+  </data>
+  <!-- SubscriptionService Keys -->
+  <data name="InvalidUserId" xml:space="preserve">
+    <value>用户ID格式无效</value>
+  </data>
+  <data name="UserConfigNotFound" xml:space="preserve">
+    <value>用户配置未找到</value>
+  </data>
+  <data name="TemplateNotFound" xml:space="preserve">
+    <value>Clash模板未找到</value>
+  </data>
+  <data name="InternalServerError" xml:space="preserve">
+    <value>内部服务器错误</value>
+  </data>
+  <data name="NoValidIPRecords" xml:space="preserve">
+    <value>CSV内容中未找到有效的IP记录</value>
+  </data>
+  <data name="UserIPsUpdated" xml:space="preserve">
+    <value>用户IP地址更新成功</value>
+  </data>
+  <data name="UserConfigDeleted" xml:space="preserve">
+    <value>用户配置删除成功</value>
+  </data>
+  <data name="SubscriptionUrlNotFound" xml:space="preserve">
+    <value>用户配置中未找到订阅URL</value>
+  </data>
+  <data name="SubscriptionUrlTemplateNotConfigured" xml:space="preserve">
+    <value>订阅URL模板未配置</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>用户未找到</value>
+  </data>
+  <!-- Sub\Index Page Keys -->
+  <data name="UserIdValidationFailed" xml:space="preserve">
+    <value>用户ID验证失败</value>
+  </data>
+  <data name="CSVContentRequired" xml:space="preserve">
+    <value>需要CSV内容</value>
+  </data>
+  <data name="EmptyCSVContent" xml:space="preserve">
+    <value>CSV内容为空</value>
+  </data>
+  <data name="SubscriptionGenerationFailed" xml:space="preserve">
+    <value>订阅生成失败</value>
+  </data>
+  <data name="IPUpdateFailed" xml:space="preserve">
+    <value>IP更新失败</value>
+  </data>
+  <data name="UserConfigDeletionFailed" xml:space="preserve">
+    <value>用户配置删除失败</value>
+  </data>
+</root>

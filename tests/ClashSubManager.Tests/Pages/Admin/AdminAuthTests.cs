@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Moq;
 using Xunit;
@@ -12,12 +13,21 @@ namespace ClashSubManager.Tests.Pages.Admin
     public class LoginTests
     {
         private readonly Mock<IStringLocalizer<LoginModel>> _mockLocalizer;
+        private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly LoginModel _loginModel;
 
         public LoginTests()
         {
             _mockLocalizer = new Mock<IStringLocalizer<LoginModel>>();
-            _loginModel = new LoginModel(_mockLocalizer.Object);
+            _mockConfiguration = new Mock<IConfiguration>();
+            
+            // Set default configuration
+            _mockConfiguration.Setup(c => c["AdminUsername"]).Returns("admin");
+            _mockConfiguration.Setup(c => c["AdminPassword"]).Returns("password");
+            _mockConfiguration.Setup(c => c["CookieSecretKey"]).Returns("test-key-32-characters-long");
+            _mockConfiguration.Setup(c => c["SessionTimeoutMinutes"]).Returns("30");
+            
+            _loginModel = new LoginModel(_mockConfiguration.Object, _mockLocalizer.Object);
             
             _mockLocalizer.Setup(l => l["UsernameAndPasswordRequired"]).Returns(new LocalizedString("UsernameAndPasswordRequired", "Username and password are required"));
             _mockLocalizer.Setup(l => l["InvalidCredentials"]).Returns(new LocalizedString("InvalidCredentials", "Invalid username or password"));
@@ -46,9 +56,6 @@ namespace ClashSubManager.Tests.Pages.Admin
         [Fact]
         public void OnPost_WithInvalidCredentials_ShouldReturnPageWithError()
         {
-            Environment.SetEnvironmentVariable("ADMIN_USERNAME", "admin");
-            Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "password");
-            
             _loginModel.Username = "wronguser";
             _loginModel.Password = "wrongpass";
             
@@ -61,11 +68,6 @@ namespace ClashSubManager.Tests.Pages.Admin
         [Fact]
         public void OnPost_WithValidCredentials_ShouldRedirectToIndex()
         {
-            Environment.SetEnvironmentVariable("ADMIN_USERNAME", "admin");
-            Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "password");
-            Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", "test-key-32-characters-long");
-            Environment.SetEnvironmentVariable("SESSION_TIMEOUT_MINUTES", "30");
-            
             // Setup mock HttpContext and Response
             var httpContext = new Mock<HttpContext>();
             var response = new Mock<HttpResponse>();
@@ -126,16 +128,17 @@ namespace ClashSubManager.Tests.Pages.Admin
     public class AdminAuthMiddlewareTests
     {
         private readonly Mock<RequestDelegate> _mockNext;
+        private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly AdminAuthMiddleware _middleware;
         private readonly HttpContext _httpContext;
 
         public AdminAuthMiddlewareTests()
         {
             _mockNext = new Mock<RequestDelegate>();
-            _middleware = new AdminAuthMiddleware(_mockNext.Object);
+            _mockConfiguration = new Mock<IConfiguration>();
+            _mockConfiguration.Setup(c => c["CookieSecretKey"]).Returns("test-key-32-characters-long");
+            _middleware = new AdminAuthMiddleware(_mockNext.Object, _mockConfiguration.Object);
             _httpContext = new DefaultHttpContext();
-            
-            Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", "test-key-32-characters-long");
         }
 
         [Fact]
@@ -177,7 +180,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             await _middleware.InvokeAsync(_httpContext);
             
             Assert.Equal(302, _httpContext.Response.StatusCode);
-            Assert.Equal("/admin/login", _httpContext.Response.Headers["Location"]);
+            Assert.Equal("/Admin/Login", _httpContext.Response.Headers["Location"]);
             _mockNext.Verify(next => next(_httpContext), Times.Never);
         }
     }

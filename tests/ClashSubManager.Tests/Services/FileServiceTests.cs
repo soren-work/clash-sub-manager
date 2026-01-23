@@ -40,106 +40,16 @@ namespace ClashSubManager.Tests.Services
         }
 
         [Fact]
-        public async Task LoadUserConfigAsync_ExistingConfig_ReturnsUserConfig()
-        {
-            // Arrange
-            var userId = "testuser";
-            var userDir = Path.Combine(_testDirectory, userId);
-            Directory.CreateDirectory(userDir);
-            
-            var expectedConfig = new UserConfig
-            {
-                UserId = userId,
-                SubscriptionUrl = "https://example.com/subscribe",
-                DedicatedIPs = new List<IPRecord>
-                {
-                    new IPRecord { IPAddress = "1.1.1.1", Port = 443, PacketLoss = 0, Latency = 50 }
-                }
-            };
-            
-            var configFile = Path.Combine(userDir, "config.json");
-            var json = JsonSerializer.Serialize(expectedConfig);
-            await File.WriteAllTextAsync(configFile, json);
-
-            // Act
-            var result = await _fileService.LoadUserConfigAsync(userId);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(userId, result!.UserId);
-            Assert.Equal(expectedConfig.SubscriptionUrl, result.SubscriptionUrl);
-            Assert.Single(result.DedicatedIPs);
-        }
-
-        [Fact]
-        public async Task LoadUserConfigAsync_NonExistingConfig_ReturnsNull()
+        public async Task LoadUserDedicatedIPsAsync_NonExistingUser_ReturnsEmptyList()
         {
             // Arrange
             var userId = "nonexistent";
 
             // Act
-            var result = await _fileService.LoadUserConfigAsync(userId);
+            var result = await _fileService.LoadUserDedicatedIPsAsync(userId);
 
             // Assert
-            Assert.Null(result);
-        }
-
-        [Fact]
-        public async Task SaveUserConfigAsync_ValidConfig_ReturnsTrue()
-        {
-            // Arrange
-            var userConfig = new UserConfig
-            {
-                UserId = "testuser",
-                SubscriptionUrl = "https://example.com/subscribe",
-                DedicatedIPs = new List<IPRecord>()
-            };
-
-            // Act
-            var result = await _fileService.SaveUserConfigAsync(userConfig);
-
-            // Assert
-            Assert.True(result);
-            
-            var configFile = Path.Combine(_testDirectory, userConfig.UserId, "config.json");
-            Assert.True(File.Exists(configFile));
-            
-            var savedJson = await File.ReadAllTextAsync(configFile);
-            var savedConfig = JsonSerializer.Deserialize<UserConfig>(savedJson);
-            Assert.NotNull(savedConfig);
-            Assert.Equal(userConfig.UserId, savedConfig!.UserId);
-        }
-
-        [Fact]
-        public async Task DeleteUserConfigAsync_ExistingConfig_ReturnsTrue()
-        {
-            // Arrange
-            var userId = "testuser";
-            var userDir = Path.Combine(_testDirectory, userId);
-            Directory.CreateDirectory(userDir);
-            
-            var configFile = Path.Combine(userDir, "config.json");
-            await File.WriteAllTextAsync(configFile, "{}");
-
-            // Act
-            var result = await _fileService.DeleteUserConfigAsync(userId);
-
-            // Assert
-            Assert.True(result);
-            Assert.False(File.Exists(configFile));
-        }
-
-        [Fact]
-        public async Task DeleteUserConfigAsync_NonExistingConfig_ReturnsFalse()
-        {
-            // Arrange
-            var userId = "nonexistent";
-
-            // Act
-            var result = await _fileService.DeleteUserConfigAsync(userId);
-
-            // Assert
-            Assert.False(result);
+            Assert.Empty(result);
         }
 
         [Fact]
@@ -241,106 +151,64 @@ namespace ClashSubManager.Tests.Services
         }
 
         [Fact]
-        public async Task SaveUserConfigAsync_ConcurrentAccess_HandlesCorrectly()
+        public async Task LoadUserDedicatedIPsAsync_ExistingFile_ReturnsIPRecords()
         {
             // Arrange
-            var baseUserId = "concurrentuser";
+            var userId = "testuser";
+            var userDir = Path.Combine(_testDirectory, userId);
+            Directory.CreateDirectory(userDir);
             
-            // Act - Save concurrently for different user IDs to avoid file conflicts
-            var tasks = Enumerable.Range(0, 5).Select(async i =>
-            {
-                var config = new UserConfig
-                {
-                    UserId = $"{baseUserId}{i}", // Use different user IDs
-                    SubscriptionUrl = $"https://example{i}.com/subscribe",
-                    DedicatedIPs = new List<IPRecord>()
-                };
-                return await _fileService.SaveUserConfigAsync(config);
-            }).ToArray();
-
-            var results = await Task.WhenAll(tasks);
-
-            // Assert
-            Assert.All(results, result => Assert.True(result));
-            
-            // Verify all files were created
-            for (int i = 0; i < 5; i++)
-            {
-                var configFile = Path.Combine(_testDirectory, $"{baseUserId}{i}", "config.json");
-                Assert.True(File.Exists(configFile));
-            }
-        }
-
-        [Fact]
-        public async Task LoadDefaultIPsAsync_InvalidCSVLines_SkipsInvalidRecords()
-        {
-            // Arrange
-            var csvFile = Path.Combine(_testDirectory, "cloudflare-ip.csv");
+            var csvFile = Path.Combine(userDir, "cloudflare-ip.csv");
             var csvContent = @"1.1.1.1,443,0,50
-invalid.line
-8.8.8.8,8080,5.5,100
-256.256.256.256,443,0,50
-# Comment line
-192.168.1.1,443,10,150";
+8.8.8.8,8080,5.5,100";
             await File.WriteAllTextAsync(csvFile, csvContent);
 
             // Act
-            var result = await _fileService.LoadDefaultIPsAsync();
+            var result = await _fileService.LoadUserDedicatedIPsAsync(userId);
 
             // Assert
-            Assert.Equal(3, result.Count);
-            Assert.All(result, ip => Assert.True(ip.IsValid()));
+            Assert.Equal(2, result.Count);
+            Assert.Equal("1.1.1.1", result[0].IPAddress);
         }
 
         [Fact]
-        public async Task DeleteUserConfigAsync_DeletesEmptyDirectory()
+        public async Task SaveUserDedicatedIPsAsync_ValidIPs_ReturnsTrue()
         {
             // Arrange
             var userId = "testuser";
-            var userDir = Path.Combine(_testDirectory, userId);
-            Directory.CreateDirectory(userDir);
-            
-            var configFile = Path.Combine(userDir, "config.json");
-            await File.WriteAllTextAsync(configFile, "{}");
+            var ipRecords = new List<IPRecord>
+            {
+                new IPRecord { IPAddress = "1.1.1.1", Port = 443, PacketLoss = 0, Latency = 50 }
+            };
 
             // Act
-            var result = await _fileService.DeleteUserConfigAsync(userId);
+            var result = await _fileService.SaveUserDedicatedIPsAsync(userId, ipRecords);
 
             // Assert
             Assert.True(result);
-            Assert.False(File.Exists(userDir));
+            
+            var userDir = Path.Combine(_testDirectory, userId);
+            var csvFile = Path.Combine(userDir, "cloudflare-ip.csv");
+            Assert.True(File.Exists(csvFile));
         }
 
         [Fact]
-        public async Task DeleteUserConfigAsync_DirectoryWithOtherFiles_KeepsDirectory()
+        public async Task DeleteUserDedicatedIPsAsync_ExistingFile_ReturnsTrue()
         {
             // Arrange
             var userId = "testuser";
             var userDir = Path.Combine(_testDirectory, userId);
             Directory.CreateDirectory(userDir);
             
-            var configFile = Path.Combine(userDir, "config.json");
-            await File.WriteAllTextAsync(configFile, "{}");
-            
-            var otherFile = Path.Combine(userDir, "other.txt");
-            await File.WriteAllTextAsync(otherFile, "content");
-
-            // Wait for file operations to complete
-            await Task.Delay(50);
+            var csvFile = Path.Combine(userDir, "cloudflare-ip.csv");
+            await File.WriteAllTextAsync(csvFile, "1.1.1.1,443,0,50");
 
             // Act
-            var result = await _fileService.DeleteUserConfigAsync(userId);
+            var result = await _fileService.DeleteUserDedicatedIPsAsync(userId);
 
-            // Assert - Verify core functionality: config file is deleted
-            Assert.False(File.Exists(configFile), "Config file should be deleted");
-            
-            // Verify directory and other files still exist
-            Assert.True(Directory.Exists(userDir), "Directory should still exist");
-            Assert.True(File.Exists(otherFile), "Other file should still exist");
-            
-            // Consider operation successful if config file is deleted
-            var actualResult = !File.Exists(configFile);
-            Assert.True(actualResult, "Delete operation should be considered successful if config file is deleted");
+            // Assert
+            Assert.True(result);
+            Assert.False(File.Exists(csvFile));
         }
     }
 }

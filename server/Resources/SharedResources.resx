@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Layout Navigation -->
+  <data name="Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Admin" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Chinese" xml:space="preserve">
+    <value>中文</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="DefaultIPs" xml:space="preserve">
+    <value>Default IPs</value>
+  </data>
+  <data name="CloudflareIP" xml:space="preserve">
+    <value>Cloudflare Preferred IP</value>
+  </data>
+  <data name="ClashTemplate" xml:space="preserve">
+    <value>Clash Template</value>
+  </data>
+  <data name="UserConfig" xml:space="preserve">
+    <value>User Config</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <!-- Index Page -->
+  <data name="ProjectDescription" xml:space="preserve">
+    <value>A lightweight Clash subscription management system that supports Cloudflare IP optimization and custom templates</value>
+  </data>
+  <data name="FeatureSubscriptionTitle" xml:space="preserve">
+    <value>Subscription Management</value>
+  </data>
+  <data name="FeatureSubscriptionDesc" xml:space="preserve">
+    <value>Generate personalized Clash subscription configurations for each user</value>
+  </data>
+  <data name="FeatureIPTitle" xml:space="preserve">
+    <value>Cloudflare IP Optimization</value>
+  </data>
+  <data name="FeatureIPDesc" xml:space="preserve">
+    <value>Support global and per-user Cloudflare preferred IP configuration</value>
+  </data>
+  <data name="FeatureTemplateTitle" xml:space="preserve">
+    <value>Custom Templates</value>
+  </data>
+  <data name="FeatureTemplateDesc" xml:space="preserve">
+    <value>Flexible Clash YAML template management for different scenarios</value>
+  </data>
+  <data name="HowToUseTitle" xml:space="preserve">
+    <value>How to Use</value>
+  </data>
+  <data name="HowToUseStep1" xml:space="preserve">
+    <value>Login to the admin panel with your credentials</value>
+  </data>
+  <data name="HowToUseStep2" xml:space="preserve">
+    <value>Configure global or user-specific Cloudflare IP lists</value>
+  </data>
+  <data name="HowToUseStep3" xml:space="preserve">
+    <value>Set up Clash YAML templates as needed</value>
+  </data>
+  <data name="HowToUseStep4" xml:space="preserve">
+    <value>Access your subscription URL: /sub/{userId}</value>
+  </data>
+  <data name="GoToAdmin" xml:space="preserve">
+    <value>Go to Admin Panel</value>
+  </data>
+  <!-- Admin Index Page -->
+  <data name="Admin Dashboard" xml:space="preserve">
+    <value>Admin Dashboard</value>
+  </data>
+  <data name="Welcome to admin panel" xml:space="preserve">
+    <value>Welcome to admin panel</value>
+  </data>
+  <!-- Admin Login Page -->
+  <data name="Admin Login" xml:space="preserve">
+    <value>Admin Login</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="UsernameAndPasswordRequired" xml:space="preserve">
+    <value>Username and password are required</value>
+  </data>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>Invalid username or password</value>
+  </data>
+  <!-- DefaultIPs Page -->
+  <data name="Title" xml:space="preserve">
+    <value>Preferred IP Management</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Cloudflare Preferred IP</value>
+  </data>
+  <data name="SelectUser" xml:space="preserve">
+    <value>Select User</value>
+  </data>
+  <data name="GlobalConfiguration" xml:space="preserve">
+    <value>Global Configuration</value>
+  </data>
+  <data name="CurrentStatus" xml:space="preserve">
+    <value>Current Status:</value>
+  </data>
+  <data name="FileExists" xml:space="preserve">
+    <value>File exists</value>
+  </data>
+  <data name="FileNotExists" xml:space="preserve">
+    <value>File does not exist</value>
+  </data>
+  <data name="IPCount" xml:space="preserve">
+    <value>IP Count:</value>
+  </data>
+  <data name="CSVContent" xml:space="preserve">
+    <value>CSV Content (CloudflareST format supported)</value>
+  </data>
+  <data name="CSVContentPlaceholder" xml:space="preserve">
+    <value>Please paste CSV content or upload result.csv file...</value>
+  </data>
+  <data name="CSVContentHelp" xml:space="preserve">
+    <value>Supports CloudflareST program output result.csv format, file size limited to 10MB</value>
+  </data>
+  <data name="SaveConfiguration" xml:space="preserve">
+    <value>Save Configuration</value>
+  </data>
+  <data name="DeleteConfiguration" xml:space="preserve">
+    <value>Delete Configuration</value>
+  </data>
+  <data name="DeleteConfirm" xml:space="preserve">
+    <value>Are you sure you want to delete this configuration?</value>
+  </data>
+  <data name="UploadFile" xml:space="preserve">
+    <value>Upload File</value>
+  </data>
+  <data name="OrUploadCSVFile" xml:space="preserve">
+    <value>Or Upload CSV File</value>
+  </data>
+  <data name="CSVFileHelp" xml:space="preserve">
+    <value>Supports .csv files, maximum 10MB</value>
+  </data>
+  <data name="CurrentIPList" xml:space="preserve">
+    <value>Current IP List</value>
+  </data>
+  <data name="Items" xml:space="preserve">
+    <value>items</value>
+  </data>
+  <data name="NoIPConfiguration" xml:space="preserve">
+    <value>No IP configuration available</value>
+  </data>
+  <data name="ID" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="IPAddress" xml:space="preserve">
+    <value>IP Address</value>
+  </data>
+  <data name="Sent" xml:space="preserve">
+    <value>Sent</value>
+  </data>
+  <data name="Received" xml:space="preserve">
+    <value>Received</value>
+  </data>
+  <data name="PacketLossRate" xml:space="preserve">
+    <value>Packet Loss Rate</value>
+  </data>
+  <data name="AverageLatency" xml:space="preserve">
+    <value>Average Latency</value>
+  </data>
+  <data name="DownloadSpeed" xml:space="preserve">
+    <value>Download Speed</value>
+  </data>
+  <data name="NoData" xml:space="preserve">
+    <value>No data</value>
+  </data>
+  <data name="IPConfigurationSaved" xml:space="preserve">
+    <value>IP configuration saved successfully</value>
+  </data>
+  <data name="FailedToSaveIPConfiguration" xml:space="preserve">
+    <value>Failed to save IP configuration</value>
+  </data>
+  <data name="FileUploadedSuccessfully" xml:space="preserve">
+    <value>File uploaded successfully</value>
+  </data>
+  <data name="FailedToUploadFile" xml:space="preserve">
+    <value>Failed to upload file</value>
+  </data>
+  <data name="ConfigurationDeletedSuccessfully" xml:space="preserve">
+    <value>Configuration deleted successfully</value>
+  </data>
+  <data name="FailedToDeleteConfiguration" xml:space="preserve">
+    <value>Failed to delete configuration</value>
+  </data>
+  <data name="PleaseSelectFileToUpload" xml:space="preserve">
+    <value>Please select a file to upload</value>
+  </data>
+  <data name="FileSizeExceedsLimit" xml:space="preserve">
+    <value>File size exceeds limit</value>
+  </data>
+  <!-- ClashTemplate Page -->
+  <data name="GlobalTemplate" xml:space="preserve">
+    <value>Global Template</value>
+  </data>
+  <data name="FilePath" xml:space="preserve">
+    <value>File path:</value>
+  </data>
+  <data name="YAMLTemplateContent" xml:space="preserve">
+    <value>YAML Template Content</value>
+  </data>
+  <data name="YAMLContentPlaceholder" xml:space="preserve">
+    <value>Please enter YAML content...</value>
+  </data>
+  <data name="YAMLContentHelp" xml:space="preserve">
+    <value>Supports all Clash configuration fields, file size limited to 1MB</value>
+  </data>
+  <data name="SaveTemplate" xml:space="preserve">
+    <value>Save Template</value>
+  </data>
+  <data name="DeleteTemplate" xml:space="preserve">
+    <value>Delete Template</value>
+  </data>
+  <data name="OrUploadYAMLFile" xml:space="preserve">
+    <value>Or Upload YAML File</value>
+  </data>
+  <data name="YAMLFileHelp" xml:space="preserve">
+    <value>Supports .yaml and .yml files, maximum 1MB</value>
+  </data>
+  <data name="YAMLContentRequired" xml:space="preserve">
+    <value>YAML content is required</value>
+  </data>
+  <data name="InvalidYAMLFormat" xml:space="preserve">
+    <value>Invalid YAML format</value>
+  </data>
+  <data name="TemplateSavedSuccessfully" xml:space="preserve">
+    <value>Template saved successfully</value>
+  </data>
+  <data name="FailedToSaveTemplate" xml:space="preserve">
+    <value>Failed to save template</value>
+  </data>
+  <data name="TemplateDeletedSuccessfully" xml:space="preserve">
+    <value>Template deleted successfully</value>
+  </data>
+  <data name="FailedToDeleteTemplate" xml:space="preserve">
+    <value>Failed to delete template</value>
+  </data>
+  <!-- UserConfig Page -->
+  <data name="SelectUserPlaceholder" xml:space="preserve">
+    <value>-- Select User --</value>
+  </data>
+  <data name="ConfigurationOverview" xml:space="preserve">
+    <value>Configuration Overview for</value>
+  </data>
+  <data name="DirectoryStatus" xml:space="preserve">
+    <value>Directory Status</value>
+  </data>
+  <data name="DirectoryExists" xml:space="preserve">
+    <value>Directory exists</value>
+  </data>
+  <data name="DirectoryNotExists" xml:space="preserve">
+    <value>Directory does not exist</value>
+  </data>
+  <data name="ConfigurationFiles" xml:space="preserve">
+    <value>Configuration Files</value>
+  </data>
+  <data name="IPConfiguration" xml:space="preserve">
+    <value>IP Configuration (cloudflare-ip.csv)</value>
+  </data>
+  <data name="IPConfigurationDetails" xml:space="preserve">
+    <value>IP Configuration Details</value>
+  </data>
+  <data name="TemplateConfigurationDetails" xml:space="preserve">
+    <value>Template Configuration Details</value>
+  </data>
+  <data name="FileSize" xml:space="preserve">
+    <value>File Size:</value>
+  </data>
+  <data name="LastModified" xml:space="preserve">
+    <value>Last Modified:</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="ManageIPConfiguration" xml:space="preserve">
+    <value>Manage IP Configuration</value>
+  </data>
+  <data name="ManageTemplate" xml:space="preserve">
+    <value>Manage Template</value>
+  </data>
+  <data name="DeleteAllConfiguration" xml:space="preserve">
+    <value>Delete All Configuration</value>
+  </data>
+  <data name="DeleteAllConfigurationConfirm" xml:space="preserve">
+    <value>Are you sure you want to delete all configuration for this user?</value>
+  </data>
+  <data name="UserConfigurationManagement" xml:space="preserve">
+    <value>User Configuration Management</value>
+  </data>
+  <data name="SelectUserInstruction" xml:space="preserve">
+    <value>Please select a user from the dropdown above to view and manage their configuration files.</value>
+  </data>
+  <data name="InterfaceDescription" xml:space="preserve">
+    <value>This interface allows you to:</value>
+  </data>
+  <data name="ViewUserSpecificConfiguration" xml:space="preserve">
+    <value>View user-specific configuration status</value>
+  </data>
+  <data name="CheckFileExistence" xml:space="preserve">
+    <value>Check file existence and details</value>
+  </data>
+  <data name="NavigateToManagementPages" xml:space="preserve">
+    <value>Navigate to specific management pages</value>
+  </data>
+  <data name="DeleteAllUserConfiguration" xml:space="preserve">
+    <value>Delete all user configuration if needed</value>
+  </data>
+  <data name="PleaseSelectUser" xml:space="preserve">
+    <value>Please select a user</value>
+  </data>
+  <data name="UserConfigurationDeletedSuccessfully" xml:space="preserve">
+    <value>User configuration deleted successfully</value>
+  </data>
+  <data name="FailedToDeleteUserConfiguration" xml:space="preserve">
+    <value>Failed to delete user configuration</value>
+  </data>
+  <!-- Additional DefaultIPs Page Keys -->
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="FileStatus" xml:space="preserve">
+    <value>File Status</value>
+  </data>
+  <data name="SearchIP" xml:space="preserve">
+    <value>Search IP...</value>
+  </data>
+  <data name="SortByIP" xml:space="preserve">
+    <value>Sort by IP</value>
+  </data>
+  <data name="SortByLatency" xml:space="preserve">
+    <value>Sort by Latency</value>
+  </data>
+  <data name="SortByLossRate" xml:space="preserve">
+    <value>Sort by Loss Rate</value>
+  </data>
+  <data name="SortBySpeed" xml:space="preserve">
+    <value>Sort by Speed</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="UploadCSVHint" xml:space="preserve">
+    <value>Upload a CSV file or paste CSV content to get started</value>
+  </data>
+  <!-- ClashTemplate Page Keys -->
+  <data name="ClashTemplateManagement" xml:space="preserve">
+    <value>Clash Template Management</value>
+  </data>
+  <data name="Format" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Validate" xml:space="preserve">
+    <value>Validate</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="CurrentFilePreview" xml:space="preserve">
+    <value>Current File Preview</value>
+  </data>
+  <data name="Characters" xml:space="preserve">
+    <value>Characters</value>
+  </data>
+  <data name="Lines" xml:space="preserve">
+    <value>Lines</value>
+  </data>
+  <data name="WordWrap" xml:space="preserve">
+    <value>Word Wrap</value>
+  </data>
+  <data name="YAMLEditorHint" xml:space="preserve">
+    <value>Use Tab for indentation, Ctrl+F for search</value>
+  </data>
+  <data name="DeleteTemplateConfirm" xml:space="preserve">
+    <value>Are you sure you want to delete this template?</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="YAMLTemplatePreview" xml:space="preserve">
+    <value>YAML Template Preview</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <!-- UserConfig Page Keys -->
+  <data name="ClashTemplateFile" xml:space="preserve">
+    <value>Clash Template (clash.yaml)</value>
+  </data>
+  <!-- SubscriptionService Keys -->
+  <data name="InvalidUserId" xml:space="preserve">
+    <value>Invalid user ID format</value>
+  </data>
+  <data name="UserConfigNotFound" xml:space="preserve">
+    <value>User configuration not found</value>
+  </data>
+  <data name="TemplateNotFound" xml:space="preserve">
+    <value>Clash template not found</value>
+  </data>
+  <data name="InternalServerError" xml:space="preserve">
+    <value>Internal server error occurred</value>
+  </data>
+  <data name="NoValidIPRecords" xml:space="preserve">
+    <value>No valid IP records found in CSV content</value>
+  </data>
+  <data name="UserIPsUpdated" xml:space="preserve">
+    <value>User IP addresses updated successfully</value>
+  </data>
+  <data name="UserConfigDeleted" xml:space="preserve">
+    <value>User configuration deleted successfully</value>
+  </data>
+  <data name="SubscriptionUrlNotFound" xml:space="preserve">
+    <value>Subscription URL not found in user configuration</value>
+  </data>
+  <data name="SubscriptionUrlTemplateNotConfigured" xml:space="preserve">
+    <value>Subscription URL template is not configured</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>User not found</value>
+  </data>
+  <!-- Sub\Index Page Keys -->
+  <data name="UserIdValidationFailed" xml:space="preserve">
+    <value>User ID validation failed</value>
+  </data>
+  <data name="CSVContentRequired" xml:space="preserve">
+    <value>CSV content is required</value>
+  </data>
+  <data name="EmptyCSVContent" xml:space="preserve">
+    <value>Empty CSV content</value>
+  </data>
+  <data name="SubscriptionGenerationFailed" xml:space="preserve">
+    <value>Subscription generation failed</value>
+  </data>
+  <data name="IPUpdateFailed" xml:space="preserve">
+    <value>IP update failed</value>
+  </data>
+  <data name="UserConfigDeletionFailed" xml:space="preserve">
+    <value>User config deletion failed</value>
+  </data>
+</root>

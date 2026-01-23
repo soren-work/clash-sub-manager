@@ -162,7 +162,7 @@ namespace ClashSubManager.Services
                         }
                         else
                         {
-                            Console.WriteLine($"Invalid IP record skipped: {line}");
+                            _logger.LogWarning("Invalid IP record skipped: {Line}", line);
                         }
                     }
                 }
@@ -170,7 +170,7 @@ namespace ClashSubManager.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error parsing CSV content");
-                Console.WriteLine($"Error parsing CSV content: {ex.Message}");
+                _logger.LogError("Error parsing CSV content: {Message}", ex.Message);
             }
 
             return ipRecords;

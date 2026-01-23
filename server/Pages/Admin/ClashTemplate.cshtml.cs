@@ -1,5 +1,5 @@
 using ClashSubManager.Models;
-using Microsoft.AspNetCore.Authorization;
+using ClashSubManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
@@ -8,14 +8,13 @@ using YamlDotNet.RepresentationModel;
 
 namespace ClashSubManager.Pages.Admin
 {
-    [Authorize(Roles = "Admin")]
     public class ClashTemplateModel : PageModel
     {
-        private readonly string _basePath = "/app/data";
+        private readonly IConfigurationService _configurationService;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
-        public string SelectedUserId { get; set; } = string.Empty;
+        public string? SelectedUserId { get; set; }
 
         public List<string> AvailableUsers { get; set; } = new();
         public string YAMLContent { get; set; } = string.Empty;
@@ -24,6 +23,11 @@ namespace ClashSubManager.Pages.Admin
         [BindProperty]
         [Required(ErrorMessage = "YAML content is required")]
         public string EditedContent { get; set; } = string.Empty;
+
+        public ClashTemplateModel(IConfigurationService configurationService)
+        {
+            _configurationService = configurationService;
+        }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -138,7 +142,8 @@ namespace ClashSubManager.Pages.Admin
         {
             try
             {
-                var usersPath = Path.Combine(_basePath, "users.txt");
+                var basePath = _configurationService.GetDataPath();
+                var usersPath = Path.Combine(basePath, "users.txt");
                 if (System.IO.File.Exists(usersPath))
                 {
                     var content = await System.IO.File.ReadAllTextAsync(usersPath, Encoding.UTF8);
@@ -244,9 +249,10 @@ namespace ClashSubManager.Pages.Admin
 
         private string GetFilePath(string userId)
         {
+            var basePath = _configurationService.GetDataPath();
             return string.IsNullOrEmpty(userId) 
-                ? Path.Combine(_basePath, "clash.yaml")
-                : Path.Combine(_basePath, userId, "clash.yaml");
+                ? Path.Combine(basePath, "clash.yaml")
+                : Path.Combine(basePath, userId, "clash.yaml");
         }
 
         private bool IsValidYAML(string content)
