@@ -90,6 +90,9 @@ namespace ClashSubManager.Pages.Admin
 
         public async Task<IActionResult> OnPostUploadAsync(IFormFile file)
         {
+            // Clear EditedContent validation error since file upload doesn't submit this field
+            ModelState.Remove(nameof(EditedContent));
+            
             if (file == null || file.Length == 0)
             {
                 ModelState.AddModelError(string.Empty, "Please select a file to upload");
@@ -139,6 +142,9 @@ namespace ClashSubManager.Pages.Admin
 
         public async Task<IActionResult> OnPostDeleteAsync()
         {
+            // Clear EditedContent validation error since delete doesn't need this field
+            ModelState.Remove(nameof(EditedContent));
+            
             var result = await DeleteYAMLFileAsync(SelectedUserId);
 
             if (result)
