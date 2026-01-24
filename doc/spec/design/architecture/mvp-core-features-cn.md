@@ -162,3 +162,78 @@ SUBSCRIPTION_URL_TEMPLATE=http://example.com/subscription/fixed
 3. IP扩展基于现有proxies进行复制和修改
 4. **动态字段处理**：所有字段必须动态解析，严禁硬编码字段名称或结构
 5. **完整字段保留**：订阅服务和模板文件的所有字段必须完整保留到最终输出
+
+## 节点命名模板系统
+
+### 功能概述
+节点命名模板系统允许用户通过配置文件、环境变量或命令行参数自定义代理节点名称，支持灵活的变量替换和多级配置。
+
+### 配置优先级
+1. 命令行参数（最高优先级）
+2. 环境变量
+3. 用户配置文件
+4. 默认配置（最低优先级）
+
+### 支持的变量
+| 变量 | 描述 | 示例 | 多级支持 |
+|------|------|------|----------|
+| `{name}` | 原始代理名称 | `HK-Server` | `proxy.name` |
+| `{index}` | 当前节点索引 | `1`, `2`, `3` | `node.index` |
+| `{network}` | 协议类型 | `vless`, `vmess` | `proxy.type` |
+| `{port}` | 端口号 | `443`, `8080` | `proxy.port` |
+| `{server}` | 新IP地址 | `104.16.1.1` | `proxy.server` |
+| `{servername}` | 原始域名 | `example.com` | `proxy.servername` |
+| `{type}` | 代理协议类型 | `VLESS`, `VMess` | `proxy.type` |
+| `{uuid}` | 原始UUID | `12345678-1234-1234-1234-123456789abc` | `proxy.uuid` |
+
+### 配置示例
+
+#### 环境变量配置
+```bash
+# 基础命名模板
+NODE_NAMING_TEMPLATE="自定义名称-{index}"
+
+# 协议特定模板
+NODE_NAMING_TEMPLATE="{type}-{index}-{server}"
+
+# 位置特定模板
+NODE_NAMING_TEMPLATE="HK-{name}-Node-{index}"
+```
+
+#### 配置文件设置
+```json
+{
+  "NodeNamingTemplate": "{name}-Node-{index}",
+  "UseIpInNodeName": false
+}
+```
+
+#### 向后兼容性
+- `UseIpInNodeName=true` 自动映射到 `{name}-{server}`
+- `UseIpInNodeName=false` 自动映射到 `{name}-Node-{index}`
+
+### 模板示例
+```
+# 简单命名
+"自定义名称-{index}"
+"Node-{index}-{server}"
+"{name}-CF-{index}"
+
+# 协议特定
+"VLESS-{index}-{server}"
+"VMess-{name}-{port}"
+
+# 多变量组合
+"{name}-{type}-{index}-{server}"
+"Custom-{proxy.type}-Node-{node.index}"
+```
+
+### 技术实现
+- **接口**: `INodeNamingTemplateService`
+- **实现**: `NodeNamingTemplateService`
+- **变量提取**: 从YAML代理节点自动提取所有可用变量
+- **模板验证**: 启动时验证模板语法正确性
+- **错误处理**: 模板处理失败时自动回退到默认命名
+
+### 集成方式
+节点命名模板系统已集成到 `PlatformConfigurationService.ExtendIPAddressesAsync` 方法中，在IP扩展过程中自动应用自定义命名规则。

@@ -17,6 +17,7 @@ namespace ClashSubManager.Services
         private readonly IPathResolver _pathResolver;
         private readonly IConfigurationValidator _configurationValidator;
         private readonly HttpClient _httpClient;
+        private readonly INodeNamingTemplateService _nodeNamingTemplateService;
         private string? _cachedDataPath;
 
         public PlatformConfigurationService(
@@ -25,7 +26,8 @@ namespace ClashSubManager.Services
             IEnvironmentDetector environmentDetector,
             IPathResolver pathResolver,
             IConfigurationValidator configurationValidator,
-            HttpClient httpClient)
+            HttpClient httpClient,
+            INodeNamingTemplateService nodeNamingTemplateService)
         {
             _configuration = configuration;
             _logger = logger;
@@ -33,6 +35,7 @@ namespace ClashSubManager.Services
             _pathResolver = pathResolver;
             _configurationValidator = configurationValidator;
             _httpClient = httpClient;
+            _nodeNamingTemplateService = nodeNamingTemplateService;
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash-verge/v1.0.0");
         }
 
@@ -152,6 +155,15 @@ namespace ClashSubManager.Services
 
             _logger.LogWarning("Subscription URL template not configured");
             return string.Empty;
+        }
+
+        /// <summary>
+        /// Get node naming template
+        /// </summary>
+        /// <returns>Node naming template</returns>
+        public string GetNodeNamingTemplate()
+        {
+            return _nodeNamingTemplateService.GetNamingTemplate();
         }
 
         /// <summary>
@@ -406,11 +418,28 @@ namespace ClashSubManager.Services
                                         if (nameNode.Value is YamlScalarNode nameScalar)
                                         {
                                             var originalName = nameScalar.Value;
-                                            // Check naming format configuration, default to node index format
-                                            var useIpFormat = GetValue<bool>("UseIpInNodeName", false);
-                                            var newName = useIpFormat 
-                                                ? $"{originalName}-{ip.IPAddress}"
-                                                : $"{originalName}-Node-{index + 1}";
+                                            
+                                            // Use new naming template system
+                                            var variables = _nodeNamingTemplateService.ExtractVariables(proxyMapping, index, ip.IPAddress);
+                                            var context = new NodeNamingContext
+                                            {
+                                                OriginalName = originalName,
+                                                Index = index + 1,
+                                                Server = ip.IPAddress,
+                                                ServerName = originalServer,
+                                                Port = ip.Port,
+                                                CustomProperties = variables
+                                            };
+                                            
+                                            var namingTemplate = GetNodeNamingTemplate();
+                                            var newName = _nodeNamingTemplateService.ProcessTemplate(namingTemplate, context);
+                                            
+                                            // If template processing fails, use original name as fallback
+                                            if (string.IsNullOrEmpty(newName))
+                                            {
+                                                newName = $"{originalName}-Node-{index + 1}";
+                                            }
+                                            
                                             nameScalar.Value = newName;
                                         }
                                     }

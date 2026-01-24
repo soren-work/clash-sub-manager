@@ -60,5 +60,11 @@ namespace ClashSubManager.Services
             string subscriptionUrl, 
             List<IPRecord> defaultIPs, 
             List<IPRecord> dedicatedIPs);
+
+        /// <summary>
+        /// Get node naming template
+        /// </summary>
+        /// <returns>Node naming template</returns>
+        string GetNodeNamingTemplate();
     }
 }
