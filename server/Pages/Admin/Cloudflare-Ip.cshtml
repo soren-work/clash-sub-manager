@@ -140,8 +140,12 @@
                     <span asp-validation-for="CSVContent" class="text-danger"></span>
                 </div>
                 <div class="d-flex gap-2 mb-3">
-                    <button type="submit" asp-page-handler="SetIPs" class="btn btn-primary">@Localizer["SaveConfiguration"]</button>
-                    <button type="submit" asp-page-handler="DeleteIPs" class="btn btn-danger">@Localizer["DeleteConfiguration"]</button>
+                    <button type="button" class="btn btn-primary" onclick="showConfirmModal('@Localizer["ConfirmSaveTitle"]', '@Localizer["ConfirmSaveMessage"]', 'SetIPs')">
+                        <i class="bi bi-save"></i> @Localizer["SaveConfiguration"]
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="showConfirmModal('@Localizer["ConfirmDeleteTitle"]', '@Localizer["ConfirmDeleteMessage"]', 'DeleteIPs')">
+                        <i class="bi bi-trash"></i> @Localizer["DeleteConfiguration"]
+                    </button>
                     <button type="button" class="btn btn-outline-secondary" onclick="resetContent()">
                         <i class="bi bi-arrow-counterclockwise"></i> @Localizer["Reset"]
                     </button>
@@ -160,14 +164,111 @@
                     <input type="file" name="file" class="form-control" accept=".csv" />
                     <div class="form-text">@Localizer["CSVFileHelp"]</div>
                 </div>
-                <button type="submit" asp-page-handler="Upload" class="btn btn-secondary">@Localizer["UploadFile"]</button>
+                <button type="button" class="btn btn-secondary" onclick="showConfirmModal('@Localizer["ConfirmUploadTitle"]', '@Localizer["ConfirmUploadMessage"]', 'Upload')">
+                    <i class="bi bi-upload"></i> @Localizer["UploadFile"]
+                </button>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">@Localizer["Confirm"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmModalButton">
+                    <i class="bi bi-check-circle"></i> @Localizer["Confirm"]
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
 const originalContent = `@Html.Raw(Model.OriginalCSVContent.Replace("\n", "\\n").Replace("\r", "\\r").Replace("'", "\\'"))`;
+
+// Confirmation Modal functionality
+let pendingHandler = null;
+let confirmModal = null;
+
+function showConfirmModal(title, message, handler) {
+    // Initialize modal if not already done
+    if (!confirmModal) {
+        const modalElement = document.getElementById('confirmModal');
+        if (modalElement) {
+            confirmModal = new bootstrap.Modal(modalElement);
+        }
+    }
+    
+    // Set modal content
+    document.getElementById('confirmModalLabel').textContent = title;
+    document.getElementById('confirmModalMessage').textContent = message;
+    
+    // Store the handler for later use
+    pendingHandler = handler;
+    
+    // Update confirm button style based on action type
+    const confirmBtn = document.getElementById('confirmModalButton');
+    if (handler === 'DeleteIPs') {
+        confirmBtn.className = 'btn btn-danger';
+        confirmBtn.innerHTML = '<i class="bi bi-trash"></i> @Localizer["Confirm"]';
+    } else {
+        confirmBtn.className = 'btn btn-primary';
+        confirmBtn.innerHTML = '<i class="bi bi-check-circle"></i> @Localizer["Confirm"]';
+    }
+    
+    // Show modal
+    confirmModal.show();
+}
+
+function executeConfirmedAction() {
+    if (!pendingHandler) return;
+    
+    // Hide modal first
+    confirmModal.hide();
+    
+    // Find the appropriate form and submit
+    if (pendingHandler === 'Upload') {
+        // Upload form is the second form (with file input)
+        const uploadForm = document.querySelector('form[enctype="multipart/form-data"]');
+        if (uploadForm) {
+            // Create hidden input for handler
+            let handlerInput = uploadForm.querySelector('input[name="handler"]');
+            if (!handlerInput) {
+                handlerInput = document.createElement('input');
+                handlerInput.type = 'hidden';
+                handlerInput.name = 'handler';
+                uploadForm.appendChild(handlerInput);
+            }
+            handlerInput.value = pendingHandler;
+            
+            // Set form action with handler
+            uploadForm.action = '?handler=' + pendingHandler;
+            uploadForm.submit();
+        }
+    } else {
+        // SetIPs or DeleteIPs - use the main CSV form
+        const mainForm = document.querySelector('form:not([enctype])');
+        if (mainForm) {
+            // Set form action with handler
+            mainForm.action = '?handler=' + pendingHandler;
+            mainForm.submit();
+        }
+    }
+    
+    pendingHandler = null;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('ipSearch');
@@ -177,6 +278,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchInput && sortSelect && table) {
         searchInput.addEventListener('input', filterTable);
         sortSelect.addEventListener('change', sortTable);
+    }
+    
+    // Setup confirm modal button click handler
+    const confirmBtn = document.getElementById('confirmModalButton');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', executeConfirmedAction);
     }
 });
 

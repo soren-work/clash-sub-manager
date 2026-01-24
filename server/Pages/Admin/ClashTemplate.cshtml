@@ -84,10 +84,10 @@
                     <span asp-validation-for="EditedContent" class="text-danger"></span>
                 </div>
                 <div class="d-flex gap-2 mb-3">
-                    <button type="submit" asp-page-handler="Save" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" onclick="showConfirmModal('@Localizer["ConfirmSaveTitle"]', '@Localizer["ConfirmSaveMessage"]', 'Save')">
                         <i class="bi bi-save"></i> @Localizer["SaveTemplate"]
                     </button>
-                    <button type="submit" asp-page-handler="Delete" class="btn btn-danger">
+                    <button type="button" class="btn btn-danger" onclick="showConfirmModal('@Localizer["ConfirmDeleteTitle"]', '@Localizer["ConfirmDeleteMessage"]', 'Delete')">
                         <i class="bi bi-trash"></i> @Localizer["DeleteTemplate"]
                     </button>
                     <button type="button" class="btn btn-outline-secondary" onclick="resetContent()">
@@ -108,18 +108,103 @@
                     <input type="file" name="file" class="form-control" accept=".yaml,.yml" />
                     <div class="form-text">@Localizer["YAMLFileHelp"]</div>
                 </div>
-                <button type="submit" asp-page-handler="Upload" class="btn btn-secondary">
-            <i class="bi bi-upload"></i> @Localizer["UploadFile"]
-        </button>
-    </form>
+                <button type="button" class="btn btn-secondary" onclick="showConfirmModal('@Localizer["ConfirmUploadTitle"]', '@Localizer["ConfirmUploadMessage"]', 'Upload')">
+                    <i class="bi bi-upload"></i> @Localizer["UploadFile"]
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
-</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">@Localizer["Confirm"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmModalButton">
+                    <i class="bi bi-check-circle"></i> @Localizer["Confirm"]
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 
 
 <script>
 const originalContent = `@Html.Raw(Model.YAMLContent.Replace("\n", "\\n").Replace("\r", "\\r").Replace("'", "\\'"))`;
+
+// Confirmation Modal functionality
+let pendingHandler = null;
+let confirmModal = null;
+
+function showConfirmModal(title, message, handler) {
+    // Initialize modal if not already done
+    if (!confirmModal) {
+        const modalElement = document.getElementById('confirmModal');
+        if (modalElement) {
+            confirmModal = new bootstrap.Modal(modalElement);
+        }
+    }
+    
+    // Set modal content
+    document.getElementById('confirmModalLabel').textContent = title;
+    document.getElementById('confirmModalMessage').textContent = message;
+    
+    // Store the handler for later use
+    pendingHandler = handler;
+    
+    // Update confirm button style based on action type
+    const confirmBtn = document.getElementById('confirmModalButton');
+    if (handler === 'Delete') {
+        confirmBtn.className = 'btn btn-danger';
+        confirmBtn.innerHTML = '<i class="bi bi-trash"></i> @Localizer["Confirm"]';
+    } else {
+        confirmBtn.className = 'btn btn-primary';
+        confirmBtn.innerHTML = '<i class="bi bi-check-circle"></i> @Localizer["Confirm"]';
+    }
+    
+    // Show modal
+    confirmModal.show();
+}
+
+function executeConfirmedAction() {
+    if (!pendingHandler) return;
+    
+    // Hide modal first
+    confirmModal.hide();
+    
+    // Find the appropriate form and submit
+    if (pendingHandler === 'Upload') {
+        // Upload form is the second form (with file input)
+        const uploadForm = document.querySelector('form[enctype="multipart/form-data"]');
+        if (uploadForm) {
+            // Set form action with handler
+            uploadForm.action = '?handler=' + pendingHandler;
+            uploadForm.submit();
+        }
+    } else {
+        // Save or Delete - use the main edit form
+        const mainForm = document.getElementById('mainEditForm');
+        if (mainForm) {
+            // Set form action with handler
+            mainForm.action = '?handler=' + pendingHandler;
+            mainForm.submit();
+        }
+    }
+    
+    pendingHandler = null;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const editor = document.getElementById('yamlEditor');
@@ -136,6 +221,12 @@ document.addEventListener('DOMContentLoaded', function() {
         wordWrap.addEventListener('change', function() {
             editor.style.whiteSpace = this.checked ? 'pre-wrap' : 'pre';
         });
+    }
+    
+    // Setup confirm modal button click handler
+    const confirmBtn = document.getElementById('confirmModalButton');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', executeConfirmedAction);
     }
 });
 
