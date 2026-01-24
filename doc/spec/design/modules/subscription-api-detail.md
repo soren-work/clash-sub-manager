@@ -44,8 +44,33 @@
 - Validation failed: Return other content means user ID is wrong
 
 ### 2.4 Data Overwrite Scope
-1. **proxies extension**: Original `proxies` `server` attribute is domain name, copy objects equal to the number of IPs in `cloudflare-ip.csv`, and change server to IP addresses
-2. **yaml structure extension**: Read `clash.yaml` template, prioritize template content, add and replace to original content
+
+#### 2.4.1 Proxies Extension Mechanism
+1. **Smart Recognition Processing**: Detect the `server` attribute type of each node in original `proxies`
+   - **IP Address Nodes**: When `server` is an IP address, replace with cloudflare optimized IPs
+   - **Domain Nodes**: When `server` is a domain name, preserve original node unchanged
+   - **No Server Nodes**: Preserve original node unchanged
+
+2. **IP Address Extension Rules**:
+   - Create new copies for each IP address type proxy node
+   - Number of copies equals the number of IPs in `cloudflare-ip.csv`
+   - Replace `server` attribute of each copy with corresponding optimized IP address
+   - Dynamically set port number based on port information in IP records
+
+3. **Node Naming Strategy**:
+   - **Index Naming Mode** (default): `{original_name}节点-{index}`
+   - **IP Address Naming Mode**: `{original_name}-{ip_address}`
+   - Controlled by `UseIpInNodeName` configuration item
+
+4. **Deep Copy Guarantee**:
+   - Use recursive deep copy to ensure each node is completely independent
+   - Avoid data pollution caused by shared references between nodes
+   - Support complete copying of complex nested structures
+
+#### 2.4.2 YAML Structure Extension
+1. **Template Field Injection**: Read `clash.yaml` template, prioritize template content, add and replace to original content
+2. **Dynamic Field Merging**: Completely preserve all fields from subscription service and template files
+3. **Field Conflict Handling**: When field names are the same, template fields override subscription fields
 
 ## 3. Compatibility and Performance Requirements
 

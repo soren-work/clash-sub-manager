@@ -138,7 +138,13 @@ ClashSubManager/
 - 验证失败：返回其他内容则用户ID错误
 
 #### 4.2.2 数据覆写范围
-1. **proxies扩展**：原`proxies`的`server`属性是域名，复制出与`cloudflare-ip.csv`中IP数量相同的对象，并将server改为IP地址
+1. **proxies智能扩展**：
+   - **智能识别**：检测原始`proxies`中每个节点的`server`属性类型
+   - **IP地址节点**：当`server`为IP地址时，用cloudflare优选IP替换
+   - **域名节点**：当`server`为域名时，保留原始节点不变
+   - **无server节点**：保留原始节点不变
+   - **深复制保证**：使用递归深复制确保每个节点完全独立
+
 2. **yaml结构扩展**：读取`clash.yaml`模板，以模板内容为优先项，添加和替换到原内容中
 
 ### 4.3 管理界面路由

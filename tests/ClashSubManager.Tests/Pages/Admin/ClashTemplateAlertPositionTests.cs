@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ClashSubManager.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Localization;
 
 namespace ClashSubManager.Tests.Pages.Admin
 {
@@ -15,6 +16,8 @@ namespace ClashSubManager.Tests.Pages.Admin
         private ClashTemplateModel _model;
         private string _testDataPath;
         private Mock<IConfigurationService> _mockConfigService;
+        private Mock<ILogger<ClashTemplateModel>> _mockLogger;
+        private Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
 
         public ClashTemplateAlertPositionTests()
         {
@@ -24,8 +27,13 @@ namespace ClashSubManager.Tests.Pages.Admin
             _mockConfigService = new Mock<IConfigurationService>();
             _mockConfigService.Setup(x => x.GetDataPath()).Returns(_testDataPath);
             
-            var mockLogger = new Mock<ILogger<ClashTemplateModel>>();
-            _model = new ClashTemplateModel(_mockConfigService.Object, mockLogger.Object);
+            _mockLogger = new Mock<ILogger<ClashTemplateModel>>();
+            _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
+            
+            // Setup localizer mock to return non-null values
+            _mockLocalizer.Setup(l => l[It.IsAny<string>()]).Returns(new LocalizedString("test", "test"));
+            
+            _model = new ClashTemplateModel(_mockConfigService.Object, _mockLocalizer.Object, _mockLogger.Object);
         }
 
         public void Dispose()

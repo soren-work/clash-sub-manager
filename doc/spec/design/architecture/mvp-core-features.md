@@ -19,8 +19,13 @@
 **Dependency Relationship:** Support any backend providing clash subscription services.
 
 **Overwrite Scope:**
-1. **Extension of proxies:** Original `proxies` `server` attribute is domain name, copy objects equal to the number of IP addresses in `cloudflare-ip.csv` file, and change server to IP addresses in the file
-2. **Extension of yaml document structure:** Read templates and settings defined in `clash.yaml` file, prioritize content in `clash.yaml` file over original content, add and replace content from `clash.yaml` file into original content
+1. **proxies smart extension:** Detect the `server` attribute type of each node in original `proxies` for differentiated processing:
+   - **IP address nodes**: When `server` is an IP address, replace with cloudflare optimized IPs
+   - **Domain nodes**: When `server` is a domain name, preserve original node unchanged
+   - **No server nodes**: Preserve original node unchanged
+   - **Deep copy guarantee**: Use recursive deep copy to ensure each node is completely independent, avoiding shared references
+
+2. **yaml document structure extension:** Read the template and settings defined in `clash.yaml` file, prioritize template content over original content, add and replace template content into original content
 
 **Compatibility Requirements:**
 - **Completely Dynamic Processing:** Must dynamically parse and process all fields from clash.yaml template and subscription service return, strictly prohibit hardcoding any field names or structures

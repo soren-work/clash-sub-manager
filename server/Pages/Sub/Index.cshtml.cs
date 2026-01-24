@@ -33,7 +33,7 @@ namespace ClashSubManager.Pages.Sub
             _localizer = localizer;
             _logger = logger;
             _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash-verge/v1.0.0");
         }
 
         /// <summary>
@@ -51,6 +51,36 @@ namespace ClashSubManager.Pages.Sub
             try
             {
                 _logger.LogInformation("Processing subscription request for user: {UserId}", id);
+                
+                // Log HTTP request information and map to httpClient
+                var requestInfo = new
+                {
+                    Client = Request.Headers["User-Agent"].ToString(),
+                    Method = Request.Method,
+                    Url = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}",
+                    RemoteIP = Request.HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Protocol = Request.Protocol,
+                    Timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"),
+                    UserId = id,
+                    Headers = new
+                    {
+                        UserAgent = Request.Headers["User-Agent"].ToString(),
+                        AcceptEncoding = Request.Headers["Accept-Encoding"].ToString(),
+                        AcceptLanguage = Request.Headers["Accept-Language"].ToString(),
+                        Connection = Request.Headers["Connection"].ToString(),
+                        Host = Request.Headers["Host"].ToString()
+                    }
+                };
+                
+                var requestJson = JsonSerializer.Serialize(requestInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                });
+                
+                _logger.LogInformation("HTTP Request Info: {RequestInfo}", requestJson);
+                
+                // Map current HTTP request information to httpClient
+                MapHttpRequestInfoToHttpClient(Request);
                 
                 UserId = id ?? string.Empty;
 
@@ -213,21 +243,78 @@ namespace ClashSubManager.Pages.Sub
         }
 
         /// <summary>
+        /// Map HTTP request info to httpClient
+        /// </summary>
+        /// <param name="request">Current HTTP request</param>
+        private void MapHttpRequestInfoToHttpClient(HttpRequest request)
+        {
+            try
+            {
+                // Clear existing request headers
+                _httpClient.DefaultRequestHeaders.Clear();
+                
+                // Reset User-Agent
+                _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash-verge/v1.0.0");
+                
+                // Map important request headers
+                var userAgent = request.Headers["User-Agent"].ToString();
+                if (!string.IsNullOrEmpty(userAgent) && userAgent != "clash-verge/v1.0.0")
+                {
+                    _httpClient.DefaultRequestHeaders.UserAgent.Clear();
+                    _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+                }
+                
+                // Map Accept-Language
+                var acceptLanguage = request.Headers["Accept-Language"].ToString();
+                if (!string.IsNullOrEmpty(acceptLanguage))
+                {
+                    _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Language", acceptLanguage);
+                }
+                
+                // Map Accept-Encoding
+                var acceptEncoding = request.Headers["Accept-Encoding"].ToString();
+                if (!string.IsNullOrEmpty(acceptEncoding))
+                {
+                    _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", acceptEncoding);
+                }
+                
+                // Map Connection (if applicable)
+                var connection = request.Headers["Connection"].ToString();
+                if (!string.IsNullOrEmpty(connection))
+                {
+                    _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Connection", connection);
+                }
+                
+                // Add custom request headers to identify source
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Forwarded-For", 
+                    request.HttpContext.Connection.RemoteIpAddress?.ToString());
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Original-User-Agent", 
+                    request.Headers["User-Agent"].ToString());
+                
+                _logger.LogInformation("HTTP request headers mapped to httpClient successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error mapping HTTP request headers to httpClient: {Message}", ex.Message);
+                // Continue with default httpClient configuration even if mapping fails
+            }
+        }
+
+        /// <summary>
         /// Validate user ID through subscription service
         /// </summary>
-        /// <param name="subscriptionUrl">Subscription URL</param>
+        /// <param name="subscriptionUrl">Subscription URL (already contains user ID)</param>
         /// <param name="userId">User ID</param>
         /// <returns>Whether the user ID is valid</returns>
         private async Task<bool> ValidateUserIdWithSubscriptionService(string subscriptionUrl, string userId)
         {
             try
             {
-                // Build validation URL
-                var validationUrl = $"{subscriptionUrl.TrimEnd('/')}/{userId}";
-                _logger.LogInformation("Validating user ID with subscription service: {ValidationUrl}", validationUrl);
-                
+                // Subscription URL already contains the complete user ID through template replacement, use it directly
+                _logger.LogInformation("Validating user ID with subscription service: {ValidationUrl}", subscriptionUrl);
+
                 // Send request to subscription service
-                var response = await _httpClient.GetAsync(validationUrl);
+                var response = await _httpClient.GetAsync(subscriptionUrl);
                 
                 // Check response status code and content type
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)

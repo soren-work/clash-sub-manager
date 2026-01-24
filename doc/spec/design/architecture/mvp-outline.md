@@ -136,7 +136,13 @@ ClashSubManager/
 - Validation failed: Return other content means user ID is wrong
 
 #### 4.2.2 Data Overwrite Scope
-1. **proxies extension**: Original `proxies` `server` attribute is domain name, copy objects equal to the number of IPs in `cloudflare-ip.csv`, and change server to IP addresses
+1. **proxies smart extension**:
+   - **Smart recognition**: Detect the `server` attribute type of each node in original `proxies`
+   - **IP address nodes**: When `server` is an IP address, replace with cloudflare optimized IPs
+   - **Domain nodes**: When `server` is a domain name, preserve original node unchanged
+   - **No server nodes**: Preserve original node unchanged
+   - **Deep copy guarantee**: Use recursive deep copy to ensure each node is completely independent
+
 2. **yaml structure extension**: Read `clash.yaml` template, prioritize template content, add and replace to original content
 
 ### 4.3 Management Interface Routes
