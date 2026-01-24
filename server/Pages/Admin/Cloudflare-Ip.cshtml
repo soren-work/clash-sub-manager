@@ -1,6 +1,6 @@
 @page "/admin/cloudflare-ip"
 @using ClashSubManager.Models
-@model DefaultIPsModel
+@model CloudflareIpModel
 @{
     ViewData["Title"] = @Localizer["PageTitle"];
     Layout = "_Layout";
@@ -51,79 +51,8 @@
         </div>
     </div>
 
-    <!-- File Status -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card @(Model.FileExists ? "border-success" : "border-warning")">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="bi @(Model.FileExists ? "bi-check-circle-fill text-success" : "bi-exclamation-circle-fill text-warning")" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">@Localizer["FileStatus"]</h6>
-                            <p class="card-text mb-0">
-                                <span class="badge @(Model.FileExists ? "bg-success" : "bg-warning")">
-                                    @(Model.FileExists ? Localizer["FileExists"] : Localizer["FileNotExists"])
-                                </span>
-                                @if (Model.FileExists)
-                                {
-                                    <span class="ms-2">
-                                        <i class="bi bi-hdd"></i> @Localizer["IPCount"] <strong>@Model.IPRecords.Count</strong>
-                                        @if (Model.IPRecords.Any())
-                                        {
-                                            <span class="ms-3">
-                                                <i class="bi bi-speedometer2"></i> @Localizer["AverageLatency"]: <strong>@Math.Round(Model.IPRecords.Where(x => x.Latency > 0).DefaultIfEmpty(new IPRecord { Latency = 0 }).Average(x => x.Latency), 2)ms</strong>
-                                            </span>
-                                        }
-                                    </span>
-                                }
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CSV Content Management -->
+    <!-- Current IP List - Moved Up -->
     <div class="row mb-3">
-        <div class="col-12">
-            <form method="post">
-                <input type="hidden" asp-for="SelectedUserId" />
-                <div class="mb-3">
-                    <label asp-for="CSVContent" class="form-label">@Localizer["CSVContent"]</label>
-                    <textarea asp-for="CSVContent" class="form-control font-monospace" rows="10" 
-                              placeholder="@Localizer["CSVContentPlaceholder"]"></textarea>
-                    <div class="form-text">@Localizer["CSVContentHelp"]</div>
-                    <span asp-validation-for="CSVContent" class="text-danger"></span>
-                </div>
-                <div class="d-flex gap-2 mb-3">
-                    <button type="submit" asp-page-handler="SetIPs" class="btn btn-primary">@Localizer["SaveConfiguration"]</button>
-                    <button type="submit" asp-page-handler="DeleteIPs" class="btn btn-danger" 
-                            onclick="return confirm('@Localizer["DeleteConfirm"]')">@Localizer["DeleteConfiguration"]</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- File Upload -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <form method="post" enctype="multipart/form-data">
-                <input type="hidden" asp-for="SelectedUserId" />
-                <div class="mb-3">
-                    <label class="form-label">@Localizer["OrUploadCSVFile"]</label>
-                    <input type="file" name="file" class="form-control" accept=".csv" />
-                    <div class="form-text">@Localizer["CSVFileHelp"]</div>
-                </div>
-                <button type="submit" asp-page-handler="Upload" class="btn btn-secondary">@Localizer["UploadFile"]</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- IP List Display -->
-    <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -161,24 +90,24 @@
                                 <tbody>
                                     @foreach (var ip in Model.IPRecords)
                                     {
-                                        var quality = GetQualityClass(ip.PacketLoss, ip.Latency);
+                                        var quality = ip.CalculateQuality();
                                         <tr>
                                             <td><span class="badge bg-secondary">@ip.Id</span></td>
                                             <td><code>@ip.IPAddress</code></td>
                                             <td>@ip.Sent</td>
                                             <td>@ip.Received</td>
                                             <td>
-                                                <span class="badge @(ip.PacketLoss == 0 ? "bg-success" : ip.PacketLoss < 5 ? "bg-warning" : "bg-danger")">
+                                                <span class="badge @quality.CssClass">
                                                     @ip.PacketLossRate
                                                 </span>
                                             </td>
                                             <td>
-                                                <span class="badge @(ip.Latency < 100 ? "bg-success" : ip.Latency < 300 ? "bg-warning" : "bg-danger")">
+                                                <span class="badge @quality.CssClass">
                                                     @ip.AverageLatency
                                                 </span>
                                             </td>
                                             <td>@ip.DownloadSpeed</td>
-                                            <td><span class="badge @quality.Item2">@quality.Item1</span></td>
+                                            <td><span class="badge @quality.CssClass">@quality.Quality</span></td>
                                         </tr>
                                     }
                                 </tbody>
@@ -197,19 +126,49 @@
             </div>
         </div>
     </div>
+
+    <!-- CSV Content Management -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <form method="post">
+                <input type="hidden" asp-for="SelectedUserId" />
+                <div class="mb-3">
+                    <label asp-for="CSVContent" class="form-label">@Localizer["CSVContent"]</label>
+                    <textarea asp-for="CSVContent" class="form-control font-monospace" rows="10" 
+                              placeholder="@Localizer["CSVContentPlaceholder"]"></textarea>
+                    <div class="form-text">@Localizer["CSVContentHelp"]</div>
+                    <span asp-validation-for="CSVContent" class="text-danger"></span>
+                </div>
+                <div class="d-flex gap-2 mb-3">
+                    <button type="submit" asp-page-handler="SetIPs" class="btn btn-primary">@Localizer["SaveConfiguration"]</button>
+                    <button type="submit" asp-page-handler="DeleteIPs" class="btn btn-danger">@Localizer["DeleteConfiguration"]</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetContent()">
+                        <i class="bi bi-arrow-counterclockwise"></i> @Localizer["Reset"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- File Upload -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="SelectedUserId" />
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["OrUploadCSVFile"]</label>
+                    <input type="file" name="file" class="form-control" accept=".csv" />
+                    <div class="form-text">@Localizer["CSVFileHelp"]</div>
+                </div>
+                <button type="submit" asp-page-handler="Upload" class="btn btn-secondary">@Localizer["UploadFile"]</button>
+            </form>
+        </div>
+    </div>
 </div>
 
-@functions {
-    private (string, string) GetQualityClass(decimal lossRate, decimal latency)
-    {
-        if (lossRate == 0 && latency < 100) return ("Excellent", "bg-success");
-        if (lossRate < 1 && latency < 200) return ("Good", "bg-primary");
-        if (lossRate < 5 && latency < 300) return ("Fair", "bg-warning");
-        return ("Poor", "bg-danger");
-    }
-}
-
 <script>
+const originalContent = `@Html.Raw(Model.OriginalCSVContent.Replace("\n", "\\n").Replace("\r", "\\r").Replace("'", "\\'"))`;
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('ipSearch');
     const sortSelect = document.getElementById('sortBy');
@@ -245,17 +204,20 @@ function sortTable() {
                 bValue = b.querySelector('td:nth-child(2) code').textContent;
                 return aValue.localeCompare(bValue);
             case 'latency':
-                aValue = parseFloat(a.querySelector('td:nth-child(6) span').textContent);
-                bValue = parseFloat(b.querySelector('td:nth-child(6) span').textContent);
+                aValue = parseFloat(a.querySelector('td:nth-child(6) span').textContent.replace('ms', ''));
+                bValue = parseFloat(b.querySelector('td:nth-child(6) span').textContent.replace('ms', ''));
                 return aValue - bValue;
             case 'loss':
-                aValue = parseFloat(a.querySelector('td:nth-child(5) span').textContent);
-                bValue = parseFloat(b.querySelector('td:nth-child(5) span').textContent);
+                aValue = parseFloat(a.querySelector('td:nth-child(5) span').textContent.replace('%', ''));
+                bValue = parseFloat(b.querySelector('td:nth-child(5) span').textContent.replace('%', ''));
                 return aValue - bValue;
             case 'speed':
-                aValue = a.querySelector('td:nth-child(7)').textContent;
-                bValue = b.querySelector('td:nth-child(7)').textContent;
-                return aValue.localeCompare(bValue);
+                aValue = a.querySelector('td:nth-child(7)').textContent.trim();
+                bValue = b.querySelector('td:nth-child(7)').textContent.trim();
+                // Handle speed values with units
+                const aSpeed = parseFloat(aValue.replace(/[^0-9.]/g, ''));
+                const bSpeed = parseFloat(bValue.replace(/[^0-9.]/g, ''));
+                return bSpeed - aSpeed; // Descending order for speed
             default:
                 return 0;
         }
@@ -268,18 +230,92 @@ function refreshData() {
     window.location.reload();
 }
 
+function resetContent() {
+    const textarea = document.querySelector('textarea[name="CSVContent"]');
+    if (textarea) {
+        if (textarea.value !== originalContent) {
+            textarea.value = originalContent;
+            showAlert('@Localizer["ContentReset"]', 'info');
+        } else {
+            showAlert('@Localizer["NoChangesToReset"]', 'info');
+        }
+    }
+}
+
+// Enhanced showAlert function for fixed positioning
+const enhancedShowAlert = async function(message, type) {
+    try {
+        // Find the alertContainer
+        let container = document.getElementById('alertContainer');
+        
+        // If container doesn't exist, create it
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'alertContainer';
+            container.className = 'position-fixed';
+            container.style.cssText = 'top: 80px; right: 20px; z-index: 1055; min-width: 300px; max-width: 500px;';
+            document.body.appendChild(container);
+        }
+        
+        // Clear existing alerts
+        container.innerHTML = '';
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Add alert to container
+        container.appendChild(alertDiv);
+        
+        // Initialize Bootstrap alert component
+        if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+            new bootstrap.Alert(alertDiv);
+        }
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                    const alert = bootstrap.Alert.getInstance(alertDiv);
+                    if (alert) {
+                        alert.close();
+                    } else {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                } else {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Error in showAlert:', error);
+    }
+};
+
+// Override the global showAlert function with our enhanced version
+Object.defineProperty(window, 'showAlert', {
+    value: enhancedShowAlert,
+    writable: false,
+    configurable: false
+});
+
 function exportData() {
     const table = document.getElementById('ipTable');
     if (!table) return;
     
-    let csv = 'ID,IP Address,Sent,Received,Packet Loss Rate,Average Latency,Download Speed\n';
+    let csv = 'IP Address,Sent,Received,Packet Loss Rate,Average Latency,Download Speed\n';
     const rows = table.querySelectorAll('tbody tr');
     
     rows.forEach(row => {
         const cells = row.querySelectorAll('td');
         const rowData = [
-            cells[0].textContent.trim(),
-            cells[1].textContent.trim(),
+            cells[1].textContent.trim(),  // Skip ID (cells[0]), start from IP Address (cells[1])
             cells[2].textContent.trim(),
             cells[3].textContent.trim(),
             cells[4].textContent.trim(),
@@ -298,3 +334,6 @@ function exportData() {
     window.URL.revokeObjectURL(url);
 }
 </script>
+
+
+

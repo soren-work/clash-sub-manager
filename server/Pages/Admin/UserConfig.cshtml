@@ -42,68 +42,78 @@
 
     @if (!string.IsNullOrEmpty(Model.SelectedUserId))
     {
-        <!-- User Configuration Overview -->
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">@Localizer["ConfigurationOverview"] @Model.SelectedUserId</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>@Localizer["DirectoryStatus"]</h6>
-                                <p class="@(Model.UserConfig.DirectoryExists ? "text-success" : "text-danger")">
-                                    @(Model.UserConfig.DirectoryExists ? Localizer["DirectoryExists"] : Localizer["DirectoryNotExists"])
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>@Localizer["ConfigurationFiles"]</h6>
-                                <ul class="list-unstyled">
-                                    <li class="@(Model.UserConfig.HasIPConfiguration ? "text-success" : "text-muted")">
-                                        <i class="@(Model.UserConfig.HasIPConfiguration ? "bi bi-check-circle" : "bi bi-x-circle")"></i>
-                                        @Localizer["IPConfiguration"]
-                                    </li>
-                                    <li class="@(Model.UserConfig.HasTemplate ? "text-success" : "text-muted")">
-                                        <i class="@(Model.UserConfig.HasTemplate ? "bi bi-check-circle" : "bi bi-x-circle")"></i>
-                                        @Localizer["ClashTemplateFile"]
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         if (Model.UserConfig.HasIPConfiguration)
         {
             <!-- IP Configuration Details -->
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header">
-                            <h6 class="card-title mb-0">@Localizer["IPConfigurationDetails"]</h6>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-0">@Localizer["CloudflareIP"] @Localizer["Overview"] [@Model.SelectedUserId]</h6>
+                            <div class="d-flex gap-2">
+                                <a href="/admin/cloudflare-ip?SelectedUserId=@Model.SelectedUserId" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil"></i> @Localizer["Edit"]
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteIPConfig()">
+                                    <i class="bi bi-trash"></i> @Localizer["Delete"]
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <strong>@Localizer["FilePath"]</strong><br>
-                                    <code>@Model.UserConfig.IPFilePath</code>
+                            @if (Model.IPRecords.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>@Localizer["IPAddress"]</th>
+                                                <th>@Localizer["AverageLatency"]</th>
+                                                <th>@Localizer["PacketLossRate"]</th>
+                                                <th>@Localizer["DownloadSpeed"]</th>
+                                                <th>@Localizer["Quality"]</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var ip in Model.IPRecords.Take(10))
+                                            {
+                                                var quality = ip.CalculateQuality();
+                                                <tr>
+                                                    <td><code>@ip.IPAddress</code></td>
+                                                    <td>
+                                                        <span class="badge @quality.CssClass">
+                                                            @ip.AverageLatency
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge @quality.CssClass">
+                                                            @ip.PacketLossRate
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info">
+                                                            @ip.DownloadSpeed
+                                                        </span>
+                                                    </td>
+                                                    <td><span class="badge @quality.CssClass">@quality.Quality</span></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div class="col-md-3">
-                                    <strong>@Localizer["FileSize"]</strong><br>
-                                    @FormatFileSize(Model.UserConfig.IPFileSize)
+                                @if (Model.IPRecords.Count > 10)
+                                {
+                                    <div class="text-muted text-center mt-2">
+                                        <small>@Localizer["ShowingFirst"] 10 @Localizer["Of"] @Model.IPRecords.Count @Localizer["Items"]</small>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mt-2">@Localizer["NoDataAvailable"]</p>
                                 </div>
-                                <div class="col-md-3">
-                                    <strong>@Localizer["LastModified"]</strong><br>
-                                    @Model.UserConfig.IPFileLastModified.ToString("yyyy-MM-dd HH:mm:ss")
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>@Localizer["IPCount"]</strong><br>
-                                    @Model.UserConfig.IPCount
-                                </div>
-                            </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -116,24 +126,31 @@
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header">
-                            <h6 class="card-title mb-0">@Localizer["TemplateConfigurationDetails"]</h6>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-0">@Localizer["ClashTemplate"] @Localizer["Overview"] [@Model.SelectedUserId]</h6>
+                            <div class="d-flex gap-2">
+                                <a href="/admin/clash-template?SelectedUserId=@Model.SelectedUserId" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil"></i> @Localizer["Edit"]
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteTemplateConfig()">
+                                    <i class="bi bi-trash"></i> @Localizer["Delete"]
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <strong>@Localizer["FilePath"]</strong><br>
-                                    <code>@Model.UserConfig.TemplateFilePath</code>
+                            @if (!string.IsNullOrEmpty(Model.YAMLContent))
+                            {
+                                <div class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.875rem;">
+                                    <pre>@Model.YAMLContent</pre>
                                 </div>
-                                <div class="col-md-4">
-                                    <strong>@Localizer["FileSize"]</strong><br>
-                                    @FormatFileSize(Model.UserConfig.TemplateFileSize)
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                                    <p class="mt-2">@Localizer["NoDataAvailable"]</p>
                                 </div>
-                                <div class="col-md-4">
-                                    <strong>@Localizer["LastModified"]</strong><br>
-                                    @Model.UserConfig.TemplateFileLastModified.ToString("yyyy-MM-dd HH:mm:ss")
-                                </div>
-                            </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -147,8 +164,6 @@
                     <div class="card-body">
                         <h6>@Localizer["Actions"]</h6>
                         <div class="d-flex gap-2">
-                            <a href="/admin/default-ips?SelectedUserId=@Model.SelectedUserId" class="btn btn-primary">@Localizer["ManageIPConfiguration"]</a>
-                            <a href="/admin/clash-template?SelectedUserId=@Model.SelectedUserId" class="btn btn-info">@Localizer["ManageTemplate"]</a>
                             <form method="post" style="display: inline;">
                                 <input type="hidden" asp-for="SelectedUserId" />
                                 <button type="submit" asp-page-handler="DeleteUserConfig" class="btn btn-danger" 
@@ -183,17 +198,16 @@
     }
 </div>
 
-@functions {
-    private string FormatFileSize(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len = len / 1024;
-        }
-        return $"{len:0.##} {sizes[order]}";
+<script>
+function deleteIPConfig() {
+    if (confirm('@Html.Raw(Localizer["DeleteConfirmMessage"])')) {
+        window.location.href = '/admin/cloudflare-ip?SelectedUserId=@Model.SelectedUserId&action=delete';
     }
 }
+
+function deleteTemplateConfig() {
+    if (confirm('@Html.Raw(Localizer["DeleteConfirmMessage"])')) {
+        window.location.href = '/admin/clash-template?SelectedUserId=@Model.SelectedUserId&action=delete';
+    }
+}
+</script>

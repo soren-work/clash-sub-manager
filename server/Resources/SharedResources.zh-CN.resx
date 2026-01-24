@@ -95,6 +95,39 @@
   <data name="Login" xml:space="preserve">
     <value>登录</value>
   </data>
+  <data name="Overview" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="Showing" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="of" xml:space="preserve">
+    <value>共</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>个用户</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="NoUsersFound" xml:space="preserve">
+    <value>暂无用户</value>
+  </data>
+  <data name="OverwriteConfirm" xml:space="preserve">
+    <value>文件已存在，确定要覆盖吗？</value>
+  </data>
+  <data name="LogoutConfirmation" xml:space="preserve">
+    <value>确定要退出登录吗？</value>
+  </data>
+  <data name="ConfirmLogout" xml:space="preserve">
+    <value>确认退出</value>
+  </data>
   <!-- Index Page -->
   <data name="ProjectDescription" xml:space="preserve">
     <value>轻量级 Clash 订阅管理系统，支持 Cloudflare IP 优选和自定义模板</value>
@@ -145,9 +178,6 @@
   <!-- Admin Login Page -->
   <data name="Admin Login" xml:space="preserve">
     <value>管理员登录</value>
-  </data>
-  <data name="Username" xml:space="preserve">
-    <value>用户名</value>
   </data>
   <data name="Password" xml:space="preserve">
     <value>密码</value>
@@ -433,9 +463,6 @@
   <data name="Validate" xml:space="preserve">
     <value>验证</value>
   </data>
-  <data name="Preview" xml:space="preserve">
-    <value>预览</value>
-  </data>
   <data name="CurrentFilePreview" xml:space="preserve">
     <value>当前文件预览</value>
   </data>
@@ -516,5 +543,28 @@
   </data>
   <data name="UserConfigDeletionFailed" xml:space="preserve">
     <value>用户配置删除失败</value>
+  </data>
+  <!-- Bootstrap Modal -->
+  <data name="Confirm" xml:space="preserve">
+    <value>确认</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <!-- Content Change Detection -->
+  <data name="NoChangesToSave" xml:space="preserve">
+    <value>没有需要保存的更改</value>
+  </data>
+  <data name="ContentReset" xml:space="preserve">
+    <value>内容已重置为原始状态</value>
+  </data>
+  <data name="NoChangesToReset" xml:space="preserve">
+    <value>没有需要重置的更改</value>
+  </data>
+  <data name="Saving" xml:space="preserve">
+    <value>保存中...</value>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>上传中...</value>
   </data>
 </root>

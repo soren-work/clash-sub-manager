@@ -12,13 +12,13 @@ namespace ClashSubManager.Tests.Pages.Admin
 {
     public class LoginTests
     {
-        private readonly Mock<IStringLocalizer<LoginModel>> _mockLocalizer;
+        private readonly Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly LoginModel _loginModel;
 
         public LoginTests()
         {
-            _mockLocalizer = new Mock<IStringLocalizer<LoginModel>>();
+            _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
             _mockConfiguration = new Mock<IConfiguration>();
             
             // Set default configuration
@@ -96,13 +96,13 @@ namespace ClashSubManager.Tests.Pages.Admin
 
     public class LogoutTests
     {
-        private readonly Mock<IStringLocalizer<LogoutModel>> _mockLocalizer;
+        private readonly Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
         private readonly LogoutModel _logoutModel;
         private readonly HttpContext _httpContext;
 
         public LogoutTests()
         {
-            _mockLocalizer = new Mock<IStringLocalizer<LogoutModel>>();
+            _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
             _httpContext = new DefaultHttpContext();
             _logoutModel = new LogoutModel(_mockLocalizer.Object)
             {
