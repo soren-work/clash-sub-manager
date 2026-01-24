@@ -113,6 +113,9 @@ builder.Services.AddSingleton<IPathResolver, PathResolver>();
 builder.Services.AddSingleton<IConfigurationValidator, ConfigurationValidator>();
 builder.Services.AddSingleton<IConfigurationService, PlatformConfigurationService>();
 
+// Register node naming template service
+builder.Services.AddSingleton<INodeNamingTemplateService, NodeNamingTemplateService>();
+
 // Register unified IP parser service
 builder.Services.AddSingleton<CloudflareIPParserService>();
 

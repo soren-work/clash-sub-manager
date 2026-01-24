@@ -38,6 +38,7 @@ namespace ClashSubManager.Tests.Services
 
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
             var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
+            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
             
             _service = new PlatformConfigurationService(
                 _configuration,
@@ -45,7 +46,8 @@ namespace ClashSubManager.Tests.Services
                 _mockDetector,
                 _mockPathResolver,
                 _mockValidator,
-                httpClient);
+                httpClient,
+                mockNamingService);
         }
 
         [Fact]
@@ -78,13 +80,15 @@ namespace ClashSubManager.Tests.Services
 
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
             var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
+            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
             var service = new PlatformConfigurationService(
                 configurationWithoutDataPath,
                 logger,
                 _mockDetector,
                 _mockPathResolver,
                 _mockValidator,
-                httpClient);
+                httpClient,
+                mockNamingService);
 
             var expectedPath = "/default/data";
             _mockPathResolver.SetDefaultDataPathResult(expectedPath);
@@ -230,13 +234,15 @@ namespace ClashSubManager.Tests.Services
 
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
             var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
+            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
             var service = new PlatformConfigurationService(
                 configWithIndexNaming,
                 logger,
                 _mockDetector,
                 _mockPathResolver,
                 _mockValidator,
-                httpClient);
+                httpClient,
+                mockNamingService);
 
             // Act
             var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
@@ -285,13 +291,15 @@ namespace ClashSubManager.Tests.Services
 
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
             var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
+            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
             var service = new PlatformConfigurationService(
                 configWithIpNaming,
                 logger,
                 _mockDetector,
                 _mockPathResolver,
                 _mockValidator,
-                httpClient);
+                httpClient,
+                mockNamingService);
 
             // Act
             var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
