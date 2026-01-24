@@ -58,7 +58,7 @@ namespace ClashSubManager.Pages.Sub
                 if (!_validationService.ValidateUserId(UserId))
                 {
                     _logger.LogWarning("Invalid user ID: {UserId}", UserId);
-                    return CreateErrorResponse("Invalid user ID", "INVALID_USER_ID", 400);
+                    return CreateErrorResponse(_localizer["InvalidUserId"], "INVALID_USER_ID", 400);
                 }
 
                 // Validate user ID - verify through actual subscription address
@@ -122,7 +122,7 @@ namespace ClashSubManager.Pages.Sub
                 if (!_validationService.ValidateUserId(UserId))
                 {
                     _logger.LogWarning("Invalid user ID: {UserId}", UserId);
-                    return CreateErrorResponse("Invalid user ID", "INVALID_USER_ID", 400);
+                    return CreateErrorResponse(_localizer["InvalidUserId"], "INVALID_USER_ID", 400);
                 }
 
                 // Read request body content
@@ -182,7 +182,7 @@ namespace ClashSubManager.Pages.Sub
                 if (!_validationService.ValidateUserId(UserId))
                 {
                     _logger.LogWarning("Invalid user ID: {UserId}", UserId);
-                    return CreateErrorResponse("Invalid user ID", "INVALID_USER_ID", 400);
+                    return CreateErrorResponse(_localizer["InvalidUserId"], "INVALID_USER_ID", 400);
                 }
 
                 // Delete user configuration

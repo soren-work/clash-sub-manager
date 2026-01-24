@@ -586,4 +586,11 @@
   <data name="ConfirmUploadMessage" xml:space="preserve">
     <value>确定要上传此文件吗？它将替换当前配置。</value>
   </data>
+  <!-- Frontend JavaScript Messages -->
+  <data name="YAMLSyntaxValid" xml:space="preserve">
+    <value>YAML语法有效！</value>
+  </data>
+  <data name="YAMLValidationFailed" xml:space="preserve">
+    <value>YAML验证失败</value>
+  </data>
 </root>

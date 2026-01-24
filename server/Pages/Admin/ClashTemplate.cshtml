@@ -278,9 +278,9 @@ function validateYaml() {
     }
     
     if (isValid) {
-        window.showAlert('YAML syntax is valid!', 'success');
+        window.showAlert('@Localizer["YAMLSyntaxValid"]', 'success');
     } else {
-        window.showAlert('YAML validation failed: ' + errorMessage, 'danger');
+        window.showAlert('@Localizer["YAMLValidationFailed"]' + ': ' + errorMessage, 'danger');
     }
 }
 
@@ -289,7 +289,7 @@ function resetContent() {
     if (editor) {
         editor.value = originalContent;
         updateCounts();
-        showAlert('Content reset to original', 'info');
+        showAlert('@Localizer["ContentReset"]', 'info');
     }
 }
 

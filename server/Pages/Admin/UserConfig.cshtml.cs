@@ -2,6 +2,7 @@ using ClashSubManager.Models;
 using ClashSubManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Localization;
 using System.Text;
 
 namespace ClashSubManager.Pages.Admin
@@ -11,6 +12,7 @@ namespace ClashSubManager.Pages.Admin
         private readonly IUserManagementService _userManagementService;
         private readonly IConfigurationService _configurationService;
         private readonly Services.FileService _fileService;
+        private readonly IStringLocalizer<SharedResources> _localizer;
 
         [BindProperty(SupportsGet = true)]
         public string? SelectedUserId { get; set; }
@@ -23,11 +25,13 @@ namespace ClashSubManager.Pages.Admin
         public UserConfigModel(
             IUserManagementService userManagementService,
             IConfigurationService configurationService,
-            Services.FileService fileService)
+            Services.FileService fileService,
+            IStringLocalizer<SharedResources> localizer)
         {
             _userManagementService = userManagementService;
             _configurationService = configurationService;
             _fileService = fileService;
+            _localizer = localizer;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -41,7 +45,7 @@ namespace ClashSubManager.Pages.Admin
         {
             if (string.IsNullOrEmpty(SelectedUserId))
             {
-                ModelState.AddModelError(string.Empty, "Please select a user");
+                ModelState.AddModelError(string.Empty, _localizer["PleaseSelectUser"]);
                 await LoadUserListAsync();
                 return Page();
             }
@@ -52,12 +56,12 @@ namespace ClashSubManager.Pages.Admin
             {
                 if (TempData != null)
                 {
-                    TempData["Success"] = "User configuration deleted successfully";
+                    TempData["Success"] = _localizer["UserConfigurationDeletedSuccessfully"].ToString();
                 }
                 return RedirectToPage();
             }
             
-            ModelState.AddModelError(string.Empty, "Failed to delete user configuration");
+            ModelState.AddModelError(string.Empty, _localizer["FailedToDeleteUserConfiguration"]);
             await LoadUserListAsync();
             await LoadUserConfigurationAsync();
             return Page();
