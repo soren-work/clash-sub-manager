@@ -2,6 +2,7 @@ using ClashSubManager.Models;
 using ClashSubManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Localization;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
@@ -11,6 +12,7 @@ namespace ClashSubManager.Pages.Admin
     {
         private readonly IConfigurationService _configurationService;
         private readonly CloudflareIPParserService _ipParserService;
+        private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ILogger<CloudflareIpModel> _logger;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
@@ -22,7 +24,7 @@ namespace ClashSubManager.Pages.Admin
         public bool FileExists { get; set; }
 
         [BindProperty]
-        [Required(ErrorMessage = "CSV content is required")]
+        [Required(ErrorMessage = "CSVContentRequired")]
         public string CSVContent { get; set; } = string.Empty;
 
         public string OriginalCSVContent { get; set; } = string.Empty;
@@ -30,10 +32,12 @@ namespace ClashSubManager.Pages.Admin
         public CloudflareIpModel(
             IConfigurationService configurationService,
             CloudflareIPParserService ipParserService,
+            IStringLocalizer<SharedResources> localizer,
             ILogger<CloudflareIpModel> logger)
         {
             _configurationService = configurationService;
             _ipParserService = ipParserService;
+            _localizer = localizer;
             _logger = logger;
         }
 
@@ -63,12 +67,12 @@ namespace ClashSubManager.Pages.Admin
                 // Check if TempData is available
                 if (TempData != null)
                 {
-                    TempData["Success"] = "IP configuration saved successfully";
+                    TempData["Success"] = _localizer["IPConfigurationSaved"].ToString();
                 }
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "Failed to save IP configuration");
+                ModelState.AddModelError(string.Empty, _localizer["FailedToSaveIPConfiguration"]);
             }
 
             await LoadUserListAsync();
@@ -80,7 +84,7 @@ namespace ClashSubManager.Pages.Admin
         {
             if (file == null || file.Length == 0)
             {
-                ModelState.AddModelError(string.Empty, "Please select a file to upload");
+                ModelState.AddModelError(string.Empty, _localizer["PleaseSelectFileToUpload"]);
                 await LoadUserListAsync();
                 await LoadIPRecordsAsync();
                 return Page();
@@ -88,7 +92,7 @@ namespace ClashSubManager.Pages.Admin
 
             if (file.Length > 10 * 1024 * 1024) // 10MB
             {
-                ModelState.AddModelError(string.Empty, "File size exceeds 10MB limit");
+                ModelState.AddModelError(string.Empty, _localizer["FileSizeExceedsLimit"]);
                 await LoadUserListAsync();
                 await LoadIPRecordsAsync();
                 return Page();
@@ -107,12 +111,12 @@ namespace ClashSubManager.Pages.Admin
                 // Check if TempData is available
                 if (TempData != null)
                 {
-                    TempData["Success"] = "File uploaded successfully";
+                    TempData["Success"] = _localizer["FileUploadedSuccessfully"].ToString();
                 }
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "Failed to upload file");
+                ModelState.AddModelError(string.Empty, _localizer["FailedToUploadFile"]);
             }
 
             await LoadUserListAsync();
@@ -132,12 +136,12 @@ namespace ClashSubManager.Pages.Admin
                 // Check if TempData is available
                 if (TempData != null)
                 {
-                    TempData["Success"] = "Configuration deleted successfully";
+                    TempData["Success"] = _localizer["ConfigurationDeletedSuccessfully"].ToString();
                 }
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "Failed to delete configuration");
+                ModelState.AddModelError(string.Empty, _localizer["FailedToDeleteConfiguration"]);
             }
 
             await LoadUserListAsync();

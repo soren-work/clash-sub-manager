@@ -2,6 +2,7 @@ using ClashSubManager.Models;
 using ClashSubManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Localization;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using YamlDotNet.RepresentationModel;
@@ -11,6 +12,7 @@ namespace ClashSubManager.Pages.Admin
     public class ClashTemplateModel : PageModel
     {
         private readonly IConfigurationService _configurationService;
+        private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ILogger<ClashTemplateModel> _logger;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
@@ -22,12 +24,13 @@ namespace ClashSubManager.Pages.Admin
         public bool FileExists { get; set; }
 
         [BindProperty]
-        [Required(ErrorMessage = "YAML content is required")]
+        [Required(ErrorMessage = "YAMLContentRequired")]
         public string EditedContent { get; set; } = string.Empty;
 
-        public ClashTemplateModel(IConfigurationService configurationService, ILogger<ClashTemplateModel> logger)
+        public ClashTemplateModel(IConfigurationService configurationService, IStringLocalizer<SharedResources> localizer, ILogger<ClashTemplateModel> logger)
         {
             _configurationService = configurationService;
+            _localizer = localizer;
             _logger = logger;
         }
 
@@ -60,7 +63,7 @@ namespace ClashSubManager.Pages.Admin
             if (!IsValidYAML(EditedContent))
             {
                 _logger.LogWarning("YAML validation failed");
-                ModelState.AddModelError(nameof(EditedContent), "Invalid YAML format");
+                ModelState.AddModelError(nameof(EditedContent), _localizer["InvalidYAMLFormat"]);
                 await LoadUserListAsync();
                 await LoadYAMLContentAsync();
                 return Page();
@@ -73,14 +76,14 @@ namespace ClashSubManager.Pages.Admin
             {
                 if (TempData != null)
                 {
-                    TempData["Success"] = "Template saved successfully";
+                    TempData["Success"] = _localizer["TemplateSavedSuccessfully"].ToString();
                     _logger.LogInformation("Success message set in TempData");
                 }
             }
             else
             {
                 _logger.LogError("Failed to save template");
-                ModelState.AddModelError(string.Empty, "Failed to save template");
+                ModelState.AddModelError(string.Empty, _localizer["FailedToSaveTemplate"]);
             }
 
             await LoadUserListAsync();
@@ -95,7 +98,7 @@ namespace ClashSubManager.Pages.Admin
             
             if (file == null || file.Length == 0)
             {
-                ModelState.AddModelError(string.Empty, "Please select a file to upload");
+                ModelState.AddModelError(string.Empty, _localizer["PleaseSelectFileToUpload"]);
                 await LoadUserListAsync();
                 await LoadYAMLContentAsync();
                 return Page();
@@ -103,7 +106,7 @@ namespace ClashSubManager.Pages.Admin
 
             if (file.Length > 1024 * 1024) // 1MB
             {
-                ModelState.AddModelError(string.Empty, "File size exceeds 1MB limit");
+                ModelState.AddModelError(string.Empty, _localizer["FileSizeExceedsLimit"]);
                 await LoadUserListAsync();
                 await LoadYAMLContentAsync();
                 return Page();
@@ -114,7 +117,7 @@ namespace ClashSubManager.Pages.Admin
 
             if (!IsValidYAML(content))
             {
-                ModelState.AddModelError(string.Empty, "Invalid YAML format");
+                ModelState.AddModelError(string.Empty, _localizer["InvalidYAMLFormat"]);
                 await LoadUserListAsync();
                 await LoadYAMLContentAsync();
                 return Page();
@@ -127,12 +130,12 @@ namespace ClashSubManager.Pages.Admin
                 // Check if TempData is available
                 if (TempData != null)
                 {
-                    TempData["Success"] = "File uploaded successfully";
+                    TempData["Success"] = _localizer["FileUploadedSuccessfully"].ToString();
                 }
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "Failed to upload file");
+                ModelState.AddModelError(string.Empty, _localizer["FailedToUploadFile"]);
             }
 
             await LoadUserListAsync();
@@ -152,12 +155,12 @@ namespace ClashSubManager.Pages.Admin
                 // Check if TempData is available
                 if (TempData != null)
                 {
-                    TempData["Success"] = "Template deleted successfully";
+                    TempData["Success"] = _localizer["TemplateDeletedSuccessfully"].ToString();
                 }
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "Failed to delete template");
+                ModelState.AddModelError(string.Empty, _localizer["FailedToDeleteTemplate"]);
             }
 
             await LoadUserListAsync();

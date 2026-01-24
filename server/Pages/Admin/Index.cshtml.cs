@@ -11,6 +11,7 @@ namespace ClashSubManager.Pages.Admin
         private readonly IUserManagementService _userManagementService;
         private readonly IConfigurationService _configurationService;
         private readonly FileService _fileService;
+        private readonly ILogger<IndexModel> _logger;
 
         public List<IPRecord> GlobalIPRecords { get; set; } = new();
         public string GlobalYAMLContent { get; set; } = string.Empty;
@@ -21,12 +22,14 @@ namespace ClashSubManager.Pages.Admin
             IStringLocalizer<SharedResources> localizer,
             IUserManagementService userManagementService,
             IConfigurationService configurationService,
-            FileService fileService)
+            FileService fileService,
+            ILogger<IndexModel> logger)
         {
             _localizer = localizer;
             _userManagementService = userManagementService;
             _configurationService = configurationService;
             _fileService = fileService;
+            _logger = logger;
         }
 
         public async Task OnGetAsync()
@@ -64,7 +67,7 @@ namespace ClashSubManager.Pages.Admin
             catch (Exception ex)
             {
                 // 记录错误但不阻止页面加载
-                Console.WriteLine($"Error loading preview data: {ex.Message}");
+                _logger.LogError(ex, "Error loading preview data: {Message}", ex.Message);
             }
         }
     }

@@ -586,4 +586,11 @@
   <data name="ConfirmUploadMessage" xml:space="preserve">
     <value>Are you sure you want to upload this file? It will replace the current configuration.</value>
   </data>
+  <!-- Frontend JavaScript Messages -->
+  <data name="YAMLSyntaxValid" xml:space="preserve">
+    <value>YAML syntax is valid!</value>
+  </data>
+  <data name="YAMLValidationFailed" xml:space="preserve">
+    <value>YAML validation failed</value>
+  </data>
 </root>
