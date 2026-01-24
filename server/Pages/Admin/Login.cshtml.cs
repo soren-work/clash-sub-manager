@@ -10,7 +10,7 @@ namespace ClashSubManager.Pages.Admin
     public class LoginModel : PageModel
     {
         private readonly IConfiguration _configuration;
-        private readonly IStringLocalizer<LoginModel> _localizer;
+        private readonly IStringLocalizer<SharedResources> _localizer;
 
         [BindProperty(SupportsGet = false)]
         public string? Username { get; set; }
@@ -20,7 +20,7 @@ namespace ClashSubManager.Pages.Admin
         
         public string? ErrorMessage { get; set; }
 
-        public LoginModel(IConfiguration configuration, IStringLocalizer<LoginModel> localizer)
+        public LoginModel(IConfiguration configuration, IStringLocalizer<SharedResources> localizer)
         {
             _configuration = configuration;
             _localizer = localizer;

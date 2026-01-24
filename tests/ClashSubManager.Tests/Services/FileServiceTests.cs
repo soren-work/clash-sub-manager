@@ -13,22 +13,25 @@ namespace ClashSubManager.Tests.Services
     /// </summary>
     public class FileServiceTests : IDisposable
     {
-        private readonly Mock<ILogger<FileService>> _loggerMock;
-        private readonly Mock<IConfigurationService> _configServiceMock;
-        private readonly string _testDirectory;
         private readonly FileService _fileService;
+        private readonly Mock<IConfigurationService> _configServiceMock;
+        private readonly Mock<CloudflareIPParserService> _ipParserMock;
+        private readonly Mock<ILogger<FileService>> _loggerMock;
+        private readonly string _testDirectory;
 
         public FileServiceTests()
         {
-            _loggerMock = new Mock<ILogger<FileService>>();
             _configServiceMock = new Mock<IConfigurationService>();
+            _ipParserMock = new Mock<CloudflareIPParserService>();
+            _loggerMock = new Mock<ILogger<FileService>>();
+            
             _testDirectory = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", Guid.NewGuid().ToString());
             
             Directory.CreateDirectory(_testDirectory);
             
             _configServiceMock.Setup(x => x.GetDataPath()).Returns(_testDirectory);
             
-            _fileService = new FileService(_configServiceMock.Object, _loggerMock.Object);
+            _fileService = new FileService(_configServiceMock.Object, _ipParserMock.Object, _loggerMock.Object);
         }
 
         public void Dispose()

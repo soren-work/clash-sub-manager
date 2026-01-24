@@ -17,15 +17,14 @@ namespace ClashSubManager.Tests.Pages.Admin
 
         public ClashTemplateTests()
         {
-            _mockConfigService = new Mock<IConfigurationService>();
-            _mockConfigService.Setup(x => x.GetDataPath()).Returns(_testDataPath);
-            
-            _model = new ClashTemplateModel(_mockConfigService.Object);
             _testDataPath = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", "ClashTemplate");
             Directory.CreateDirectory(_testDataPath);
             
-            // Update mock to return actual test path
+            _mockConfigService = new Mock<IConfigurationService>();
             _mockConfigService.Setup(x => x.GetDataPath()).Returns(_testDataPath);
+            
+            var mockLogger = new Mock<ILogger<ClashTemplateModel>>();
+            _model = new ClashTemplateModel(_mockConfigService.Object, mockLogger.Object);
         }
 
         public void Dispose()
@@ -109,7 +108,7 @@ log-level: info";
             var result = await _model.OnPostSaveAsync();
 
             // Assert
-            Assert.IsType<RedirectToPageResult>(result);
+            Assert.IsType<PageResult>(result);
             var globalTemplateFile = Path.Combine(_testDataPath, "clash.yaml");
             Assert.True(File.Exists(globalTemplateFile));
             var savedContent = await File.ReadAllTextAsync(globalTemplateFile);
@@ -169,7 +168,7 @@ mode: rule";
             var result = await _model.OnPostUploadAsync(file);
 
             // Assert
-            Assert.IsType<RedirectToPageResult>(result);
+            Assert.IsType<PageResult>(result);
             var globalTemplateFile = Path.Combine(_testDataPath, "clash.yaml");
             Assert.True(File.Exists(globalTemplateFile));
             var savedContent = await File.ReadAllTextAsync(globalTemplateFile);
@@ -232,7 +231,7 @@ unbalanced: [";
             var result = await _model.OnPostDeleteAsync();
 
             // Assert
-            Assert.IsType<RedirectToPageResult>(result);
+            Assert.IsType<PageResult>(result);
             Assert.False(File.Exists(globalTemplateFile));
         }
 

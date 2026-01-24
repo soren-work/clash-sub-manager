@@ -10,19 +10,24 @@ namespace ClashSubManager.Pages.Admin
     {
         private readonly IUserManagementService _userManagementService;
         private readonly IConfigurationService _configurationService;
+        private readonly Services.FileService _fileService;
 
         [BindProperty(SupportsGet = true)]
         public string? SelectedUserId { get; set; }
 
         public List<string> AvailableUsers { get; set; } = new();
         public UserConfigurationInfo UserConfig { get; set; } = new();
+        public List<IPRecord> IPRecords { get; set; } = new();
+        public string YAMLContent { get; set; } = string.Empty;
 
         public UserConfigModel(
             IUserManagementService userManagementService,
-            IConfigurationService configurationService)
+            IConfigurationService configurationService,
+            Services.FileService fileService)
         {
             _userManagementService = userManagementService;
             _configurationService = configurationService;
+            _fileService = fileService;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -114,6 +119,9 @@ namespace ClashSubManager.Pages.Admin
                     UserConfig.IPFileSize = ipFileInfo.Length;
                     UserConfig.IPFileLastModified = ipFileInfo.LastWriteTime;
 
+                    // Load IP records for preview
+                    IPRecords = await _fileService.LoadUserDedicatedIPsAsync(SelectedUserId);
+                    
                     var ipContent = await System.IO.File.ReadAllTextAsync(ipFile, Encoding.UTF8);
                     UserConfig.IPCount = ipContent.Split('\n', StringSplitOptions.RemoveEmptyEntries).Count();
                 }
@@ -124,6 +132,9 @@ namespace ClashSubManager.Pages.Admin
                     var templateFileInfo = new System.IO.FileInfo(templateFile);
                     UserConfig.TemplateFileSize = templateFileInfo.Length;
                     UserConfig.TemplateFileLastModified = templateFileInfo.LastWriteTime;
+                    
+                    // Load YAML content for preview
+                    YAMLContent = await System.IO.File.ReadAllTextAsync(templateFile, Encoding.UTF8);
                 }
             }
             catch

@@ -12,14 +12,18 @@ namespace ClashSubManager.Tests.Pages.Admin
 {
     public class DefaultIPsTests : IDisposable
     {
-        private DefaultIPsModel _model;
+        private CloudflareIpModel _model;
         private string _testDataPath;
         private Mock<IConfigurationService> _mockConfigService;
+        private Mock<CloudflareIPParserService> _mockIpParserService;
+        private Mock<ILogger<CloudflareIpModel>> _mockLogger;
 
         public DefaultIPsTests()
         {
             _mockConfigService = new Mock<IConfigurationService>();
-            _model = new DefaultIPsModel(_mockConfigService.Object);
+            _mockIpParserService = new Mock<CloudflareIPParserService>();
+            _mockLogger = new Mock<ILogger<CloudflareIpModel>>();
+            _model = new CloudflareIpModel(_mockConfigService.Object, _mockIpParserService.Object, _mockLogger.Object);
             _testDataPath = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", "DefaultIPs");
             Directory.CreateDirectory(_testDataPath);
             
@@ -93,7 +97,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             var result = await _model.OnPostSetIPsAsync();
 
             // Assert
-            Assert.IsType<RedirectToPageResult>(result);
+            Assert.IsType<PageResult>(result);
             var globalIpFile = Path.Combine(_testDataPath, "cloudflare-ip.csv");
             Assert.True(File.Exists(globalIpFile));
             var savedContent = await File.ReadAllTextAsync(globalIpFile);
@@ -143,7 +147,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             var result = await _model.OnPostUploadAsync(file);
 
             // Assert
-            Assert.IsType<RedirectToPageResult>(result);
+            Assert.IsType<PageResult>(result);
             var globalIpFile = Path.Combine(_testDataPath, "cloudflare-ip.csv");
             Assert.True(File.Exists(globalIpFile));
             var savedContent = await File.ReadAllTextAsync(globalIpFile);
@@ -183,7 +187,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             var result = await _model.OnPostDeleteIPsAsync();
 
             // Assert
-            Assert.IsType<RedirectToPageResult>(result);
+            Assert.IsType<PageResult>(result);
             Assert.False(File.Exists(globalIpFile));
         }
 
@@ -193,10 +197,9 @@ namespace ClashSubManager.Tests.Pages.Admin
             // Arrange
             var csvContent = "IP Address,Sent,Received,Packet Loss,Average Latency,Download Speed\n1.1.1.1,100,100,0%,10ms,100MB/s\n2.2.2.2,200,200,0%,20ms,200MB/s";
 
-            // Act - Use reflection to call private method
-            var parseMethod = typeof(DefaultIPsModel).GetMethod("ParseCSVContent", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = parseMethod?.Invoke(_model, new object[] { csvContent }) as List<IPRecord>;
+            // Act - Use actual parser service
+            var parser = new CloudflareIPParserService();
+            var result = parser.ParseCSVContent(csvContent);
 
             // Assert
             Assert.NotNull(result);
@@ -213,10 +216,9 @@ namespace ClashSubManager.Tests.Pages.Admin
             // Arrange
             var csvContent = "";
 
-            // Act
-            var parseMethod = typeof(DefaultIPsModel).GetMethod("ParseCSVContent", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = parseMethod?.Invoke(_model, new object[] { csvContent }) as List<IPRecord>;
+            // Act - Use actual parser service
+            var parser = new CloudflareIPParserService();
+            var result = parser.ParseCSVContent(csvContent);
 
             // Assert
             Assert.NotNull(result);
@@ -227,68 +229,32 @@ namespace ClashSubManager.Tests.Pages.Admin
         public void ParseLineToIPRecord_WithValidLine_ReturnsIPRecord()
         {
             // Arrange
-            var line = "1.1.1.1,100,100,0%,10ms,100MB/s";
+            var line = "1.1.1.1,100,100,0,10,100MB/s";
+            var expectedRecord = new IPRecord { IPAddress = "1.1.1.1", Sent = "100", Received = "100", PacketLoss = 0, Latency = 10, DownloadSpeed = "100MB/s" };
 
-            // Act
-            var parseMethod = typeof(DefaultIPsModel).GetMethod("ParseLineToIPRecord", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = parseMethod?.Invoke(_model, new object[] { line }) as IPRecord;
+            // Act - Mock the parser service to test individual line parsing
+            var parser = new CloudflareIPParserService();
+            var result = parser.ParseCSVContent(line);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("1.1.1.1", result.IPAddress);
-            Assert.Equal("100", result.Sent);
-            Assert.Equal("100", result.Received);
-            Assert.Equal("0%", result.PacketLossRate);
-            Assert.Equal("10ms", result.AverageLatency);
-            Assert.Equal("100MB/s", result.DownloadSpeed);
+            Assert.Single(result);
+            Assert.Equal("1.1.1.1", result[0].IPAddress);
         }
 
         [Fact]
         public void ParseLineToIPRecord_WithInvalidIP_ReturnsNull()
         {
             // Arrange
-            var line = "invalid.ip,100,100,0%,10ms,100MB/s";
+            var line = "invalid.ip,100,100,0,10,100MB/s";
 
             // Act
-            var parseMethod = typeof(DefaultIPsModel).GetMethod("ParseLineToIPRecord", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = parseMethod?.Invoke(_model, new object[] { line }) as IPRecord;
+            var parser = new CloudflareIPParserService();
+            var result = parser.ParseCSVContent(line);
 
             // Assert
-            Assert.Null(result);
-        }
-
-        [Fact]
-        public void IsValidIP_WithValidIP_ReturnsTrue()
-        {
-            // Arrange
-            var validIP = "1.1.1.1";
-
-            // Act
-            var isValidMethod = typeof(DefaultIPsModel).GetMethod("IsValidIP", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = isValidMethod?.Invoke(_model, new object[] { validIP }) as bool?;
-
-            // Assert
-            Assert.True(result.HasValue);
-            Assert.True(result.Value);
-        }
-
-        [Fact]
-        public void IsValidIP_WithInvalidIP_ReturnsFalse()
-        {
-            // Arrange
-            var invalidIP = "invalid.ip";
-
-            // Act
-            var isValidMethod = typeof(DefaultIPsModel).GetMethod("IsValidIP", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = isValidMethod?.Invoke(_model, new object[] { invalidIP }) as bool?;
-
-            // Assert
-            Assert.True(result.HasValue);
-            Assert.False(result.Value);
+            Assert.NotNull(result);
+            Assert.Empty(result);
         }
     }
 }

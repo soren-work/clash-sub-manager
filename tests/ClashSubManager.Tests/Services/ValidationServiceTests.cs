@@ -13,11 +13,13 @@ namespace ClashSubManager.Tests.Services
     {
         private readonly ValidationService _validationService;
         private readonly Mock<ILogger<ValidationService>> _loggerMock;
+        private readonly Mock<CloudflareIPParserService> _ipParserMock;
 
         public ValidationServiceTests()
         {
             _loggerMock = new Mock<ILogger<ValidationService>>();
-            _validationService = new ValidationService(_loggerMock.Object);
+            _ipParserMock = new Mock<CloudflareIPParserService>();
+            _validationService = new ValidationService(_ipParserMock.Object, _loggerMock.Object);
         }
 
         [Theory]

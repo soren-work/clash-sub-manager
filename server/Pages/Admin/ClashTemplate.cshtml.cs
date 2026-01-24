@@ -11,6 +11,7 @@ namespace ClashSubManager.Pages.Admin
     public class ClashTemplateModel : PageModel
     {
         private readonly IConfigurationService _configurationService;
+        private readonly ILogger<ClashTemplateModel> _logger;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
@@ -24,9 +25,10 @@ namespace ClashSubManager.Pages.Admin
         [Required(ErrorMessage = "YAML content is required")]
         public string EditedContent { get; set; } = string.Empty;
 
-        public ClashTemplateModel(IConfigurationService configurationService)
+        public ClashTemplateModel(IConfigurationService configurationService, ILogger<ClashTemplateModel> logger)
         {
             _configurationService = configurationService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -38,8 +40,18 @@ namespace ClashSubManager.Pages.Admin
 
         public async Task<IActionResult> OnPostSaveAsync()
         {
+            _logger.LogInformation("OnPostSaveAsync called");
+            _logger.LogInformation("EditedContent length: {Length}", EditedContent?.Length ?? 0);
+            _logger.LogInformation("SelectedUserId: {UserId}", SelectedUserId);
+            _logger.LogInformation("ModelState.IsValid: {IsValid}", ModelState.IsValid);
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("ModelState is invalid");
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    _logger.LogWarning("ModelState error: {Error}", error.ErrorMessage);
+                }
                 await LoadUserListAsync();
                 await LoadYAMLContentAsync();
                 return Page();
@@ -47,6 +59,7 @@ namespace ClashSubManager.Pages.Admin
 
             if (!IsValidYAML(EditedContent))
             {
+                _logger.LogWarning("YAML validation failed");
                 ModelState.AddModelError(nameof(EditedContent), "Invalid YAML format");
                 await LoadUserListAsync();
                 await LoadYAMLContentAsync();
@@ -54,18 +67,22 @@ namespace ClashSubManager.Pages.Admin
             }
 
             var result = await SaveYAMLContentAsync(EditedContent, SelectedUserId);
-            
+            _logger.LogInformation("SaveYAMLContentAsync result: {Result}", result);
+
             if (result)
             {
-                // Check if TempData is available
                 if (TempData != null)
                 {
                     TempData["Success"] = "Template saved successfully";
+                    _logger.LogInformation("Success message set in TempData");
                 }
-                return RedirectToPage();
             }
-            
-            ModelState.AddModelError(string.Empty, "Failed to save template");
+            else
+            {
+                _logger.LogError("Failed to save template");
+                ModelState.AddModelError(string.Empty, "Failed to save template");
+            }
+
             await LoadUserListAsync();
             await LoadYAMLContentAsync();
             return Page();
@@ -91,7 +108,7 @@ namespace ClashSubManager.Pages.Admin
 
             using var reader = new StreamReader(file.OpenReadStream());
             var content = await reader.ReadToEndAsync();
-            
+
             if (!IsValidYAML(content))
             {
                 ModelState.AddModelError(string.Empty, "Invalid YAML format");
@@ -101,7 +118,7 @@ namespace ClashSubManager.Pages.Admin
             }
 
             var result = await SaveYAMLContentAsync(content, SelectedUserId);
-            
+
             if (result)
             {
                 // Check if TempData is available
@@ -109,10 +126,12 @@ namespace ClashSubManager.Pages.Admin
                 {
                     TempData["Success"] = "File uploaded successfully";
                 }
-                return RedirectToPage();
             }
-            
-            ModelState.AddModelError(string.Empty, "Failed to upload file");
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Failed to upload file");
+            }
+
             await LoadUserListAsync();
             await LoadYAMLContentAsync();
             return Page();
@@ -121,7 +140,7 @@ namespace ClashSubManager.Pages.Admin
         public async Task<IActionResult> OnPostDeleteAsync()
         {
             var result = await DeleteYAMLFileAsync(SelectedUserId);
-            
+
             if (result)
             {
                 // Check if TempData is available
@@ -129,10 +148,12 @@ namespace ClashSubManager.Pages.Admin
                 {
                     TempData["Success"] = "Template deleted successfully";
                 }
-                return RedirectToPage();
             }
-            
-            ModelState.AddModelError(string.Empty, "Failed to delete template");
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Failed to delete template");
+            }
+
             await LoadUserListAsync();
             await LoadYAMLContentAsync();
             return Page();
@@ -167,17 +188,20 @@ namespace ClashSubManager.Pages.Admin
                 if (System.IO.File.Exists(filePath))
                 {
                     YAMLContent = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);
+                    EditedContent = YAMLContent; // Set EditedContent to display in editor
                     FileExists = true;
                 }
                 else
                 {
                     YAMLContent = string.Empty;
+                    EditedContent = string.Empty; // Clear EditedContent
                     FileExists = false;
                 }
             }
             catch
             {
                 YAMLContent = string.Empty;
+                EditedContent = string.Empty; // Clear EditedContent
                 FileExists = false;
             }
         }
@@ -203,7 +227,7 @@ namespace ClashSubManager.Pages.Admin
 
                 var tempPath = filePath + ".tmp";
                 await System.IO.File.WriteAllTextAsync(tempPath, content, Encoding.UTF8);
-                
+
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Replace(tempPath, filePath, null);
@@ -250,7 +274,7 @@ namespace ClashSubManager.Pages.Admin
         private string GetFilePath(string userId)
         {
             var basePath = _configurationService.GetDataPath();
-            return string.IsNullOrEmpty(userId) 
+            return string.IsNullOrEmpty(userId)
                 ? Path.Combine(basePath, "clash.yaml")
                 : Path.Combine(basePath, userId, "clash.yaml");
         }
@@ -259,7 +283,7 @@ namespace ClashSubManager.Pages.Admin
         {
             if (string.IsNullOrWhiteSpace(content))
                 return false;
-                
+
             try
             {
                 using var reader = new StringReader(content);

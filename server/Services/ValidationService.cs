@@ -9,6 +9,7 @@ namespace ClashSubManager.Services
     /// </summary>
     public class ValidationService
     {
+        private readonly CloudflareIPParserService _ipParserService;
         private readonly ILogger<ValidationService> _logger;
         
         // User ID validation regex
@@ -16,9 +17,10 @@ namespace ClashSubManager.Services
         
         // IPv4 address validation regex
         private static readonly Regex IPv4Regex = new(@"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", RegexOptions.Compiled);
-
-        public ValidationService(ILogger<ValidationService> logger)
+        
+        public ValidationService(CloudflareIPParserService ipParserService, ILogger<ValidationService> logger)
         {
+            _ipParserService = ipParserService;
             _logger = logger;
         }
 
@@ -130,50 +132,7 @@ namespace ClashSubManager.Services
         /// <returns>IP record list</returns>
         public virtual List<IPRecord> ParseCSVContent(string csvContent)
         {
-            var ipRecords = new List<IPRecord>();
-
-            if (string.IsNullOrWhiteSpace(csvContent))
-                return ipRecords;
-
-            try
-            {
-                var lines = csvContent.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-                
-                foreach (var line in lines)
-                {
-                    // Skip comment lines and empty lines
-                    if (string.IsNullOrWhiteSpace(line) || line.Trim().StartsWith("#"))
-                        continue;
-
-                    var parts = line.Split(',');
-                    if (parts.Length >= 1) // At least IP address is required
-                    {
-                        var ipRecord = new IPRecord
-                        {
-                            IPAddress = parts[0].Trim(),
-                            Port = parts.Length > 1 && int.TryParse(parts[1].Trim(), out var port) ? port : 443,
-                            PacketLoss = parts.Length > 2 && decimal.TryParse(parts[2].Trim(), out var loss) ? loss : 0,
-                            Latency = parts.Length > 3 && decimal.TryParse(parts[3].Trim(), out var latency) ? latency : 0
-                        };
-
-                        if (ValidateIPRecord(ipRecord))
-                        {
-                            ipRecords.Add(ipRecord);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Invalid IP record skipped: {Line}", line);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error parsing CSV content");
-                _logger.LogError("Error parsing CSV content: {Message}", ex.Message);
-            }
-
-            return ipRecords;
+            return _ipParserService.ParseCSVContent(csvContent);
         }
 
         /// <summary>

@@ -7,9 +7,11 @@ using System.Text;
 
 namespace ClashSubManager.Pages.Admin
 {
-    public class DefaultIPsModel : PageModel
+    public class CloudflareIpModel : PageModel
     {
         private readonly IConfigurationService _configurationService;
+        private readonly CloudflareIPParserService _ipParserService;
+        private readonly ILogger<CloudflareIpModel> _logger;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
@@ -23,9 +25,16 @@ namespace ClashSubManager.Pages.Admin
         [Required(ErrorMessage = "CSV content is required")]
         public string CSVContent { get; set; } = string.Empty;
 
-        public DefaultIPsModel(IConfigurationService configurationService)
+        public string OriginalCSVContent { get; set; } = string.Empty;
+
+        public CloudflareIpModel(
+            IConfigurationService configurationService,
+            CloudflareIPParserService ipParserService,
+            ILogger<CloudflareIpModel> logger)
         {
             _configurationService = configurationService;
+            _ipParserService = ipParserService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -45,18 +54,23 @@ namespace ClashSubManager.Pages.Admin
             }
 
             var result = await SetIPsAsync(CSVContent, SelectedUserId);
-            
+
             if (result)
             {
+                // Clear any existing validation errors
+                ModelState.Clear();
+                
                 // Check if TempData is available
                 if (TempData != null)
                 {
                     TempData["Success"] = "IP configuration saved successfully";
                 }
-                return RedirectToPage();
             }
-            
-            ModelState.AddModelError(string.Empty, "Failed to save IP configuration");
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Failed to save IP configuration");
+            }
+
             await LoadUserListAsync();
             await LoadIPRecordsAsync();
             return Page();
@@ -82,20 +96,25 @@ namespace ClashSubManager.Pages.Admin
 
             using var reader = new StreamReader(file.OpenReadStream());
             var content = await reader.ReadToEndAsync();
-            
+
             var result = await SetIPsAsync(content, SelectedUserId);
-            
+
             if (result)
             {
+                // Clear any existing validation errors
+                ModelState.Clear();
+                
                 // Check if TempData is available
                 if (TempData != null)
                 {
                     TempData["Success"] = "File uploaded successfully";
                 }
-                return RedirectToPage();
             }
-            
-            ModelState.AddModelError(string.Empty, "Failed to upload file");
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Failed to upload file");
+            }
+
             await LoadUserListAsync();
             await LoadIPRecordsAsync();
             return Page();
@@ -104,18 +123,23 @@ namespace ClashSubManager.Pages.Admin
         public async Task<IActionResult> OnPostDeleteIPsAsync()
         {
             var result = await DeleteIPsAsync(SelectedUserId);
-            
+
             if (result)
             {
+                // Clear any existing validation errors
+                ModelState.Clear();
+                
                 // Check if TempData is available
                 if (TempData != null)
                 {
                     TempData["Success"] = "Configuration deleted successfully";
                 }
-                return RedirectToPage();
             }
-            
-            ModelState.AddModelError(string.Empty, "Failed to delete configuration");
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Failed to delete configuration");
+            }
+
             await LoadUserListAsync();
             await LoadIPRecordsAsync();
             return Page();
@@ -150,23 +174,29 @@ namespace ClashSubManager.Pages.Admin
                 if (System.IO.File.Exists(filePath))
                 {
                     var content = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);
-                    IPRecords = ParseCSVContent(content);
+                    IPRecords = _ipParserService.ParseCSVContent(content);
+                    OriginalCSVContent = content;
+                    CSVContent = content;
                     FileExists = true;
                 }
                 else
                 {
                     IPRecords = new List<IPRecord>();
+                    OriginalCSVContent = string.Empty;
+                    CSVContent = string.Empty;
                     FileExists = false;
                 }
             }
             catch
             {
                 IPRecords = new List<IPRecord>();
+                OriginalCSVContent = string.Empty;
+                CSVContent = string.Empty;
                 FileExists = false;
             }
         }
 
-        private async Task<bool> SetIPsAsync(string csvContent, string userId)
+        private async Task<bool> SetIPsAsync(string csvContent, string? userId)
         {
             await _semaphore.WaitAsync();
             try
@@ -184,7 +214,7 @@ namespace ClashSubManager.Pages.Admin
 
                 var tempPath = filePath + ".tmp";
                 await System.IO.File.WriteAllTextAsync(tempPath, csvContent, Encoding.UTF8);
-                
+
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Replace(tempPath, filePath, null);
@@ -206,7 +236,7 @@ namespace ClashSubManager.Pages.Admin
             }
         }
 
-        private async Task<bool> DeleteIPsAsync(string userId)
+        private async Task<bool> DeleteIPsAsync(string? userId)
         {
             await _semaphore.WaitAsync();
             try
@@ -228,72 +258,12 @@ namespace ClashSubManager.Pages.Admin
             }
         }
 
-        private string GetFilePath(string userId)
+        private string GetFilePath(string? userId)
         {
             var basePath = _configurationService.GetDataPath();
-            return string.IsNullOrEmpty(userId) 
+            return string.IsNullOrEmpty(userId)
                 ? Path.Combine(basePath, "cloudflare-ip.csv")
                 : Path.Combine(basePath, userId, "cloudflare-ip.csv");
-        }
-
-        private List<IPRecord> ParseCSVContent(string csvContent)
-        {
-            var records = new List<IPRecord>();
-            
-            if (string.IsNullOrWhiteSpace(csvContent))
-                return records;
-
-            var lines = csvContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            var isFirstLine = true;
-            var id = 1;
-            
-            foreach (var line in lines)
-            {
-                var trimmedLine = line.Trim();
-                if (string.IsNullOrEmpty(trimmedLine))
-                    continue;
-
-                if (isFirstLine && trimmedLine.Contains("IP地址"))
-                {
-                    isFirstLine = false;
-                    continue;
-                }
-                
-                isFirstLine = false;
-                var record = ParseLineToIPRecord(trimmedLine);
-                if (record != null)
-                {
-                    record.Id = id++;
-                    records.Add(record);
-                }
-            }
-
-            return records;
-        }
-
-        private IPRecord? ParseLineToIPRecord(string line)
-        {
-            var columns = line.Split(',');
-            if (columns.Length < 1 || !IsValidIP(columns[0].Trim()))
-                return null;
-
-            var record = new IPRecord
-            {
-                IPAddress = columns[0].Trim()
-            };
-
-            if (columns.Length > 1) record.Sent = columns[1].Trim();
-            if (columns.Length > 2) record.Received = columns[2].Trim();
-            if (columns.Length > 3) record.PacketLossRate = columns[3].Trim();
-            if (columns.Length > 4) record.AverageLatency = columns[4].Trim();
-            if (columns.Length > 5) record.DownloadSpeed = columns[5].Trim();
-
-            return record;
-        }
-
-        private bool IsValidIP(string ip)
-        {
-            return System.Net.IPAddress.TryParse(ip, out _);
         }
     }
 }

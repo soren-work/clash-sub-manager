@@ -6,9 +6,9 @@ namespace ClashSubManager.Pages.Admin
 {
     public class LogoutModel : PageModel
     {
-        private readonly IStringLocalizer<LogoutModel> _localizer;
+        private readonly IStringLocalizer<SharedResources> _localizer;
 
-        public LogoutModel(IStringLocalizer<LogoutModel> localizer)
+        public LogoutModel(IStringLocalizer<SharedResources> localizer)
         {
             _localizer = localizer;
         }

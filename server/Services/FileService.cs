@@ -10,13 +10,18 @@ namespace ClashSubManager.Services
     /// </summary>
     public class FileService
     {
-        private readonly ILogger<FileService> _logger;
         private readonly IConfigurationService _configurationService;
+        private readonly CloudflareIPParserService _ipParserService;
+        private readonly ILogger<FileService> _logger;
         private readonly string _dataPath;
 
-        public FileService(IConfigurationService configurationService, ILogger<FileService> logger)
+        public FileService(
+            IConfigurationService configurationService,
+            CloudflareIPParserService ipParserService,
+            ILogger<FileService> logger)
         {
             _configurationService = configurationService;
+            _ipParserService = ipParserService;
             _logger = logger;
             _dataPath = _configurationService.GetDataPath();
             
@@ -39,33 +44,8 @@ namespace ClashSubManager.Services
                 if (!File.Exists(csvFile))
                     return new List<IPRecord>();
 
-                var csvLines = await File.ReadAllLinesAsync(csvFile);
-                var ipRecords = new List<IPRecord>();
-
-                foreach (var line in csvLines)
-                {
-                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
-                        continue;
-
-                    var parts = line.Split(',');
-                    if (parts.Length >= 4)
-                    {
-                        var ipRecord = new IPRecord
-                        {
-                            IPAddress = parts[0].Trim(),
-                            Port = int.TryParse(parts[1].Trim(), out var port) ? port : 443,
-                            PacketLoss = decimal.TryParse(parts[2].Trim(), out var loss) ? loss : 0,
-                            Latency = decimal.TryParse(parts[3].Trim(), out var latency) ? latency : 0
-                        };
-
-                        if (ipRecord.IsValid())
-                        {
-                            ipRecords.Add(ipRecord);
-                        }
-                    }
-                }
-
-                return ipRecords;
+                var csvContent = await File.ReadAllTextAsync(csvFile);
+                return _ipParserService.ParseCSVContent(csvContent);
             }
             catch (Exception ex)
             {
@@ -91,7 +71,7 @@ namespace ClashSubManager.Services
                 Directory.CreateDirectory(userDir);
                 
                 var csvLines = ipRecords.Select(ip => 
-                    $"{ip.IPAddress},{ip.Port},{ip.PacketLoss},{ip.Latency}");
+                    $"{ip.IPAddress},{ip.Port},{ip.PacketLoss},{ip.Latency},{ip.DownloadSpeed}");
 
                 var csvContent = string.Join(Environment.NewLine, csvLines);
                 
@@ -164,33 +144,8 @@ namespace ClashSubManager.Services
                 if (!File.Exists(csvFile))
                     return new List<IPRecord>();
 
-                var csvLines = await File.ReadAllLinesAsync(csvFile);
-                var ipRecords = new List<IPRecord>();
-
-                foreach (var line in csvLines)
-                {
-                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
-                        continue;
-
-                    var parts = line.Split(',');
-                    if (parts.Length >= 4)
-                    {
-                        var ipRecord = new IPRecord
-                        {
-                            IPAddress = parts[0].Trim(),
-                            Port = int.TryParse(parts[1].Trim(), out var port) ? port : 443,
-                            PacketLoss = decimal.TryParse(parts[2].Trim(), out var loss) ? loss : 0,
-                            Latency = decimal.TryParse(parts[3].Trim(), out var latency) ? latency : 0
-                        };
-
-                        if (ipRecord.IsValid())
-                        {
-                            ipRecords.Add(ipRecord);
-                        }
-                    }
-                }
-
-                return ipRecords;
+                var csvContent = await File.ReadAllTextAsync(csvFile);
+                return _ipParserService.ParseCSVContent(csvContent);
             }
             catch (Exception ex)
             {
