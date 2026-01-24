@@ -18,7 +18,7 @@ namespace ClashSubManager.Services
         {
             _logger = logger;
             _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash-verge/v1.0.0");
         }
 
         /// <summary>
@@ -87,9 +87,20 @@ namespace ClashSubManager.Services
         {
             try
             {
-                _logger.LogInformation("Fetching remote subscription from: {SubscriptionUrl}", subscriptionUrl);
+                // Add flag parameter to ensure subscription server correctly identifies
+                var requestUrl = subscriptionUrl;
+                if (requestUrl.Contains('?'))
+                {
+                    requestUrl += "&flag=clash";
+                }
+                else
+                {
+                    requestUrl += "?flag=clash";
+                }
                 
-                var response = await _httpClient.GetAsync(subscriptionUrl);
+                _logger.LogInformation("Fetching remote subscription from: {SubscriptionUrl}", requestUrl);
+                
+                var response = await _httpClient.GetAsync(requestUrl);
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();

@@ -33,7 +33,7 @@ namespace ClashSubManager.Services
             _pathResolver = pathResolver;
             _configurationValidator = configurationValidator;
             _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("clash-verge/v1.0.0");
         }
 
         /// <summary>
@@ -362,6 +362,7 @@ namespace ClashSubManager.Services
                     return;
 
                 var newProxies = new YamlSequenceNode();
+                
                 foreach (var proxyNode in proxiesNode.Children)
                 {
                     if (proxyNode is YamlMappingNode proxyMapping)
@@ -373,37 +374,60 @@ namespace ClashSubManager.Services
                         {
                             var originalServer = serverScalar.Value;
                             
-                            // Create a new proxy configuration for each IP address
-                            foreach (var ip in allIPs)
+                            // Check if the original server is an IP address
+                            bool isOriginalServerIP = System.Net.IPAddress.TryParse(originalServer, out _);
+                            
+                            if (isOriginalServerIP)
                             {
-                                var newProxy = CloneProxyNode(proxyMapping);
-                                var newServerNode = newProxy.Children.FirstOrDefault(c => 
-                                    (c.Key as YamlScalarNode)?.Value == "server");
-                                
-                                if (newServerNode.Value is YamlScalarNode newServerScalar)
+                                // If the original server is an IP address, replace it with Cloudflare IPs
+                                // Create a new proxy configuration for each IP address
+                                for (int index = 0; index < allIPs.Count; index++)
                                 {
-                                    newServerScalar.Value = ip.IPAddress;
+                                    var ip = allIPs[index];
+                                    var newProxy = CloneProxyNode(proxyMapping);
+                                    var newServerNode = newProxy.Children.FirstOrDefault(c => 
+                                        (c.Key as YamlScalarNode)?.Value == "server");
                                     
-                                    // Update port
-                                    var portNode = newProxy.Children.FirstOrDefault(c => 
-                                        (c.Key as YamlScalarNode)?.Value == "port");
-                                    if (portNode.Value is YamlScalarNode portScalar)
+                                    if (newServerNode.Value is YamlScalarNode newServerScalar)
                                     {
-                                        portScalar.Value = ip.Port.ToString();
+                                        newServerScalar.Value = ip.IPAddress;
+                                        
+                                        // Update port
+                                        var portNode = newProxy.Children.FirstOrDefault(c => 
+                                            (c.Key as YamlScalarNode)?.Value == "port");
+                                        if (portNode.Value is YamlScalarNode portScalar)
+                                        {
+                                            portScalar.Value = ip.Port.ToString();
+                                        }
+                                        
+                                        // Generate new node name
+                                        var nameNode = newProxy.Children.FirstOrDefault(c => 
+                                            (c.Key as YamlScalarNode)?.Value == "name");
+                                        if (nameNode.Value is YamlScalarNode nameScalar)
+                                        {
+                                            var originalName = nameScalar.Value;
+                                            // Check naming format configuration, default to node index format
+                                            var useIpFormat = GetValue<bool>("UseIpInNodeName", false);
+                                            var newName = useIpFormat 
+                                                ? $"{originalName}-{ip.IPAddress}"
+                                                : $"{originalName}-Node-{index + 1}";
+                                            nameScalar.Value = newName;
+                                        }
                                     }
                                     
-                                    // Add quality information to name
-                                    var nameNode = newProxy.Children.FirstOrDefault(c => 
-                                        (c.Key as YamlScalarNode)?.Value == "name");
-                                    if (nameNode.Value is YamlScalarNode nameScalar)
-                                    {
-                                        var suffix = $"({ip.Latency}ms/{ip.PacketLoss}%)";
-                                        nameScalar.Value = nameScalar.Value + suffix;
-                                    }
+                                    newProxies.Add(newProxy);
                                 }
-                                
-                                newProxies.Add(newProxy);
                             }
+                            else
+                            {
+                                // If the original server is not an IP address (e.g., domain name), keep the original node
+                                newProxies.Add(proxyMapping);
+                            }
+                        }
+                        else
+                        {
+                            // If there is no server node, keep the original node
+                            newProxies.Add(proxyMapping);
                         }
                     }
                 }
@@ -432,7 +456,41 @@ namespace ClashSubManager.Services
             var clone = new YamlMappingNode();
             foreach (var child in original.Children)
             {
-                clone.Children.Add(child.Key, child.Value);
+                // Deep copy: create new node objects instead of copying references
+                var clonedKey = CloneYamlNode(child.Key);
+                var clonedValue = CloneYamlNode(child.Value);
+                clone.Children.Add(clonedKey, clonedValue);
+            }
+            return clone;
+        }
+
+        /// <summary>
+        /// Clone YAML node
+        /// </summary>
+        /// <param name="node">Original node</param>
+        /// <returns>Cloned node</returns>
+        private YamlNode CloneYamlNode(YamlNode node)
+        {
+            return node switch
+            {
+                YamlScalarNode scalar => new YamlScalarNode(scalar.Value),
+                YamlMappingNode mapping => CloneProxyNode(mapping),
+                YamlSequenceNode sequence => CloneSequenceNode(sequence),
+                _ => node
+            };
+        }
+
+        /// <summary>
+        /// Clone sequence node
+        /// </summary>
+        /// <param name="original">Original sequence node</param>
+        /// <returns>Cloned sequence node</returns>
+        private YamlSequenceNode CloneSequenceNode(YamlSequenceNode original)
+        {
+            var clone = new YamlSequenceNode();
+            foreach (var child in original.Children)
+            {
+                clone.Children.Add(CloneYamlNode(child));
             }
             return clone;
         }

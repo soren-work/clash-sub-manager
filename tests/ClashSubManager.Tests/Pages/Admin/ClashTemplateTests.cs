@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Localization;
 using Moq;
 using Xunit;
 
@@ -14,6 +15,8 @@ namespace ClashSubManager.Tests.Pages.Admin
         private ClashTemplateModel _model;
         private string _testDataPath;
         private Mock<IConfigurationService> _mockConfigService;
+        private Mock<ILogger<ClashTemplateModel>> _mockLogger;
+        private Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
 
         public ClashTemplateTests()
         {
@@ -23,8 +26,18 @@ namespace ClashSubManager.Tests.Pages.Admin
             _mockConfigService = new Mock<IConfigurationService>();
             _mockConfigService.Setup(x => x.GetDataPath()).Returns(_testDataPath);
             
-            var mockLogger = new Mock<ILogger<ClashTemplateModel>>();
-            _model = new ClashTemplateModel(_mockConfigService.Object, mockLogger.Object);
+            _mockLogger = new Mock<ILogger<ClashTemplateModel>>();
+            _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
+            
+            // Setup localizer mock to return non-null values
+            _mockLocalizer.Setup(l => l[It.IsAny<string>()]).Returns(new LocalizedString("test", "test"));
+            _mockLocalizer.Setup(l => l["InvalidYAMLContent"]).Returns(new LocalizedString("InvalidYAMLContent", "Invalid YAML content"));
+            _mockLocalizer.Setup(l => l["YAMLContentRequired"]).Returns(new LocalizedString("YAMLContentRequired", "YAML content is required"));
+            _mockLocalizer.Setup(l => l["FileSizeExceedsLimit"]).Returns(new LocalizedString("FileSizeExceedsLimit", "File size exceeds the 1MB limit"));
+            _mockLocalizer.Setup(l => l["PleaseSelectFileToUpload"]).Returns(new LocalizedString("PleaseSelectFileToUpload", "Please select a file to upload"));
+            _mockLocalizer.Setup(l => l["InvalidYAMLFile"]).Returns(new LocalizedString("InvalidYAMLFile", "Invalid YAML file format"));
+            
+            _model = new ClashTemplateModel(_mockConfigService.Object, _mockLocalizer.Object, _mockLogger.Object);
         }
 
         public void Dispose()

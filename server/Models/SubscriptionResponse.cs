@@ -52,7 +52,7 @@ namespace ClashSubManager.Models
         /// <param name="yamlContent">YAML content</param>
         /// <param name="message">Success message (optional)</param>
         /// <returns>Success response</returns>
-        public static SubscriptionResponse CreateSuccessFromYaml(string yamlContent, string message = "")
+        public static SubscriptionResponse CreateSuccessFromYaml(string yamlContent, string message = "Subscription generated successfully")
         {
             return new SubscriptionResponse
             {

@@ -19,7 +19,12 @@
 **依赖关系：** 支持任何提供clash订阅服务的后端。
 
 **覆写范围：**
-1. **proxies的扩展：** 原`proxies`的`server`属性是域名，在此基础上将其复制出与`cloudflare-ip.csv`文件中ip地址数量相同的对象，并将server改为文件中的ip地址
+1. **proxies的智能扩展：** 检测原始`proxies`中每个节点的`server`属性类型，进行差异化处理：
+   - **IP地址节点**：当`server`为IP地址时，用cloudflare优选IP替换
+   - **域名节点**：当`server`为域名时，保留原始节点不变  
+   - **无server节点**：保留原始节点不变
+   - **深复制保证**：使用递归深复制确保每个节点完全独立，避免引用共享
+
 2. **yaml文档结构的扩展：** 读取`clash.yaml`文件中定义好的模板与设定，以`clash.yaml`文件中的内容为优先项，以原内容为次优先项，将`clash.yaml`文件的内容添加和替换到原内容中
 
 **兼容性要求：**
@@ -66,7 +71,25 @@
 - 查询参数替换：`http://www.domain.com/sub?userId={userId}`
 - 固定URL：`http://www.domain.com/sub/abcdefghijkl`（不进行替换）
 
-**替换机制：** 系统自动将 `{userId}` 占位符替换为 `/sub/[id]` 接口接收的实际用户ID。
+**替换机制：** 
+- 系统自动将 `{userId}` 占位符替换为 `/sub/[id]` 接口接收的实际用户ID
+- **重要**：替换后的URL已包含完整用户ID，验证时无需再次拼接用户ID
+- **禁止重复拼接**：避免出现 `http://domain.com/sub/user123/user123` 的错误格式
+
+**URL模板示例：**
+```
+# 路径参数模式
+SUBSCRIPTION_URL_TEMPLATE=http://api.example.com/subscription/{userId}
+# 替换后：http://api.example.com/subscription/user123
+
+# 查询参数模式  
+SUBSCRIPTION_URL_TEMPLATE=http://example.com/subscribe?user={userId}
+# 替换后：http://example.com/subscribe?user=user123
+
+# 固定URL模式
+SUBSCRIPTION_URL_TEMPLATE=http://example.com/subscription/fixed
+# 替换后：http://example.com/subscription/fixed
+```
 
 ### 用户管理
 **用户记录方式：** 仅在 `/app/data/users.txt` 中记录用户ID，支持去重处理。

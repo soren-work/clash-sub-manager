@@ -39,13 +39,61 @@
 7. **返回YAML**：Content-Type: text/yaml
 
 ### 2.3 用户ID验证机制
-- 携带clash的user-agent请求`GET [真实订阅地址]/[用户id]`
-- 验证成功：返回yaml文档且HTTP状态码为200
-- 验证失败：返回其他内容则用户ID错误
+- **URL模板替换**：系统通过环境变量 `SUBSCRIPTION_URL_TEMPLATE` 配置订阅URL模板
+- **占位符替换**：自动将 `{userId}` 占位符替换为实际用户ID
+- **验证请求**：携带clash的user-agent请求替换后的完整URL
+- **验证成功**：返回yaml文档且HTTP状态码为200
+- **验证失败**：返回其他内容则用户ID错误
+- **重要约束**：替换后的URL已包含完整路径，验证时禁止再次拼接用户ID
+
+**URL模板示例：**
+```
+# 环境变量配置
+SUBSCRIPTION_URL_TEMPLATE=http://api.example.com/subscription/{userId}
+
+# 用户请求：GET /sub/user123
+# 系统替换：http://api.example.com/subscription/user123
+# 验证请求：直接访问替换后的URL，无需再次拼接
+```
+
+**错误示例（禁止）：**
+```
+# 错误：重复拼接用户ID
+var validationUrl = $"{subscriptionUrl}/{userId}"; // ❌ 会导致 /user123/user123
+
+# 正确：直接使用替换后的URL  
+var validationUrl = subscriptionUrl; // ✅ 已经是完整URL
+```
 
 ### 2.4 数据覆写范围
-1. **proxies扩展**：原`proxies`的`server`属性是域名，复制出与`cloudflare-ip.csv`中IP数量相同的对象，并将server改为IP地址
-2. **yaml结构扩展**：读取`clash.yaml`模板，以模板内容为优先项，添加和替换到原内容中
+
+#### 2.4.1 proxies扩展机制
+1. **智能识别处理**：检测原始`proxies`中每个节点的`server`属性类型
+   - **IP地址节点**：当`server`为IP地址时，用cloudflare优选IP替换
+   - **域名节点**：当`server`为域名时，保留原始节点不变
+   - **无server节点**：保留原始节点不变
+
+2. **IP地址扩展规则**：
+   - 为每个IP地址类型的代理节点创建新副本
+   - 副本数量等于`cloudflare-ip.csv`中的IP数量
+   - 每个副本的`server`属性替换为对应的优选IP地址
+   - 端口号根据IP记录中的端口信息动态设置
+
+3. **节点命名策略**：
+   - **索引命名模式**（默认）：`{原始名称}节点-{序号}`
+   - **IP地址命名模式**：`{原始名称}-{IP地址}`
+   - 通过`UseIpInNodeName`配置项控制命名格式
+
+4. **深复制保证**：
+   - 使用递归深复制确保每个节点完全独立
+   - 避免节点间引用共享导致的数据污染
+   - 支持复杂嵌套结构的完整复制
+
+#### 2.4.2 yaml结构扩展
+1. **模板字段注入**：读取`clash.yaml`模板，以模板内容为优先项，添加和替换到原内容中
+2. **动态字段合并**：完整保留订阅服务和模板文件的所有字段
+3. **字段冲突处理**：相同字段名时，模板字段覆盖订阅字段
+
 ## 3. 兼容性与性能要求
 
 ### 3.1 完全动态解析原则

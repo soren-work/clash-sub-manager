@@ -1,10 +1,11 @@
 using ClashSubManager.Pages.Admin;
-using ClashSubManager.Models;
 using ClashSubManager.Services;
+using ClashSubManager.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Localization;
 using Moq;
 using Xunit;
 
@@ -17,13 +18,21 @@ namespace ClashSubManager.Tests.Pages.Admin
         private Mock<IConfigurationService> _mockConfigService;
         private Mock<CloudflareIPParserService> _mockIpParserService;
         private Mock<ILogger<CloudflareIpModel>> _mockLogger;
+        private Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
 
         public DefaultIPsTests()
         {
             _mockConfigService = new Mock<IConfigurationService>();
             _mockIpParserService = new Mock<CloudflareIPParserService>();
             _mockLogger = new Mock<ILogger<CloudflareIpModel>>();
-            _model = new CloudflareIpModel(_mockConfigService.Object, _mockIpParserService.Object, _mockLogger.Object);
+            _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
+            
+            // Setup localizer mock to return non-null values
+            _mockLocalizer.Setup(l => l[It.IsAny<string>()]).Returns(new LocalizedString("test", "test"));
+            _mockLocalizer.Setup(l => l["PleaseSelectFileToUpload"]).Returns(new LocalizedString("PleaseSelectFileToUpload", "Please select a file to upload"));
+            _mockLocalizer.Setup(l => l["FileSizeExceedsLimit"]).Returns(new LocalizedString("FileSizeExceedsLimit", "File size exceeds the 10MB limit"));
+            
+            _model = new CloudflareIpModel(_mockConfigService.Object, _mockIpParserService.Object, _mockLocalizer.Object, _mockLogger.Object);
             _testDataPath = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", "DefaultIPs");
             Directory.CreateDirectory(_testDataPath);
             
