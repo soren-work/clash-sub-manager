@@ -202,6 +202,9 @@ namespace ClashSubManager.Services
                 // Merge remote configuration into the template (template takes priority)
                 MergeYAMLNodes(rootNode, remoteYaml);
 
+                // Clean up empty proxy-groups if neither config has them
+                CleanupEmptyProxyGroups(rootNode);
+
                 // Extend proxy nodes with optimized IP addresses
                 await ExtendIPAddressesAsync(rootNode, defaultIPs, dedicatedIPs);
 
@@ -307,10 +310,25 @@ namespace ClashSubManager.Services
                     var targetValue = target.Children[key];
                     var sourceValue = entry.Value;
 
-                    // Special handling for proxy arrays - merge them instead of overwriting
-                    if (keyText == "proxies" || keyText == "proxy-groups")
+                    // Special handling for proxies array - merge them instead of overwriting
+                    if (keyText == "proxies")
                     {
                         MergeArrayNodes(targetValue as YamlSequenceNode, sourceValue as YamlSequenceNode);
+                    }
+                    // For proxy-groups, use priority selection instead of merging
+                    else if (keyText == "proxy-groups")
+                    {
+                        // Template (user config) takes priority over remote config
+                        // If template has proxy-groups, keep it and ignore remote
+                        // If template doesn't have proxy-groups, use remote proxy-groups
+                        // If neither has proxy-groups, don't include this field
+                        if (targetValue as YamlSequenceNode == null || 
+                            !(targetValue as YamlSequenceNode).Children.Any())
+                        {
+                            // Template doesn't have proxy-groups, use remote's
+                            target.Children[key] = sourceValue;
+                        }
+                        // else: template has proxy-groups, keep it (do nothing)
                     }
                     else
                     {
@@ -321,8 +339,46 @@ namespace ClashSubManager.Services
                 else
                 {
                     // New field from source - add it to target
-                    target.Children[key] = entry.Value;
+                    // Special case for proxy-groups: only add if target doesn't already have it
+                    if (keyText == "proxy-groups")
+                    {
+                        // This means target doesn't have proxy-groups, so we can safely add from source
+                        target.Children[key] = entry.Value;
+                    }
+                    else
+                    {
+                        target.Children[key] = entry.Value;
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Clean up empty proxy-groups node
+        /// </summary>
+        /// <param name="rootNode">Root YAML node</param>
+        private void CleanupEmptyProxyGroups(YamlMappingNode rootNode)
+        {
+            try
+            {
+                var proxyGroupsNode = rootNode.Children.FirstOrDefault(c => 
+                    (c.Key as YamlScalarNode)?.Value == "proxy-groups");
+
+                if (proxyGroupsNode.Value != null)
+                {
+                    var proxyGroups = proxyGroupsNode.Value as YamlSequenceNode;
+                    
+                    // If proxy-groups is empty or null, remove it entirely
+                    if (proxyGroups == null || !proxyGroups.Children.Any())
+                    {
+                        rootNode.Children.Remove(proxyGroupsNode.Key);
+                        _logger.LogInformation("Removed empty proxy-groups from configuration");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error cleaning up empty proxy-groups");
             }
         }
 

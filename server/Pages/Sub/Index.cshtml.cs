@@ -124,6 +124,29 @@ namespace ClashSubManager.Pages.Sub
 
                 _logger.LogInformation("Subscription generated successfully for user: {UserId}", UserId);
                 
+                // Set response headers
+                if (subscriptionResponse.UploadBytes > 0 || subscriptionResponse.DownloadBytes > 0 || 
+                    subscriptionResponse.TotalBytes > 0 || subscriptionResponse.ExpireTime > DateTime.MinValue)
+                {
+                    Response.Headers.Add("subscription-userinfo", subscriptionResponse.GetSubscriptionUserInfoHeader());
+                }
+                
+                // Add profile title header
+                if (!string.IsNullOrEmpty(subscriptionResponse.ProfileTitle))
+                {
+                    Response.Headers.Add("Profile-Title", subscriptionResponse.ProfileTitle);
+                }
+                
+                // Add update interval header
+                if (subscriptionResponse.UpdateIntervalHours > 0)
+                {
+                    Response.Headers.Add("profile-update-interval", subscriptionResponse.UpdateIntervalHours.ToString());
+                }
+                
+                // Add content disposition header
+                var fileNamePrefix = UserId.Length >= 6 ? UserId.Substring(0, 6) : UserId;
+                Response.Headers.Add("content-disposition", $"attachment; filename={fileNamePrefix}");
+                
                 // Return YAML content
                 return Content(subscriptionResponse.YAMLContent ?? string.Empty, "text/yaml");
             }

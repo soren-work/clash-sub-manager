@@ -190,5 +190,132 @@ proxy-groups:
             Assert.Equal(longErrorMessage, response.Message);
             Assert.Null(response.YAMLContent);
         }
+
+        [Fact]
+        public void CreateSuccess_WithSubscriptionInfo_ReturnsSuccessResponse()
+        {
+            // Arrange
+            var yamlContent = "proxies:\n  - name: test";
+            var uploadBytes = 1024L;
+            var downloadBytes = 2048L;
+            var totalBytes = 1073741824L;
+            var expireTime = DateTime.UtcNow.AddDays(30);
+            var profileTitle = "Test Subscription";
+            var updateIntervalHours = 24;
+
+            // Act
+            var response = SubscriptionResponse.CreateSuccessWithSubscriptionInfo(
+                yamlContent, uploadBytes, downloadBytes, totalBytes, expireTime, profileTitle, updateIntervalHours);
+
+            // Assert
+            Assert.True(response.Success);
+            Assert.Equal(yamlContent, response.YAMLContent);
+            Assert.Equal(uploadBytes, response.UploadBytes);
+            Assert.Equal(downloadBytes, response.DownloadBytes);
+            Assert.Equal(totalBytes, response.TotalBytes);
+            Assert.Equal(expireTime, response.ExpireTime);
+            Assert.Equal(profileTitle, response.ProfileTitle);
+            Assert.Equal(updateIntervalHours, response.UpdateIntervalHours);
+        }
+
+        [Fact]
+        public void CreateSuccess_WithMinimalSubscriptionInfo_ReturnsSuccessResponse()
+        {
+            // Arrange
+            var yamlContent = "proxies:\n  - name: test";
+
+            // Act
+            var response = SubscriptionResponse.CreateSuccessWithSubscriptionInfo(yamlContent);
+
+            // Assert
+            Assert.True(response.Success);
+            Assert.Equal(yamlContent, response.YAMLContent);
+            Assert.Equal(0L, response.UploadBytes);
+            Assert.Equal(0L, response.DownloadBytes);
+            Assert.Equal(0L, response.TotalBytes);
+            Assert.Equal(DateTime.MinValue, response.ExpireTime);
+            Assert.Equal(string.Empty, response.ProfileTitle);
+            Assert.Equal(24, response.UpdateIntervalHours); // Default value
+        }
+
+        [Fact]
+        public void SubscriptionUserInfoHeader_FormatsCorrectly()
+        {
+            // Arrange
+            var response = new SubscriptionResponse
+            {
+                UploadBytes = 1234,
+                DownloadBytes = 5678,
+                TotalBytes = 10737418240,
+                ExpireTime = new DateTime(2024, 12, 31, 23, 59, 59, DateTimeKind.Utc)
+            };
+
+            // Act
+            var headerValue = response.GetSubscriptionUserInfoHeader();
+
+            // Assert
+            Assert.NotNull(headerValue);
+            Assert.Contains("upload=1234", headerValue);
+            Assert.Contains("download=5678", headerValue);
+            Assert.Contains("total=10737418240", headerValue);
+            Assert.Contains("expire=1735689599", headerValue); // Unix timestamp
+        }
+
+        [Fact]
+        public void SubscriptionUserInfoHeader_WithZeroValues_FormatsCorrectly()
+        {
+            // Arrange
+            var response = new SubscriptionResponse
+            {
+                UploadBytes = 0,
+                DownloadBytes = 0,
+                TotalBytes = 0,
+                ExpireTime = DateTime.MinValue
+            };
+
+            // Act
+            var headerValue = response.GetSubscriptionUserInfoHeader();
+
+            // Assert
+            Assert.NotNull(headerValue);
+            Assert.Contains("upload=0", headerValue);
+            Assert.Contains("download=0", headerValue);
+            Assert.Contains("total=0", headerValue);
+            Assert.Contains("expire=0", headerValue); // Updated to expect 0 for DateTime.MinValue
+        }
+
+        [Theory]
+        [InlineData("My Subscription", "My Subscription")]
+        [InlineData("Test 🚀 Subscription", "Test 🚀 Subscription")]
+        [InlineData("", "")]
+        [InlineData("   ", "   ")]
+        public void ProfileTitle_SetAndGet_WorksCorrectly(string title, string expected)
+        {
+            // Arrange & Act
+            var response = new SubscriptionResponse
+            {
+                ProfileTitle = title
+            };
+
+            // Assert
+            Assert.Equal(expected, response.ProfileTitle);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(12)]
+        [InlineData(24)]
+        [InlineData(168)]
+        public void UpdateIntervalHours_SetAndGet_WorksCorrectly(int interval)
+        {
+            // Arrange & Act
+            var response = new SubscriptionResponse
+            {
+                UpdateIntervalHours = interval
+            };
+
+            // Assert
+            Assert.Equal(interval, response.UpdateIntervalHours);
+        }
     }
 }
