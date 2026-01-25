@@ -593,4 +593,71 @@
   <data name="YAMLValidationFailed" xml:space="preserve">
     <value>YAML验证失败</value>
   </data>
+  <!-- Subscription Information -->
+  <data name="SubscriptionInfo" xml:space="preserve">
+    <value>订阅信息</value>
+  </data>
+  <data name="UploadTraffic" xml:space="preserve">
+    <value>上传流量</value>
+  </data>
+  <data name="DownloadTraffic" xml:space="preserve">
+    <value>下载流量</value>
+  </data>
+  <data name="TotalTraffic" xml:space="preserve">
+    <value>总流量</value>
+  </data>
+  <data name="ExpireDate" xml:space="preserve">
+    <value>到期时间</value>
+  </data>
+  <data name="DaysRemaining" xml:space="preserve">
+    <value>剩余天数</value>
+  </data>
+  <data name="Unlimited" xml:space="preserve">
+    <value>无限</value>
+  </data>
+  <data name="Never" xml:space="preserve">
+    <value>永不过期</value>
+  </data>
+  <data name="SubscriptionActive" xml:space="preserve">
+    <value>订阅有效</value>
+  </data>
+  <data name="SubscriptionExpired" xml:space="preserve">
+    <value>订阅已过期</value>
+  </data>
+  <data name="TrafficUsage" xml:space="preserve">
+    <value>流量使用</value>
+  </data>
+  <data name="Used" xml:space="preserve">
+    <value>已使用</value>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>可用</value>
+  </data>
+  <data name="SubscriptionDetails" xml:space="preserve">
+    <value>订阅详情</value>
+  </data>
+  <data name="ProfileTitle" xml:space="preserve">
+    <value>配置名称</value>
+  </data>
+  <data name="UpdateInterval" xml:space="preserve">
+    <value>更新间隔</value>
+  </data>
+  <data name="Hours" xml:space="preserve">
+    <value>小时</value>
+  </data>
+  <data name="LastUpdated" xml:space="preserve">
+    <value>上次更新</value>
+  </data>
+  <data name="NextUpdate" xml:space="preserve">
+    <value>下次更新</value>
+  </data>
+  <data name="SubscriptionStatus" xml:space="preserve">
+    <value>订阅状态</value>
+  </data>
+  <data name="UserIPsUpdatedSuccessfully" xml:space="preserve">
+    <value>用户IP地址更新成功</value>
+  </data>
+  <data name="UserNotFoundForDeletion" xml:space="preserve">
+    <value>未找到要删除的用户</value>
+  </data>
 </root>

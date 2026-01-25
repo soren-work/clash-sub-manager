@@ -593,4 +593,71 @@
   <data name="YAMLValidationFailed" xml:space="preserve">
     <value>YAML validation failed</value>
   </data>
+  <!-- Subscription Information -->
+  <data name="SubscriptionInfo" xml:space="preserve">
+    <value>Subscription Information</value>
+  </data>
+  <data name="UploadTraffic" xml:space="preserve">
+    <value>Upload Traffic</value>
+  </data>
+  <data name="DownloadTraffic" xml:space="preserve">
+    <value>Download Traffic</value>
+  </data>
+  <data name="TotalTraffic" xml:space="preserve">
+    <value>Total Traffic</value>
+  </data>
+  <data name="ExpireDate" xml:space="preserve">
+    <value>Expire Date</value>
+  </data>
+  <data name="DaysRemaining" xml:space="preserve">
+    <value>Days Remaining</value>
+  </data>
+  <data name="Unlimited" xml:space="preserve">
+    <value>Unlimited</value>
+  </data>
+  <data name="Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="SubscriptionActive" xml:space="preserve">
+    <value>Subscription Active</value>
+  </data>
+  <data name="SubscriptionExpired" xml:space="preserve">
+    <value>Subscription Expired</value>
+  </data>
+  <data name="TrafficUsage" xml:space="preserve">
+    <value>Traffic Usage</value>
+  </data>
+  <data name="Used" xml:space="preserve">
+    <value>Used</value>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="SubscriptionDetails" xml:space="preserve">
+    <value>Subscription Details</value>
+  </data>
+  <data name="ProfileTitle" xml:space="preserve">
+    <value>Profile Title</value>
+  </data>
+  <data name="UpdateInterval" xml:space="preserve">
+    <value>Update Interval</value>
+  </data>
+  <data name="Hours" xml:space="preserve">
+    <value>Hours</value>
+  </data>
+  <data name="LastUpdated" xml:space="preserve">
+    <value>Last Updated</value>
+  </data>
+  <data name="NextUpdate" xml:space="preserve">
+    <value>Next Update</value>
+  </data>
+  <data name="SubscriptionStatus" xml:space="preserve">
+    <value>Subscription Status</value>
+  </data>
+  <data name="UserIPsUpdatedSuccessfully" xml:space="preserve">
+    <value>User IP addresses updated successfully</value>
+  </data>
+  <data name="UserNotFoundForDeletion" xml:space="preserve">
+    <value>User not found for deletion</value>
+  </data>
 </root>
