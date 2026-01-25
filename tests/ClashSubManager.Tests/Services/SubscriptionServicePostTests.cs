@@ -69,7 +69,7 @@ namespace ClashSubManager.Tests.Services
             
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
             _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(emptyIPList);
-            _mockLocalizer.Setup(x => x["NoValidIPRecords"]).Returns(new LocalizedString("NoValidIPRecords", "No valid IP records found", false));
+            _mockLocalizer.Setup(x => x["NoValidIPRecordsFound"]).Returns(new LocalizedString("NoValidIPRecordsFound", "No valid IP records found", false));
 
             // Act
             var result = await _subscriptionService.UpdateUserIPsAsync(userId, csvContent);
@@ -77,7 +77,7 @@ namespace ClashSubManager.Tests.Services
             // Assert
             Assert.False(result.Success);
             Assert.Equal("No valid IP records found", result.Message);
-            Assert.Equal("NO_VALID_IP_RECORDS", result.ErrorCode);
+            Assert.Equal("NO_VALID_IP_RECORDS_FOUND", result.ErrorCode);
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace ClashSubManager.Tests.Services
             _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(ipRecords);
             _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
             _mockFileService.Setup(x => x.SaveUserDedicatedIPsAsync(userId, ipRecords)).ReturnsAsync(true);
-            _mockLocalizer.Setup(x => x["UserIPsUpdated"]).Returns(new LocalizedString("UserIPsUpdated", "User IPs updated successfully", false));
+            _mockLocalizer.Setup(x => x["UserIPsUpdatedSuccessfully"]).Returns(new LocalizedString("UserIPsUpdatedSuccessfully", "User IPs updated successfully", false));
 
             // Act
             var result = await _subscriptionService.UpdateUserIPsAsync(userId, csvContent);
@@ -123,7 +123,7 @@ namespace ClashSubManager.Tests.Services
             _mockValidationService.Setup(x => x.ParseCSVContent(csvContent)).Returns(ipRecords);
             _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
             _mockFileService.Setup(x => x.SaveUserDedicatedIPsAsync(userId, ipRecords)).ReturnsAsync(true);
-            _mockLocalizer.Setup(x => x["UserIPsUpdated"]).Returns(new LocalizedString("UserIPsUpdated", "User IPs updated successfully", false));
+            _mockLocalizer.Setup(x => x["UserIPsUpdatedSuccessfully"]).Returns(new LocalizedString("UserIPsUpdatedSuccessfully", "User IPs updated successfully", false));
 
             // Act
             var result = await _subscriptionService.UpdateUserIPsAsync(userId, csvContent);

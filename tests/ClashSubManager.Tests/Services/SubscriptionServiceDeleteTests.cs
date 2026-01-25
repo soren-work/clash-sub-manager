@@ -65,7 +65,7 @@ namespace ClashSubManager.Tests.Services
             var userId = "test-user";
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
             _mockUserManagementService.Setup(x => x.DeleteUserAsync(userId)).ReturnsAsync(false);
-            _mockLocalizer.Setup(x => x["UserNotFound"]).Returns(new LocalizedString("UserNotFound", "User not found", false));
+            _mockLocalizer.Setup(x => x["UserNotFoundForDeletion"]).Returns(new LocalizedString("UserNotFoundForDeletion", "User not found", false));
 
             // Act
             var result = await _subscriptionService.DeleteUserConfigAsync(userId);
@@ -73,7 +73,7 @@ namespace ClashSubManager.Tests.Services
             // Assert
             Assert.False(result.Success);
             Assert.Equal("User not found", result.Message);
-            Assert.Equal("USER_NOT_FOUND", result.ErrorCode);
+            Assert.Equal("USER_NOT_FOUND_FOR_DELETION", result.ErrorCode);
         }
 
         [Fact]

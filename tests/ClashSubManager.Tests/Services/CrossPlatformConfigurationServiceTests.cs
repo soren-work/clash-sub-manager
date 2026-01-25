@@ -291,7 +291,8 @@ namespace ClashSubManager.Tests.Services
 
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
             var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
+            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
+            var namingService = new NodeNamingTemplateService(configWithIpNaming, namingLogger);
             var service = new PlatformConfigurationService(
                 configWithIpNaming,
                 logger,
@@ -299,7 +300,7 @@ namespace ClashSubManager.Tests.Services
                 _mockPathResolver,
                 _mockValidator,
                 httpClient,
-                mockNamingService);
+                namingService);
 
             // Act
             var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
@@ -334,8 +335,35 @@ namespace ClashSubManager.Tests.Services
             };
             var dedicatedIPs = new List<IPRecord>();
 
+            // Create service with UseIpInNodeName=false configuration
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    ["AdminUsername"] = "admin",
+                    ["AdminPassword"] = "password123",
+                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
+                    ["SessionTimeoutMinutes"] = "30",
+                    ["DataPath"] = "/test/data",
+                    ["UseIpInNodeName"] = "false"
+                })
+                .Build();
+
+            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
+            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
+            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
+            var namingService = new NodeNamingTemplateService(configuration, namingLogger);
+            
+            var service = new PlatformConfigurationService(
+                configuration,
+                logger,
+                _mockDetector,
+                _mockPathResolver,
+                _mockValidator,
+                httpClient,
+                namingService);
+
             // Act
-            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
+            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
 
             // Assert - Verify each node has independent IP address and name
             Assert.Contains("server: 1.1.1.1", result);
@@ -414,8 +442,35 @@ namespace ClashSubManager.Tests.Services
             };
             var dedicatedIPs = new List<IPRecord>();
 
+            // Create service with UseIpInNodeName=false configuration
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    ["AdminUsername"] = "admin",
+                    ["AdminPassword"] = "password123",
+                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
+                    ["SessionTimeoutMinutes"] = "30",
+                    ["DataPath"] = "/test/data",
+                    ["UseIpInNodeName"] = "false"
+                })
+                .Build();
+
+            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
+            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
+            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
+            var namingService = new NodeNamingTemplateService(configuration, namingLogger);
+            
+            var service = new PlatformConfigurationService(
+                configuration,
+                logger,
+                _mockDetector,
+                _mockPathResolver,
+                _mockValidator,
+                httpClient,
+                namingService);
+
             // Act
-            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
+            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
 
             // Assert - Domain proxies should be preserved
             Assert.Contains("server: example.com", result);
@@ -549,8 +604,35 @@ namespace ClashSubManager.Tests.Services
             };
             var dedicatedIPs = new List<IPRecord>();
 
+            // Create service with UseIpInNodeName=false configuration
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    ["AdminUsername"] = "admin",
+                    ["AdminPassword"] = "password123",
+                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
+                    ["SessionTimeoutMinutes"] = "30",
+                    ["DataPath"] = "/test/data",
+                    ["UseIpInNodeName"] = "false"
+                })
+                .Build();
+
+            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
+            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
+            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
+            var namingService = new NodeNamingTemplateService(configuration, namingLogger);
+            
+            var service = new PlatformConfigurationService(
+                configuration,
+                logger,
+                _mockDetector,
+                _mockPathResolver,
+                _mockValidator,
+                httpClient,
+                namingService);
+
             // Act
-            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
+            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
 
             // Assert - Domain proxies should be preserved
             Assert.Contains("server: example.com", result);

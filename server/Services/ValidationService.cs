@@ -110,21 +110,7 @@ namespace ClashSubManager.Services
                    ValidateLatency(ipRecord.Latency);
         }
 
-        /// <summary>
-        /// Validates user configuration
-        /// </summary>
-        /// <param name="userConfig">User configuration</param>
-        /// <returns>Whether valid</returns>
-        public bool ValidateUserConfig(UserConfig userConfig)
-        {
-            if (userConfig == null)
-                return false;
-
-            return ValidateUserId(userConfig.UserId) &&
-                   ValidateSubscriptionUrl(userConfig.SubscriptionUrl) &&
-                   userConfig.DedicatedIPs.All(ValidateIPRecord);
-        }
-
+        
         /// <summary>
         /// Parses CSV content to IP record list
         /// </summary>
