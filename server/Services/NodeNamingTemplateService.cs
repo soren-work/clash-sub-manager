@@ -27,7 +27,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Process template and replace variables
+        /// Processes template and replaces variables
         /// </summary>
         public string ProcessTemplate(string template, NodeNamingContext context)
         {
@@ -66,7 +66,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Get available template variables
+        /// Gets available template variables
         /// </summary>
         public Dictionary<string, object> GetVariables(NodeNamingContext context)
         {
@@ -105,7 +105,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate template syntax
+        /// Validates template syntax
         /// </summary>
         public bool ValidateTemplate(string template, out string errorMessage)
         {
@@ -151,7 +151,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Extract variables from proxy node
+        /// Extracts variables from proxy node
         /// </summary>
         public Dictionary<string, object> ExtractVariables(YamlMappingNode proxyNode, int index, string newServer)
         {
@@ -175,7 +175,7 @@ namespace ClashSubManager.Services
                 variables["servername"] = ExtractStringValue(proxyNode, "server") ?? string.Empty;
                 variables["uuid"] = ExtractStringValue(proxyNode, "uuid") ?? string.Empty;
 
-                // Create nested variables
+                // Create multi-level variables
                 CreateNestedVariables(variables);
 
                 _logger.LogDebug("Extracted {Count} variables from proxy node", variables.Count);
@@ -189,7 +189,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Create nested variables
+        /// Creates multi-level variables
         /// </summary>
         private void CreateNestedVariables(Dictionary<string, object> variables)
         {
@@ -218,7 +218,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Extract string value
+        /// Extracts string value
         /// </summary>
         private string? ExtractStringValue(YamlMappingNode node, string key)
         {
@@ -234,7 +234,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Extract integer value
+        /// Extracts integer value
         /// </summary>
         private int ExtractIntValue(YamlMappingNode node, string key)
         {
@@ -248,11 +248,11 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Get naming template (with backward compatibility support)
+        /// Gets naming template (supports backward compatibility)
         /// </summary>
         public string GetNamingTemplate()
         {
-            // Check for new template configuration
+            // Check new template configuration
             var template = _configuration["NodeNamingTemplate"];
             if (!string.IsNullOrEmpty(template))
             {
@@ -260,7 +260,8 @@ namespace ClashSubManager.Services
             }
 
             // Migrate from old UseIpInNodeName setting
-            var useIpFormat = _configuration.GetValue<bool>("UseIpInNodeName", false);
+            var useIpFormatStr = _configuration["UseIpInNodeName"];
+            var useIpFormat = bool.TryParse(useIpFormatStr, out var result) && result;
             return useIpFormat 
                 ? "{name}-{server}" 
                 : "{name}-Node-{index}";

@@ -9,7 +9,7 @@ using Xunit;
 namespace ClashSubManager.Tests.Services
 {
     /// <summary>
-    /// SubscriptionService POST endpoint unit tests
+    /// SubscriptionService POST interface unit tests
     /// </summary>
     public class SubscriptionServicePostTests
     {

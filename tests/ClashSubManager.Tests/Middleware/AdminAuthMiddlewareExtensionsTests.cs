@@ -7,7 +7,7 @@ using System;
 namespace ClashSubManager.Tests.Middleware
 {
     /// <summary>
-    /// Unit tests for AdminAuthMiddlewareExtensions
+    /// AdminAuthMiddlewareExtensions unit tests
     /// </summary>
     public class AdminAuthMiddlewareExtensionsTests
     {
@@ -18,7 +18,7 @@ namespace ClashSubManager.Tests.Middleware
             var builderMock = new Mock<IApplicationBuilder>();
             
             // Act & Assert
-            // Since UseMiddleware is an extension method, we can only test that it doesn't throw
+            // Since UseMiddleware is an extension method, we can only test that it doesn't throw exceptions
             var exception = Record.Exception(() => builderMock.Object.UseAdminAuth());
             Assert.Null(exception);
         }
@@ -30,7 +30,7 @@ namespace ClashSubManager.Tests.Middleware
             IApplicationBuilder builder = null;
 
             // Act & Assert
-            // Since the extension method has no null check, it throws NullReferenceException
+            // Since extension method has no null check, throws NullReferenceException
             Assert.Throws<NullReferenceException>(() => builder.UseAdminAuth());
         }
     }

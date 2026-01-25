@@ -17,7 +17,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Resolve path
+        /// Resolves path
         /// </summary>
         /// <param name="path">Relative or absolute path</param>
         /// <returns>Resolved absolute path</returns>
@@ -33,7 +33,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Get default data path
+        /// Gets default data path
         /// </summary>
         /// <returns>Default data path</returns>
         public string GetDefaultDataPath()
@@ -45,10 +45,10 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate if path is valid
+        /// Validates if path is valid
         /// </summary>
-        /// <param name="path">Path to validate</param>
-        /// <returns>True if path is valid</returns>
+        /// <param name="path">Path</param>
+        /// <returns>Whether path is valid</returns>
         public bool IsValidPath(string path)
         {
             try

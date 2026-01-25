@@ -467,7 +467,7 @@ invalid.line
             Assert.False(result);
         }
 
-        // 新增分支覆盖测试 - 边界条件
+        // New branch coverage test - boundary conditions
         [Theory]
         [InlineData("valid_user123")]
         [InlineData("user-456")]

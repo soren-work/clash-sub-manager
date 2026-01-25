@@ -9,15 +9,15 @@ using Xunit;
 namespace ClashSubManager.Tests.Common
 {
     /// <summary>
-    /// Mock object factory - Unified test mock configuration
+    /// Mock object factory - Unified test Mock configuration
     /// </summary>
     public static class MockFactory
     {
         /// <summary>
-        /// Creates an IStringLocalizer mock
+        /// Create IStringLocalizer Mock
         /// </summary>
         /// <typeparam name="T">Localization type</typeparam>
-        /// <returns>Configured mock object</returns>
+        /// <returns>Configured Mock object</returns>
         public static Mock<IStringLocalizer<T>> CreateStringLocalizerMock<T>()
         {
             var mock = new Mock<IStringLocalizer<T>>();
@@ -27,9 +27,9 @@ namespace ClashSubManager.Tests.Common
         }
 
         /// <summary>
-        /// Creates an HttpContext mock
+        /// Create HttpContext Mock
         /// </summary>
-        /// <returns>Configured mock object</returns>
+        /// <returns>Configured Mock object</returns>
         public static Mock<HttpContext> CreateHttpContextMock()
         {
             var mock = new Mock<HttpContext>();
@@ -47,10 +47,10 @@ namespace ClashSubManager.Tests.Common
         }
 
         /// <summary>
-        /// Creates an HttpContext mock with path
+        /// Create HttpContext Mock with path
         /// </summary>
         /// <param name="path">Request path</param>
-        /// <returns>Configured mock object</returns>
+        /// <returns>Configured Mock object</returns>
         public static Mock<HttpContext> CreateHttpContextMock(string path)
         {
             var mock = CreateHttpContextMock();
@@ -59,11 +59,11 @@ namespace ClashSubManager.Tests.Common
         }
 
         /// <summary>
-        /// Creates an HttpContext mock with cookies
+        /// Create HttpContext Mock with cookies
         /// </summary>
         /// <param name="path">Request path</param>
         /// <param name="cookies">Cookie key-value pairs</param>
-        /// <returns>Configured mock object</returns>
+        /// <returns>Configured Mock object</returns>
         public static Mock<HttpContext> CreateHttpContextMock(string path, Dictionary<string, string> cookies)
         {
             var mock = CreateHttpContextMock(path);
@@ -79,9 +79,9 @@ namespace ClashSubManager.Tests.Common
         }
 
         /// <summary>
-        /// Creates a RequestDelegate mock
+        /// Create RequestDelegate Mock
         /// </summary>
-        /// <returns>Configured mock object</returns>
+        /// <returns>Configured Mock object</returns>
         public static Mock<RequestDelegate> CreateRequestDelegateMock()
         {
             var mock = new Mock<RequestDelegate>();
@@ -90,10 +90,10 @@ namespace ClashSubManager.Tests.Common
         }
 
         /// <summary>
-        /// Creates an ILogger mock
+        /// Create ILogger Mock
         /// </summary>
         /// <typeparam name="T">Logger type</typeparam>
-        /// <returns>Configured mock object</returns>
+        /// <returns>Configured Mock object</returns>
         public static Mock<Microsoft.Extensions.Logging.ILogger<T>> CreateLoggerMock<T>()
         {
             var mock = new Mock<Microsoft.Extensions.Logging.ILogger<T>>();

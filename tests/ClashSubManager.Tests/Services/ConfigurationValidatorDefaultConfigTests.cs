@@ -48,7 +48,7 @@ namespace ClashSubManager.Tests.Services
             var tempDir = Path.GetTempPath();
             var testConfigPath = Path.Combine(tempDir, "test-appsettings.json");
             
-            // Clean up any existing test files
+            // Clean up potentially existing test files
             if (File.Exists(testConfigPath))
             {
                 File.Delete(testConfigPath);
