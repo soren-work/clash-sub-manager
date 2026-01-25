@@ -25,7 +25,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Record user access
+        /// Records user access
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Operation result</returns>
@@ -39,16 +39,20 @@ namespace ClashSubManager.Services
                     return false;
                 }
 
+                // Validate user ID format
                 if (!IsValidUserId(userId))
                 {
                     _logger.LogWarning("Invalid user ID format: {UserId}", userId);
                     return false;
                 }
 
+                // Ensure data directory exists
                 Directory.CreateDirectory(_dataPath);
 
+                // Read existing user list
                 var existingUsers = await ReadUsersFromFileAsync();
                 
+                // If user does not exist, add to list
                 if (!existingUsers.Contains(userId))
                 {
                     existingUsers.Add(userId);
@@ -70,7 +74,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Get all users list
+        /// Gets all users list
         /// </summary>
         /// <returns>User ID list</returns>
         public async Task<List<string>> GetAllUsersAsync()
@@ -89,7 +93,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Check if user exists
+        /// Checks if user exists
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Whether user exists</returns>
@@ -111,7 +115,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Delete user record
+        /// Deletes user record
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Operation result</returns>
@@ -130,7 +134,7 @@ namespace ClashSubManager.Services
                 {
                     await WriteUsersToFileAsync(users);
                     
-                    // Delete user-specific directory
+                    // Delete user dedicated directory
                     var userDir = Path.Combine(_dataPath, userId);
                     if (Directory.Exists(userDir))
                     {
@@ -155,7 +159,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Get user subscription URL
+        /// Gets user subscription URL
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Subscription URL</returns>
@@ -185,7 +189,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Read user list from file
+        /// Reads user list from file
         /// </summary>
         /// <returns>User ID list</returns>
         private async Task<List<string>> ReadUsersFromFileAsync()
@@ -218,14 +222,14 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Write user list to file
+        /// Writes user list to file
         /// </summary>
         /// <param name="users">User ID list</param>
         private async Task WriteUsersToFileAsync(List<string> users)
         {
             try
             {
-                // Use temporary file pattern to ensure atomic write
+                // Use temporary file mode to ensure atomic write
                 var tempFilePath = _usersFilePath + ".tmp";
                 
                 var distinctUsers = users.Distinct().OrderBy(u => u).ToList();
@@ -249,7 +253,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate user ID format
+        /// Validates user ID format
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Whether valid</returns>

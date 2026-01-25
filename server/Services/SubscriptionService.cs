@@ -33,7 +33,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Get user subscription configuration
+        /// Gets user subscription configuration
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Subscription response</returns>
@@ -76,10 +76,10 @@ namespace ClashSubManager.Services
                 // Get default IP list
                 var defaultIPs = await _fileService.LoadDefaultIPsAsync();
                 
-                // Get user-specific IP list
+                // Get user dedicated IP list
                 var dedicatedIPs = await _fileService.LoadUserDedicatedIPsAsync(userId);
                 
-                // Merge configuration and generate YAML
+                // Merge configuration to generate YAML
                 var yamlContent = await _configurationService.GenerateSubscriptionConfigAsync(
                     template, 
                     subscriptionUrl, 
@@ -99,7 +99,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Update user IP configuration
+        /// Updates user IP configuration
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <param name="csvContent">CSV content</param>
@@ -123,19 +123,19 @@ namespace ClashSubManager.Services
                 {
                     _logger.LogWarning("No valid IP records found in CSV content");
                     return SubscriptionResponse.CreateError(
-                        _localizer["NoValidIPRecords"], 
-                        "NO_VALID_IP_RECORDS");
+                        _localizer["NoValidIPRecordsFound"], 
+                        "NO_VALID_IP_RECORDS_FOUND");
                 }
 
                 // Record user access
                 await _userManagementService.RecordUserAccessAsync(userId);
 
-                // Save user-specific IP list
+                // Save user dedicated IP list
                 await _fileService.SaveUserDedicatedIPsAsync(userId, ipRecords);
 
                 _logger.LogInformation("User IPs updated successfully for user: {UserId}, count: {Count}", userId, ipRecords.Count);
                 return SubscriptionResponse.CreateSuccess(
-                    _localizer["UserIPsUpdated"].ToString());
+                    _localizer["UserIPsUpdatedSuccessfully"].ToString());
             }
             catch (Exception ex)
             {
@@ -147,7 +147,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Delete user configuration
+        /// Deletes user configuration
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Operation result</returns>
@@ -170,8 +170,8 @@ namespace ClashSubManager.Services
                 {
                     _logger.LogWarning("User not found for deletion: {UserId}", userId);
                     return SubscriptionResponse.CreateError(
-                        _localizer["UserNotFound"], 
-                        "USER_NOT_FOUND");
+                        _localizer["UserNotFoundForDeletion"], 
+                        "USER_NOT_FOUND_FOR_DELETION");
                 }
 
                 _logger.LogInformation("User config deleted successfully for user: {UserId}", userId);

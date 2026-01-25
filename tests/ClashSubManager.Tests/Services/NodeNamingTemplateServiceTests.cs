@@ -250,7 +250,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             _mockConfiguration.Setup(c => c["NodeNamingTemplate"]).Returns((string?)null);
-            _mockConfiguration.Setup(c => c.GetValue<bool>("UseIpInNodeName", false)).Returns(true);
+            _mockConfiguration.Setup(c => c["UseIpInNodeName"]).Returns("true");
 
             // Act
             var result = _service.GetNamingTemplate();
@@ -264,7 +264,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             _mockConfiguration.Setup(c => c["NodeNamingTemplate"]).Returns((string?)null);
-            _mockConfiguration.Setup(c => c.GetValue<bool>("UseIpInNodeName", false)).Returns(false);
+            _mockConfiguration.Setup(c => c["UseIpInNodeName"]).Returns("false");
 
             // Act
             var result = _service.GetNamingTemplate();
@@ -274,7 +274,7 @@ namespace ClashSubManager.Tests.Services
         }
 
         /// <summary>
-        /// Create test proxy node
+        /// Creates test proxy node
         /// </summary>
         private YamlMappingNode CreateTestProxyNode()
         {

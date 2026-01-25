@@ -7,7 +7,7 @@ using Xunit;
 namespace ClashSubManager.Tests.Services
 {
     /// <summary>
-    /// Unit tests for UserManagementService
+    /// UserManagementService unit tests
     /// </summary>
     public class UserManagementServiceTests : IDisposable
     {
@@ -281,7 +281,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var userId1 = "TestUser";
-            var userId2 = "testuser"; // 相同但不同大小写
+            var userId2 = "testuser"; // Same but different case
 
             // Act
             await _userManagementService.RecordUserAccessAsync(userId1);
@@ -289,7 +289,7 @@ namespace ClashSubManager.Tests.Services
 
             // Assert
             var users = await _userManagementService.GetAllUsersAsync();
-            Assert.Equal(2, users.Count); // 大小写敏感，应该被视为不同用户
+            Assert.Equal(2, users.Count); // Case sensitive, should be treated as different users
         }
 
         [Fact]

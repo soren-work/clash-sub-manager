@@ -25,7 +25,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate user ID
+        /// Validates user ID
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Whether valid</returns>
@@ -38,7 +38,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate IPv4 address
+        /// Validates IPv4 address
         /// </summary>
         /// <param name="ipAddress">IP address</param>
         /// <returns>Whether valid</returns>
@@ -51,7 +51,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate subscription URL
+        /// Validates subscription URL
         /// </summary>
         /// <param name="url">Subscription URL</param>
         /// <returns>Whether valid</returns>
@@ -65,7 +65,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate port number
+        /// Validates port number
         /// </summary>
         /// <param name="port">Port number</param>
         /// <returns>Whether valid</returns>
@@ -75,9 +75,9 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate packet loss rate
+        /// Validates packet loss
         /// </summary>
-        /// <param name="packetLoss">Packet loss rate</param>
+        /// <param name="packetLoss">Packet loss</param>
         /// <returns>Whether valid</returns>
         public bool ValidatePacketLoss(decimal packetLoss)
         {
@@ -85,7 +85,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate latency
+        /// Validates latency
         /// </summary>
         /// <param name="latency">Latency</param>
         /// <returns>Whether valid</returns>
@@ -95,7 +95,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate IP record
+        /// Validates IP record
         /// </summary>
         /// <param name="ipRecord">IP record</param>
         /// <returns>Whether valid</returns>
@@ -111,7 +111,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate user configuration
+        /// Validates user configuration
         /// </summary>
         /// <param name="userConfig">User configuration</param>
         /// <returns>Whether valid</returns>
@@ -126,7 +126,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Parse CSV content to IP record list
+        /// Parses CSV content to IP record list
         /// </summary>
         /// <param name="csvContent">CSV content</param>
         /// <returns>IP record list</returns>
@@ -136,7 +136,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Convert IP record list to CSV format
+        /// Converts IP record list to CSV format
         /// </summary>
         /// <param name="ipRecords">IP record list</param>
         /// <returns>CSV content</returns>
@@ -152,7 +152,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate file size
+        /// Validates file size
         /// </summary>
         /// <param name="fileSize">File size (bytes)</param>
         /// <param name="maxSizeMB">Maximum size (MB)</param>
@@ -164,7 +164,7 @@ namespace ClashSubManager.Services
         }
 
         /// <summary>
-        /// Validate YAML content format
+        /// Validates YAML content format
         /// </summary>
         /// <param name="yamlContent">YAML content</param>
         /// <returns>Whether valid</returns>
