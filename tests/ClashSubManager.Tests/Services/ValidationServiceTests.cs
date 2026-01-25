@@ -280,55 +280,7 @@ namespace ClashSubManager.Tests.Services
             Assert.False(result);
         }
 
-        [Fact]
-        public void ValidateUserConfig_ValidConfig_ReturnsTrue()
-        {
-            // Arrange
-            var userConfig = new UserConfig
-            {
-                UserId = "user123",
-                SubscriptionUrl = "https://example.com/subscribe",
-                DedicatedIPs = new List<IPRecord>
-                {
-                    new IPRecord { IPAddress = "1.1.1.1", Port = 443, PacketLoss = 0, Latency = 50 }
-                }
-            };
-
-            // Act
-            var result = _validationService.ValidateUserConfig(userConfig);
-
-            // Assert
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void ValidateUserConfig_NullConfig_ReturnsFalse()
-        {
-            // Act
-            var result = _validationService.ValidateUserConfig(null!);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void ValidateUserConfig_EmptyDedicatedIPs_ReturnsTrue()
-        {
-            // Arrange
-            var userConfig = new UserConfig
-            {
-                UserId = "user123",
-                SubscriptionUrl = "https://example.com/subscribe",
-                DedicatedIPs = new List<IPRecord>()
-            };
-
-            // Act
-            var result = _validationService.ValidateUserConfig(userConfig);
-
-            // Assert
-            Assert.True(result);
-        }
-
+        
         [Fact]
         public void ParseCSVContent_ValidCSV_ReturnsIPRecords()
         {

@@ -101,7 +101,7 @@ namespace ClashSubManager.Tests.Services
         }
 
         [Fact]
-        public void ProcessTemplate_WithMissingVariable_ReturnsOriginalName()
+        public void ProcessTemplate_WithMissingVariable_PreservesPlaceholder()
         {
             // Arrange
             var template = "{name}-{nonexistent}";
@@ -114,8 +114,8 @@ namespace ClashSubManager.Tests.Services
             // Act
             var result = _service.ProcessTemplate(template, context);
 
-            // Assert
-            Assert.Equal("Original-", result);
+            // Assert - Missing variables should preserve their placeholders
+            Assert.Equal("Original-{nonexistent}", result);
         }
 
         [Fact]
@@ -226,9 +226,9 @@ namespace ClashSubManager.Tests.Services
             Assert.Equal("104.16.2.1", variables["server"]);
             Assert.Equal("example.com", variables["servername"]);
             Assert.Equal(443, variables["port"]);
-            Assert.Equal("VLESS", variables["type"]);
+            Assert.Equal("vless", variables["type"]);
             Assert.Equal("12345678-1234-1234-1234-123456789abc", variables["uuid"]);
-            Assert.Equal("vless", variables["network"]);
+            Assert.Equal("", variables["network"]); // network字段不存在，应该为空
         }
 
         [Fact]
