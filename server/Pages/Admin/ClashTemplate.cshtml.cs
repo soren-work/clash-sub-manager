@@ -12,9 +12,9 @@ namespace ClashSubManager.Pages.Admin
     public class ClashTemplateModel : PageModel
     {
         private readonly IConfigurationService _configurationService;
+        private readonly IFileLockProvider _fileLockProvider;
         private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ILogger<ClashTemplateModel> _logger;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
         public string? SelectedUserId { get; set; }
@@ -27,9 +27,10 @@ namespace ClashSubManager.Pages.Admin
         [Required(ErrorMessage = "YAMLContentRequired")]
         public string EditedContent { get; set; } = string.Empty;
 
-        public ClashTemplateModel(IConfigurationService configurationService, IStringLocalizer<SharedResources> localizer, ILogger<ClashTemplateModel> logger)
+        public ClashTemplateModel(IConfigurationService configurationService, IFileLockProvider fileLockProvider, IStringLocalizer<SharedResources> localizer, ILogger<ClashTemplateModel> logger)
         {
             _configurationService = configurationService;
+            _fileLockProvider = fileLockProvider;
             _localizer = localizer;
             _logger = logger;
         }
@@ -43,14 +44,14 @@ namespace ClashSubManager.Pages.Admin
 
         public async Task<IActionResult> OnPostSaveAsync()
         {
-            _logger.LogInformation("OnPostSaveAsync called");
-            _logger.LogInformation("EditedContent length: {Length}", EditedContent?.Length ?? 0);
-            _logger.LogInformation("SelectedUserId: {UserId}", SelectedUserId);
-            _logger.LogInformation("ModelState.IsValid: {IsValid}", ModelState.IsValid);
+            _logger.LogDebug("Template save request received. SelectedUserId: {SelectedUserId}, ContentLength: {ContentLength}, IsModelValid: {IsModelValid}",
+                SelectedUserId,
+                EditedContent?.Length ?? 0,
+                ModelState.IsValid);
 
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("ModelState is invalid");
+                _logger.LogWarning("Template save rejected due to invalid model state. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                 {
                     _logger.LogWarning("ModelState error: {Error}", error.ErrorMessage);
@@ -62,7 +63,7 @@ namespace ClashSubManager.Pages.Admin
 
             if (!IsValidYAML(EditedContent!))
             {
-                _logger.LogWarning("YAML validation failed");
+                _logger.LogWarning("Template save rejected due to invalid YAML format. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 ModelState.AddModelError(nameof(EditedContent), _localizer["InvalidYAMLFormat"]);
                 await LoadUserListAsync();
                 await LoadYAMLContentAsync();
@@ -70,19 +71,19 @@ namespace ClashSubManager.Pages.Admin
             }
 
             var result = await SaveYAMLContentAsync(EditedContent!, SelectedUserId!);
-            _logger.LogInformation("SaveYAMLContentAsync result: {Result}", result);
+            _logger.LogDebug("Template save operation result. SelectedUserId: {SelectedUserId}, Result: {Result}", SelectedUserId, result);
 
             if (result)
             {
                 if (TempData != null)
                 {
                     TempData["Success"] = _localizer["TemplateSavedSuccessfully"].ToString();
-                    _logger.LogInformation("Success message set in TempData");
+                    _logger.LogDebug("Template save success message set in TempData. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 }
             }
             else
             {
-                _logger.LogError("Failed to save template");
+                _logger.LogError("Failed to save template. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 ModelState.AddModelError(string.Empty, _localizer["FailedToSaveTemplate"]);
             }
 
@@ -183,8 +184,9 @@ namespace ClashSubManager.Pages.Admin
                                         .ToList();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load user list. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 AvailableUsers = new List<string>();
             }
         }
@@ -207,8 +209,9 @@ namespace ClashSubManager.Pages.Admin
                     FileExists = false;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load template content. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 YAMLContent = string.Empty;
                 EditedContent = string.Empty; // Clear EditedContent
                 FileExists = false;
@@ -217,17 +220,23 @@ namespace ClashSubManager.Pages.Admin
 
         private async Task<bool> SaveYAMLContentAsync(string content, string userId)
         {
-            await _semaphore.WaitAsync();
             try
             {
                 var fileSize = Encoding.UTF8.GetByteCount(content);
                 if (fileSize > 1024 * 1024) // 1MB
+                {
+                    _logger.LogWarning("Template save rejected: content too large. SizeBytes: {SizeBytes}, SelectedUserId: {SelectedUserId}", fileSize, userId);
                     return false;
+                }
 
                 if (!IsValidYAML(content))
+                {
+                    _logger.LogWarning("Template save rejected: invalid YAML content. SelectedUserId: {SelectedUserId}", userId);
                     return false;
+                }
 
                 var filePath = GetFilePath(userId);
+                await using var fileLock = await _fileLockProvider.AcquireAsync(filePath);
                 var directory = Path.GetDirectoryName(filePath);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
@@ -246,24 +255,22 @@ namespace ClashSubManager.Pages.Admin
                     System.IO.File.Move(tempPath, filePath);
                 }
 
+                _logger.LogInformation("Template saved successfully. SelectedUserId: {SelectedUserId}, SizeBytes: {SizeBytes}", userId, fileSize);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to save template. SelectedUserId: {SelectedUserId}", userId);
                 return false;
-            }
-            finally
-            {
-                _semaphore.Release();
             }
         }
 
         private async Task<bool> DeleteYAMLFileAsync(string userId)
         {
-            await _semaphore.WaitAsync();
             try
             {
                 var filePath = GetFilePath(userId);
+                await using var fileLock = await _fileLockProvider.AcquireAsync(filePath);
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
@@ -273,10 +280,6 @@ namespace ClashSubManager.Pages.Admin
             catch
             {
                 return false;
-            }
-            finally
-            {
-                _semaphore.Release();
             }
         }
 
@@ -300,8 +303,9 @@ namespace ClashSubManager.Pages.Admin
                 yaml.Load(reader);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogDebug(ex, "YAML validation failed");
                 return false;
             }
         }

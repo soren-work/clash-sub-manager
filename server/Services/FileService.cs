@@ -11,16 +11,19 @@ namespace ClashSubManager.Services
     public class FileService
     {
         private readonly IConfigurationService _configurationService;
+        private readonly IFileLockProvider _fileLockProvider;
         private readonly CloudflareIPParserService _ipParserService;
         private readonly ILogger<FileService> _logger;
         private readonly string _dataPath;
 
         public FileService(
             IConfigurationService configurationService,
+            IFileLockProvider fileLockProvider,
             CloudflareIPParserService ipParserService,
             ILogger<FileService> logger)
         {
             _configurationService = configurationService;
+            _fileLockProvider = fileLockProvider;
             _ipParserService = ipParserService;
             _logger = logger;
             _dataPath = _configurationService.GetDataPath();
@@ -77,6 +80,7 @@ namespace ClashSubManager.Services
                 
                 // Atomic write
                 var tempFile = csvFile + ".tmp";
+                await using var fileLock = await _fileLockProvider.AcquireAsync(csvFile);
                 await File.WriteAllTextAsync(tempFile, csvContent);
                 
                 File.Move(tempFile, csvFile, true);
@@ -105,6 +109,8 @@ namespace ClashSubManager.Services
                 if (!File.Exists(csvFile))
                     return false;
 
+                await using var fileLock = await _fileLockProvider.AcquireAsync(csvFile);
+
                 // Delete file
                 File.Delete(csvFile);
 
@@ -117,9 +123,9 @@ namespace ClashSubManager.Services
                         Directory.Delete(userDir);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Directory deletion failure doesn't affect main functionality
+                    _logger.LogWarning(ex, "Failed to delete empty user directory: {UserDir}", userDir);
                 }
 
                 return true;
@@ -172,6 +178,7 @@ namespace ClashSubManager.Services
                 
                 // Atomic write
                 var tempFile = csvFile + ".tmp";
+                await using var fileLock = await _fileLockProvider.AcquireAsync(csvFile);
                 await File.WriteAllTextAsync(tempFile, csvContent);
                 
                 File.Move(tempFile, csvFile, true);
@@ -220,6 +227,7 @@ namespace ClashSubManager.Services
                 
                 // Atomic write
                 var tempFile = templateFile + ".tmp";
+                await using var fileLock = await _fileLockProvider.AcquireAsync(templateFile);
                 await File.WriteAllTextAsync(tempFile, templateContent);
                 
                 File.Move(tempFile, templateFile, true);

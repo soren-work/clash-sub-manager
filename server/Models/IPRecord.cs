@@ -130,37 +130,21 @@ namespace ClashSubManager.Models
             if (string.IsNullOrWhiteSpace(DownloadSpeed))
                 return 0;
 
-            try
+            var speedStr = DownloadSpeed.Trim();
+
+            if (speedStr.EndsWith("MB/s", StringComparison.OrdinalIgnoreCase))
             {
-                // Remove unit and convert to numeric value
-                var speedStr = DownloadSpeed.Trim();
-                
-                // Handle MB/s format
-                if (speedStr.EndsWith("MB/s", StringComparison.OrdinalIgnoreCase))
-                {
-                    speedStr = speedStr.Substring(0, speedStr.Length - 4).Trim();
-                    if (decimal.TryParse(speedStr, out var speed))
-                        return speed;
-                }
-                
-                // Handle MB format
-                if (speedStr.EndsWith("MB", StringComparison.OrdinalIgnoreCase))
-                {
-                    speedStr = speedStr.Substring(0, speedStr.Length - 2).Trim();
-                    if (decimal.TryParse(speedStr, out var speed))
-                        return speed;
-                }
-                
-                // Parse number directly
-                if (decimal.TryParse(speedStr, out var directSpeed))
-                    return directSpeed;
+                var numberPart = speedStr.Substring(0, speedStr.Length - 4).Trim();
+                return decimal.TryParse(numberPart, out var speed) ? speed : 0;
             }
-            catch
+
+            if (speedStr.EndsWith("MB", StringComparison.OrdinalIgnoreCase))
             {
-                // Return 0 if parsing fails
+                var numberPart = speedStr.Substring(0, speedStr.Length - 2).Trim();
+                return decimal.TryParse(numberPart, out var speed) ? speed : 0;
             }
-            
-            return 0;
+
+            return decimal.TryParse(speedStr, out var directSpeed) ? directSpeed : 0;
         }
     }
 }

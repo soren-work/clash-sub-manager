@@ -14,6 +14,7 @@ namespace ClashSubManager.Tests.Services
         private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly Mock<ILogger<UserManagementService>> _mockLogger;
         private readonly UserManagementService _userManagementService;
+        private readonly FileLockProvider _fileLockProvider;
         private readonly string _tempDirectory;
 
         public UserManagementServiceTests()
@@ -26,9 +27,11 @@ namespace ClashSubManager.Tests.Services
             Directory.CreateDirectory(_tempDirectory);
             
             _mockConfigurationService.Setup(x => x.GetDataPath()).Returns(_tempDirectory);
+            _fileLockProvider = new FileLockProvider();
             
             _userManagementService = new UserManagementService(
                 _mockConfigurationService.Object,
+                _fileLockProvider,
                 _mockLogger.Object);
         }
 

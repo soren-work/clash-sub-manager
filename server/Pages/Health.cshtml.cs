@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
 namespace ClashSubManager.Pages
 {
@@ -10,10 +11,12 @@ namespace ClashSubManager.Pages
     public class HealthModel : PageModel
     {
         private readonly IStringLocalizer<HealthModel> _localizer;
+        private readonly ILogger<HealthModel> _logger;
 
-        public HealthModel(IStringLocalizer<HealthModel> localizer)
+        public HealthModel(IStringLocalizer<HealthModel> localizer, ILogger<HealthModel> logger)
         {
             _localizer = localizer;
+            _logger = logger;
         }
         /// <summary>
         /// GET /health - Health check endpoint
@@ -37,6 +40,7 @@ namespace ClashSubManager.Pages
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Health check failed");
                 // Return unhealthy status if any exception occurs
                 var errorStatus = new
                 {

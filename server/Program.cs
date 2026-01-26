@@ -20,8 +20,11 @@ bool HasRequiredConfigurations(string configPath)
                config.ContainsKey("SessionTimeoutMinutes") &&
                config.ContainsKey("DataPath");
     }
-    catch
+    catch (Exception ex)
     {
+        using var tempLoggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+        var tempLogger = tempLoggerFactory.CreateLogger<Program>();
+        tempLogger.LogError(ex, "Failed to read or parse configuration file: {ConfigPath}", configPath);
         return false;
     }
 }
@@ -55,7 +58,9 @@ if (!string.IsNullOrWhiteSpace(logLevelFromEnv) && string.IsNullOrWhiteSpace(bui
 // If this is the first startup, generate default configuration
 if (isFirstStart)
 {
-    var validator = new ConfigurationValidator();
+    using var tempLoggerFactoryForDefaultConfig = LoggerFactory.Create(logging => logging.AddConsole());
+    var validatorLogger = tempLoggerFactoryForDefaultConfig.CreateLogger<ConfigurationValidator>();
+    var validator = new ConfigurationValidator(validatorLogger);
     try
     {
         await validator.WriteDefaultConfigurationAsync(builder.Configuration, appSettingsPath);
@@ -86,7 +91,9 @@ if (isFirstStart)
 }
 
 // Validate configuration
-var finalValidator = new ConfigurationValidator();
+using var tempLoggerFactoryForValidation = LoggerFactory.Create(logging => logging.AddConsole());
+var finalValidatorLogger = tempLoggerFactoryForValidation.CreateLogger<ConfigurationValidator>();
+var finalValidator = new ConfigurationValidator(finalValidatorLogger);
 try
 {
     finalValidator.Validate(builder.Configuration);
@@ -121,14 +128,11 @@ builder.Services.AddSingleton<IEnvironmentDetector, EnvironmentDetector>();
 builder.Services.AddSingleton<IPathResolver, PathResolver>();
 builder.Services.AddSingleton<IConfigurationValidator, ConfigurationValidator>();
 builder.Services.AddSingleton<IConfigurationService, PlatformConfigurationService>();
+builder.Services.AddSingleton<IFileLockProvider, FileLockProvider>();
 
-// Register node naming template service
 builder.Services.AddSingleton<INodeNamingTemplateService, NodeNamingTemplateService>();
-
-// Register unified IP parser service
 builder.Services.AddSingleton<CloudflareIPParserService>();
 
-// Register custom services
 builder.Services.AddSingleton<FileService>();
 builder.Services.AddSingleton<ValidationService>();
 builder.Services.AddSingleton<IUserManagementService, UserManagementService>();

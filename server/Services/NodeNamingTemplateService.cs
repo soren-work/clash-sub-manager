@@ -145,6 +145,7 @@ namespace ClashSubManager.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Template validation failed for template '{Template}' with exception: {Exception}", template, ex);
                 errorMessage = $"Template validation error: {ex.Message}";
                 return false;
             }

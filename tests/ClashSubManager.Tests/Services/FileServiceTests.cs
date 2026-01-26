@@ -17,6 +17,7 @@ namespace ClashSubManager.Tests.Services
         private readonly Mock<IConfigurationService> _configServiceMock;
         private readonly Mock<CloudflareIPParserService> _ipParserMock;
         private readonly Mock<ILogger<FileService>> _loggerMock;
+        private readonly FileLockProvider _fileLockProvider;
         private readonly string _testDirectory;
 
         public FileServiceTests()
@@ -24,6 +25,7 @@ namespace ClashSubManager.Tests.Services
             _configServiceMock = new Mock<IConfigurationService>();
             _ipParserMock = new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>());
             _loggerMock = new Mock<ILogger<FileService>>();
+            _fileLockProvider = new FileLockProvider();
             
             _testDirectory = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", Guid.NewGuid().ToString());
             
@@ -31,7 +33,7 @@ namespace ClashSubManager.Tests.Services
             
             _configServiceMock.Setup(x => x.GetDataPath()).Returns(_testDirectory);
             
-            _fileService = new FileService(_configServiceMock.Object, _ipParserMock.Object, _loggerMock.Object);
+            _fileService = new FileService(_configServiceMock.Object, _fileLockProvider, _ipParserMock.Object, _loggerMock.Object);
         }
 
         public void Dispose()

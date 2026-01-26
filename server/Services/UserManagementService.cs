@@ -10,15 +10,18 @@ namespace ClashSubManager.Services
     public class UserManagementService : IUserManagementService
     {
         private readonly IConfigurationService _configurationService;
+        private readonly IFileLockProvider _fileLockProvider;
         private readonly ILogger<UserManagementService> _logger;
         private readonly string _dataPath;
         private readonly string _usersFilePath;
 
         public UserManagementService(
             IConfigurationService configurationService,
+            IFileLockProvider fileLockProvider,
             ILogger<UserManagementService> logger)
         {
             _configurationService = configurationService;
+            _fileLockProvider = fileLockProvider;
             _logger = logger;
             _dataPath = _configurationService.GetDataPath();
             _usersFilePath = Path.Combine(_dataPath, "users.txt");
@@ -178,7 +181,7 @@ namespace ClashSubManager.Services
                 // Replace {userId} placeholder
                 var subscriptionUrl = urlTemplate.Replace("{userId}", userId, StringComparison.OrdinalIgnoreCase);
                 
-                _logger.LogDebug("Generated subscription URL for user {UserId}: {Url}", userId, subscriptionUrl);
+                _logger.LogDebug("Generated subscription URL for user {UserId}: {Url}", userId, MaskUrlLikeValue(subscriptionUrl));
                 return subscriptionUrl;
             }
             catch (Exception ex)
@@ -186,6 +189,17 @@ namespace ClashSubManager.Services
                 _logger.LogError(ex, "Error generating subscription URL for user: {UserId}", userId);
                 return string.Empty;
             }
+        }
+
+        private static string MaskUrlLikeValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+                return "[REDACTED]";
+
+            return $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
         }
 
         /// <summary>
@@ -231,6 +245,7 @@ namespace ClashSubManager.Services
             {
                 // Use temporary file mode to ensure atomic write
                 var tempFilePath = _usersFilePath + ".tmp";
+                await using var fileLock = await _fileLockProvider.AcquireAsync(_usersFilePath);
                 
                 var distinctUsers = users.Distinct().OrderBy(u => u).ToList();
                 await File.WriteAllLinesAsync(tempFilePath, distinctUsers);

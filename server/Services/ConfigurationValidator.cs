@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text;
 
@@ -9,6 +10,13 @@ namespace ClashSubManager.Services
     /// </summary>
     public class ConfigurationValidator : IConfigurationValidator
     {
+        private readonly ILogger<ConfigurationValidator> _logger;
+
+        public ConfigurationValidator(ILogger<ConfigurationValidator> logger)
+        {
+            _logger = logger;
+        }
+
         /// <summary>
         /// Validate configuration
         /// </summary>
@@ -62,6 +70,7 @@ namespace ClashSubManager.Services
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error creating data directory: {DataPath}", dataPath);
                     errors.Add($"Cannot create data directory '{dataPath}': {ex.Message}");
                 }
             }
@@ -184,6 +193,7 @@ namespace ClashSubManager.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to write default configuration to {FilePath}", filePath);
                 throw new InvalidOperationException($"Failed to write default configuration to {filePath}: {ex.Message}", ex);
             }
         }

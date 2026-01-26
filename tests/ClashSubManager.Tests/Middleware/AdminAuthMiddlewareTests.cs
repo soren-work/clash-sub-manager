@@ -2,6 +2,7 @@ using ClashSubManager.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 using System.Security.Cryptography;
@@ -29,7 +30,7 @@ namespace ClashSubManager.Tests.Middleware
             // Setup mock configuration
             _configurationMock.Setup(c => c["CookieSecretKey"]).Returns(_testHmacKey);
             
-            _middleware = new AdminAuthMiddleware(_nextMock.Object, _configurationMock.Object);
+            _middleware = new AdminAuthMiddleware(_nextMock.Object, _configurationMock.Object, NullLogger<AdminAuthMiddleware>.Instance);
         }
 
         public void Dispose()
@@ -45,7 +46,7 @@ namespace ClashSubManager.Tests.Middleware
             // Arrange & Act
             var configMock = new Mock<IConfiguration>();
             configMock.Setup(c => c["CookieSecretKey"]).Returns(_testHmacKey);
-            var middleware = new AdminAuthMiddleware(_nextMock.Object, configMock.Object);
+            var middleware = new AdminAuthMiddleware(_nextMock.Object, configMock.Object, NullLogger<AdminAuthMiddleware>.Instance);
 
             // Assert
             Assert.NotNull(middleware);
@@ -59,7 +60,7 @@ namespace ClashSubManager.Tests.Middleware
             configMock.Setup(c => c["CookieSecretKey"]).Returns((string?)null);
 
             // Act
-            var middleware = new AdminAuthMiddleware(_nextMock.Object, configMock.Object);
+            var middleware = new AdminAuthMiddleware(_nextMock.Object, configMock.Object, NullLogger<AdminAuthMiddleware>.Instance);
 
             // Assert
             Assert.NotNull(middleware);
@@ -349,19 +350,20 @@ namespace ClashSubManager.Tests.Middleware
         {
             var configMock = new Mock<IConfiguration>();
             configMock.Setup(c => c["CookieSecretKey"]).Returns(_testHmacKey);
-            return new AdminAuthMiddleware(_nextMock.Object, configMock.Object);
+            return new AdminAuthMiddleware(_nextMock.Object, configMock.Object, NullLogger<AdminAuthMiddleware>.Instance);
         }
 
         private bool TestValidateSessionCookie(AdminAuthMiddleware middleware, string? cookieValue)
         {
             // Use reflection to call private method for testing
-            var method = typeof(AdminAuthMiddleware).GetMethod("ValidateSessionCookie", 
+            var method = typeof(AdminAuthMiddleware).GetMethod("TryValidateSessionCookie",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             
             if (method == null)
-                throw new InvalidOperationException("Failed to find ValidateSessionCookie method via reflection.");
+                throw new InvalidOperationException("Failed to find TryValidateSessionCookie method via reflection.");
 
-            var result = method.Invoke(middleware, new object?[] { cookieValue });
+            var args = new object?[] { cookieValue, string.Empty };
+            var result = method.Invoke(middleware, args);
             return result is bool value && value;
         }
 

@@ -165,8 +165,9 @@ namespace ClashSubManager.Services
                 var result = deserializer.Deserialize(yamlContent);
                 return result != null;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogDebug(ex, "YAML validation failed");
                 return false;
             }
         }

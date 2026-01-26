@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace ClashSubManager.Services
 {
@@ -8,11 +9,13 @@ namespace ClashSubManager.Services
     public class PathResolver : IPathResolver
     {
         private readonly IEnvironmentDetector _environmentDetector;
+        private readonly ILogger<PathResolver> _logger;
         private readonly string _assemblyDirectory;
 
-        public PathResolver(IEnvironmentDetector environmentDetector)
+        public PathResolver(IEnvironmentDetector environmentDetector, ILogger<PathResolver> logger)
         {
             _environmentDetector = environmentDetector;
+            _logger = logger;
             _assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
         }
 
@@ -60,8 +63,9 @@ namespace ClashSubManager.Services
                 Directory.CreateDirectory(fullPath);
                 return Directory.Exists(fullPath);
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to validate path: {Path}", path);
                 return false;
             }
         }

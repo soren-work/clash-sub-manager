@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 using ClashSubManager.Pages.Admin;
@@ -27,7 +28,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             _mockConfiguration.Setup(c => c["CookieSecretKey"]).Returns("test-key-32-characters-long");
             _mockConfiguration.Setup(c => c["SessionTimeoutMinutes"]).Returns("30");
             
-            _loginModel = new LoginModel(_mockConfiguration.Object, _mockLocalizer.Object);
+            _loginModel = new LoginModel(_mockConfiguration.Object, _mockLocalizer.Object, NullLogger<LoginModel>.Instance);
             
             _mockLocalizer.Setup(l => l["UsernameAndPasswordRequired"]).Returns(new LocalizedString("UsernameAndPasswordRequired", "Username and password are required"));
             _mockLocalizer.Setup(l => l["InvalidCredentials"]).Returns(new LocalizedString("InvalidCredentials", "Invalid username or password"));
@@ -103,7 +104,7 @@ namespace ClashSubManager.Tests.Pages.Admin
         {
             _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
             _httpContext = new DefaultHttpContext();
-            _logoutModel = new LogoutModel(_mockLocalizer.Object)
+            _logoutModel = new LogoutModel(_mockLocalizer.Object, NullLogger<LogoutModel>.Instance)
             {
                 PageContext = new PageContext
                 {
@@ -136,7 +137,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             _mockNext = new Mock<RequestDelegate>();
             _mockConfiguration = new Mock<IConfiguration>();
             _mockConfiguration.Setup(c => c["CookieSecretKey"]).Returns("test-key-32-characters-long");
-            _middleware = new AdminAuthMiddleware(_mockNext.Object, _mockConfiguration.Object);
+            _middleware = new AdminAuthMiddleware(_mockNext.Object, _mockConfiguration.Object, NullLogger<AdminAuthMiddleware>.Instance);
             _httpContext = new DefaultHttpContext();
         }
 
