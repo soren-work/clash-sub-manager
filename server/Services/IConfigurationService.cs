@@ -21,7 +21,7 @@ namespace ClashSubManager.Services
         /// <param name="key">Configuration key</param>
         /// <param name="defaultValue">Default value</param>
         /// <returns>Configuration value</returns>
-        T GetValue<T>(string key, T defaultValue = default);
+        T GetValue<T>(string key, T defaultValue = default!);
 
         /// <summary>
         /// Check if configuration key exists

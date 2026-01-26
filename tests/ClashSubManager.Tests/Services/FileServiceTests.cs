@@ -22,7 +22,7 @@ namespace ClashSubManager.Tests.Services
         public FileServiceTests()
         {
             _configServiceMock = new Mock<IConfigurationService>();
-            _ipParserMock = new Mock<CloudflareIPParserService>();
+            _ipParserMock = new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>());
             _loggerMock = new Mock<ILogger<FileService>>();
             
             _testDirectory = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", Guid.NewGuid().ToString());

@@ -60,7 +60,7 @@ namespace ClashSubManager.Pages.Admin
                 return Page();
             }
 
-            if (!IsValidYAML(EditedContent))
+            if (!IsValidYAML(EditedContent!))
             {
                 _logger.LogWarning("YAML validation failed");
                 ModelState.AddModelError(nameof(EditedContent), _localizer["InvalidYAMLFormat"]);
@@ -69,7 +69,7 @@ namespace ClashSubManager.Pages.Admin
                 return Page();
             }
 
-            var result = await SaveYAMLContentAsync(EditedContent, SelectedUserId);
+            var result = await SaveYAMLContentAsync(EditedContent!, SelectedUserId!);
             _logger.LogInformation("SaveYAMLContentAsync result: {Result}", result);
 
             if (result)
@@ -123,7 +123,7 @@ namespace ClashSubManager.Pages.Admin
                 return Page();
             }
 
-            var result = await SaveYAMLContentAsync(content, SelectedUserId);
+            var result = await SaveYAMLContentAsync(content, SelectedUserId!);
 
             if (result)
             {
@@ -148,7 +148,7 @@ namespace ClashSubManager.Pages.Admin
             // Clear EditedContent validation error since delete doesn't need this field
             ModelState.Remove(nameof(EditedContent));
             
-            var result = await DeleteYAMLFileAsync(SelectedUserId);
+            var result = await DeleteYAMLFileAsync(SelectedUserId!);
 
             if (result)
             {
@@ -193,7 +193,7 @@ namespace ClashSubManager.Pages.Admin
         {
             try
             {
-                var filePath = GetFilePath(SelectedUserId);
+                var filePath = GetFilePath(SelectedUserId!);
                 if (System.IO.File.Exists(filePath))
                 {
                     YAMLContent = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);

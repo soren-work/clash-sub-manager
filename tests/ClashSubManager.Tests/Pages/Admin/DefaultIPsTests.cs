@@ -23,7 +23,7 @@ namespace ClashSubManager.Tests.Pages.Admin
         public DefaultIPsTests()
         {
             _mockConfigService = new Mock<IConfigurationService>();
-            _mockIpParserService = new Mock<CloudflareIPParserService>();
+            _mockIpParserService = new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>());
             _mockLogger = new Mock<ILogger<CloudflareIpModel>>();
             _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
             
@@ -206,8 +206,9 @@ namespace ClashSubManager.Tests.Pages.Admin
             // Arrange
             var csvContent = "IP Address,Sent,Received,Packet Loss,Average Latency,Download Speed\n1.1.1.1,100,100,0%,10ms,100MB/s\n2.2.2.2,200,200,0%,20ms,200MB/s";
 
-            // Act - Use actual parser service
-            var parser = new CloudflareIPParserService();
+            // Act - Use actual parser service with mocked logger
+            var mockLogger = new Mock<ILogger<CloudflareIPParserService>>();
+            var parser = new CloudflareIPParserService(mockLogger.Object);
             var result = parser.ParseCSVContent(csvContent);
 
             // Assert
@@ -225,8 +226,9 @@ namespace ClashSubManager.Tests.Pages.Admin
             // Arrange
             var csvContent = "";
 
-            // Act - Use actual parser service
-            var parser = new CloudflareIPParserService();
+            // Act - Use actual parser service with mocked logger
+            var mockLogger = new Mock<ILogger<CloudflareIPParserService>>();
+            var parser = new CloudflareIPParserService(mockLogger.Object);
             var result = parser.ParseCSVContent(csvContent);
 
             // Assert
@@ -242,7 +244,8 @@ namespace ClashSubManager.Tests.Pages.Admin
             var expectedRecord = new IPRecord { IPAddress = "1.1.1.1", Sent = "100", Received = "100", PacketLoss = 0, Latency = 10, DownloadSpeed = "100MB/s" };
 
             // Act - Mock the parser service to test individual line parsing
-            var parser = new CloudflareIPParserService();
+            var mockLogger = new Mock<ILogger<CloudflareIPParserService>>();
+            var parser = new CloudflareIPParserService(mockLogger.Object);
             var result = parser.ParseCSVContent(line);
 
             // Assert
@@ -258,7 +261,8 @@ namespace ClashSubManager.Tests.Pages.Admin
             var line = "invalid.ip,100,100,0,10,100MB/s";
 
             // Act
-            var parser = new CloudflareIPParserService();
+            var mockLogger = new Mock<ILogger<CloudflareIPParserService>>();
+            var parser = new CloudflareIPParserService(mockLogger.Object);
             var result = parser.ParseCSVContent(line);
 
             // Assert

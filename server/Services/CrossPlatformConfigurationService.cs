@@ -80,18 +80,18 @@ namespace ClashSubManager.Services
         /// <param name="key">Configuration key</param>
         /// <param name="defaultValue">Default value</param>
         /// <returns>Configuration value</returns>
-        public T GetValue<T>(string key, T defaultValue = default)
+        public T GetValue<T>(string key, T defaultValue = default!)
         {
             try
             {
                 var value = _configuration.GetValue(key, defaultValue);
                 _logger.LogDebug("Configuration value retrieved: {Key} = {Value}", key, value);
-                return value;
+                return value!;
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to get configuration value for key: {Key}", key);
-                return defaultValue;
+                return defaultValue!;
             }
         }
 
@@ -323,7 +323,7 @@ namespace ClashSubManager.Services
                         // If template doesn't have proxy-groups, use remote proxy-groups
                         // If neither has proxy-groups, don't include this field
                         if (targetValue as YamlSequenceNode == null || 
-                            !(targetValue as YamlSequenceNode).Children.Any())
+                            ((targetValue as YamlSequenceNode)?.Children.Any() == false))
                         {
                             // Template doesn't have proxy-groups, use remote's
                             target.Children[key] = sourceValue;
@@ -484,7 +484,7 @@ namespace ClashSubManager.Services
                                                 Server = ip.IPAddress,
                                                 ServerName = originalServer,
                                                 Port = ip.Port,
-                                                CustomProperties = variables
+                                                CustomProperties = variables!
                                             };
                                             
                                             var namingTemplate = GetNodeNamingTemplate();
