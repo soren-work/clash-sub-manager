@@ -26,7 +26,7 @@ namespace ClashSubManager.Tests.Services
             _mockValidator = new MockConfigurationValidator();
             
             _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -70,11 +70,12 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var configurationWithoutDataPath = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long"
+                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
+                    ["SessionTimeoutMinutes"] = "30"
                 })
                 .Build();
 
@@ -221,7 +222,7 @@ namespace ClashSubManager.Tests.Services
 
             // Configure to use index naming (default value)
             var configWithIndexNaming = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -278,7 +279,7 @@ namespace ClashSubManager.Tests.Services
 
             // Configure to use IP naming
             var configWithIpNaming = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -337,7 +338,7 @@ namespace ClashSubManager.Tests.Services
 
             // Create service with UseIpInNodeName=false configuration
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -444,7 +445,7 @@ namespace ClashSubManager.Tests.Services
 
             // Create service with UseIpInNodeName=false configuration
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -606,7 +607,7 @@ namespace ClashSubManager.Tests.Services
 
             // Create service with UseIpInNodeName=false configuration
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",

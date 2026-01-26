@@ -45,6 +45,13 @@ builder.Configuration
     .AddEnvironmentVariables()
     .AddCommandLine(args);
 
+// Override log level from environment variable if specified
+var logLevelFromEnv = Environment.GetEnvironmentVariable("LOG_LEVEL");
+if (!string.IsNullOrWhiteSpace(logLevelFromEnv) && string.IsNullOrWhiteSpace(builder.Configuration["Logging:LogLevel:Default"]))
+{
+    builder.Configuration["Logging:LogLevel:Default"] = logLevelFromEnv;
+}
+
 // If this is the first startup, generate default configuration
 if (isFirstStart)
 {
@@ -54,8 +61,8 @@ if (isFirstStart)
         await validator.WriteDefaultConfigurationAsync(builder.Configuration, appSettingsPath);
         
         // Use ILogger to log success message
-        using var tempProvider = builder.Services.BuildServiceProvider();
-        var tempLogger = tempProvider.GetRequiredService<ILogger<Program>>();
+        using var tempLoggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+        var tempLogger = tempLoggerFactory.CreateLogger<Program>();
         tempLogger.LogInformation("Default configuration has been generated successfully.");
         
         // Recreate builder to reload configuration
@@ -72,8 +79,8 @@ if (isFirstStart)
     }
     catch (Exception ex)
     {
-        using var tempProvider = builder.Services.BuildServiceProvider();
-        var tempLogger = tempProvider.GetRequiredService<ILogger<Program>>();
+        using var tempLoggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+        var tempLogger = tempLoggerFactory.CreateLogger<Program>();
         tempLogger.LogError(ex, "Failed to generate default configuration");
     }
 }
@@ -89,8 +96,8 @@ try
 catch (ConfigurationException ex)
 {
     // Create a temporary logger for error logging
-    using var tempProvider = builder.Services.BuildServiceProvider();
-    var tempLogger = tempProvider.GetRequiredService<ILogger<Program>>();
+    using var tempLoggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+    var tempLogger = tempLoggerFactory.CreateLogger<Program>();
     tempLogger.LogError(ex, "Configuration validation failed: {ValidationErrors}", string.Join(", ", ex.ValidationErrors));
     tempLogger.LogInformation("Please set the required environment variables or update the configuration file:");
     tempLogger.LogInformation("- ADMIN_USERNAME: Administrator username");

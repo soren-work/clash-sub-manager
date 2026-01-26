@@ -80,7 +80,7 @@ namespace ClashSubManager.Tests.Models
         public void CreateSuccess_EmptyYamlContent_ReturnsSuccessResponse(string? yamlContent)
         {
             // Act
-            var response = SubscriptionResponse.CreateSuccessFromYaml(yamlContent);
+            var response = SubscriptionResponse.CreateSuccessFromYaml(yamlContent!);
 
             // Assert
             Assert.True(response.Success);
@@ -94,7 +94,7 @@ namespace ClashSubManager.Tests.Models
         public void CreateError_EmptyMessage_ReturnsErrorResponse(string? errorMessage)
         {
             // Act
-            var response = SubscriptionResponse.CreateError(errorMessage);
+            var response = SubscriptionResponse.CreateError(errorMessage!);
 
             // Assert
             Assert.False(response.Success);

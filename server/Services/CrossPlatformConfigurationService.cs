@@ -85,7 +85,8 @@ namespace ClashSubManager.Services
             try
             {
                 var value = _configuration.GetValue(key, defaultValue);
-                _logger.LogDebug("Configuration value retrieved: {Key} = {Value}", key, value);
+                object? logValue = IsSensitiveKey(key) ? "[REDACTED]" : value;
+                _logger.LogDebug("Configuration value retrieved: {Key} = {Value}", key, logValue);
                 return value!;
             }
             catch (Exception ex)
@@ -93,6 +94,16 @@ namespace ClashSubManager.Services
                 _logger.LogWarning(ex, "Failed to get configuration value for key: {Key}", key);
                 return defaultValue!;
             }
+        }
+
+        private static bool IsSensitiveKey(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                return false;
+
+            return key.Contains("Password", StringComparison.OrdinalIgnoreCase) ||
+                   key.Contains("Secret", StringComparison.OrdinalIgnoreCase) ||
+                   key.Contains("Key", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -221,7 +232,6 @@ namespace ClashSubManager.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating subscription configuration");
-                _logger.LogError("Error generating configuration: {Message}", ex.Message);
                 throw;
             }
         }
@@ -248,7 +258,6 @@ namespace ClashSubManager.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching remote subscription from: {Url}", subscriptionUrl);
-                _logger.LogError("Error fetching remote subscription: {Message}", ex.Message);
                 
                 // Return empty content as fallback
                 return string.Empty;
@@ -278,7 +287,6 @@ namespace ClashSubManager.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error parsing remote YAML configuration");
-                _logger.LogError("Error parsing remote YAML: {Message}", ex.Message);
                 return new YamlMappingNode();
             }
         }
@@ -479,10 +487,10 @@ namespace ClashSubManager.Services
                                             var variables = _nodeNamingTemplateService.ExtractVariables(proxyMapping, index, ip.IPAddress);
                                             var context = new NodeNamingContext
                                             {
-                                                OriginalName = originalName,
+                                                OriginalName = originalName ?? string.Empty,
                                                 Index = index + 1,
                                                 Server = ip.IPAddress,
-                                                ServerName = originalServer,
+                                                ServerName = originalServer ?? string.Empty,
                                                 Port = ip.Port,
                                                 CustomProperties = variables!
                                             };
@@ -527,7 +535,6 @@ namespace ClashSubManager.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error extending IP addresses");
-                _logger.LogError("Error extending IPs: {Message}", ex.Message);
             }
         }
 

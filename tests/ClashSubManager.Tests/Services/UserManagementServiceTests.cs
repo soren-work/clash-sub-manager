@@ -61,10 +61,10 @@ namespace ClashSubManager.Tests.Services
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public async Task RecordUserAccessAsync_InvalidUserId_ReturnsFalse(string userId)
+        public async Task RecordUserAccessAsync_InvalidUserId_ReturnsFalse(string? userId)
         {
             // Act
-            var result = await _userManagementService.RecordUserAccessAsync(userId);
+            var result = await _userManagementService.RecordUserAccessAsync(userId!);
 
             // Assert
             Assert.False(result);
@@ -163,10 +163,10 @@ namespace ClashSubManager.Tests.Services
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public async Task UserExistsAsync_InvalidUserId_ReturnsFalse(string userId)
+        public async Task UserExistsAsync_InvalidUserId_ReturnsFalse(string? userId)
         {
             // Act
-            var result = await _userManagementService.UserExistsAsync(userId);
+            var result = await _userManagementService.UserExistsAsync(userId!);
 
             // Assert
             Assert.False(result);
@@ -208,10 +208,10 @@ namespace ClashSubManager.Tests.Services
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public async Task DeleteUserAsync_InvalidUserId_ReturnsFalse(string userId)
+        public async Task DeleteUserAsync_InvalidUserId_ReturnsFalse(string? userId)
         {
             // Act
-            var result = await _userManagementService.DeleteUserAsync(userId);
+            var result = await _userManagementService.DeleteUserAsync(userId!);
 
             // Assert
             Assert.False(result);
