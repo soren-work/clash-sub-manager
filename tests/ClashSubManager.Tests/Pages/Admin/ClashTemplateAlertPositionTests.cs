@@ -18,6 +18,7 @@ namespace ClashSubManager.Tests.Pages.Admin
         private Mock<IConfigurationService> _mockConfigService;
         private Mock<ILogger<ClashTemplateModel>> _mockLogger;
         private Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
+        private FileLockProvider _fileLockProvider;
 
         public ClashTemplateAlertPositionTests()
         {
@@ -29,11 +30,12 @@ namespace ClashSubManager.Tests.Pages.Admin
             
             _mockLogger = new Mock<ILogger<ClashTemplateModel>>();
             _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
+            _fileLockProvider = new FileLockProvider();
             
             // Setup localizer mock to return non-null values
             _mockLocalizer.Setup(l => l[It.IsAny<string>()]).Returns(new LocalizedString("test", "test"));
             
-            _model = new ClashTemplateModel(_mockConfigService.Object, _mockLocalizer.Object, _mockLogger.Object);
+            _model = new ClashTemplateModel(_mockConfigService.Object, _fileLockProvider, _mockLocalizer.Object, _mockLogger.Object);
         }
 
         public void Dispose()

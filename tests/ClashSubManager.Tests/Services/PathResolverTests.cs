@@ -1,6 +1,8 @@
 using ClashSubManager.Services;
 using Xunit;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace ClashSubManager.Tests.Services
 {
@@ -15,7 +17,8 @@ namespace ClashSubManager.Tests.Services
         public PathResolverTests()
         {
             _mockDetector = new MockEnvironmentDetector();
-            _resolver = new PathResolver(_mockDetector);
+            var loggerMock = new Mock<ILogger<PathResolver>>();
+            _resolver = new PathResolver(_mockDetector, loggerMock.Object);
         }
 
         [Fact]

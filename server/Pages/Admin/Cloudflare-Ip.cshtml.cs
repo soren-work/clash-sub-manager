@@ -11,10 +11,10 @@ namespace ClashSubManager.Pages.Admin
     public class CloudflareIpModel : PageModel
     {
         private readonly IConfigurationService _configurationService;
+        private readonly IFileLockProvider _fileLockProvider;
         private readonly CloudflareIPParserService _ipParserService;
         private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ILogger<CloudflareIpModel> _logger;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         [BindProperty(SupportsGet = true)]
         public string? SelectedUserId { get; set; }
@@ -31,11 +31,13 @@ namespace ClashSubManager.Pages.Admin
 
         public CloudflareIpModel(
             IConfigurationService configurationService,
+            IFileLockProvider fileLockProvider,
             CloudflareIPParserService ipParserService,
             IStringLocalizer<SharedResources> localizer,
             ILogger<CloudflareIpModel> logger)
         {
             _configurationService = configurationService;
+            _fileLockProvider = fileLockProvider;
             _ipParserService = ipParserService;
             _localizer = localizer;
             _logger = logger;
@@ -52,6 +54,7 @@ namespace ClashSubManager.Pages.Admin
         {
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("IP configuration save request rejected due to invalid model state. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 await LoadUserListAsync();
                 await LoadIPRecordsAsync();
                 return Page();
@@ -84,6 +87,7 @@ namespace ClashSubManager.Pages.Admin
         {
             if (file == null || file.Length == 0)
             {
+                _logger.LogWarning("IP configuration upload rejected: empty file. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 ModelState.AddModelError(string.Empty, _localizer["PleaseSelectFileToUpload"]);
                 await LoadUserListAsync();
                 await LoadIPRecordsAsync();
@@ -92,6 +96,7 @@ namespace ClashSubManager.Pages.Admin
 
             if (file.Length > 10 * 1024 * 1024) // 10MB
             {
+                _logger.LogWarning("IP configuration upload rejected: file too large. SizeBytes: {SizeBytes}, SelectedUserId: {SelectedUserId}", file.Length, SelectedUserId);
                 ModelState.AddModelError(string.Empty, _localizer["FileSizeExceedsLimit"]);
                 await LoadUserListAsync();
                 await LoadIPRecordsAsync();
@@ -164,8 +169,9 @@ namespace ClashSubManager.Pages.Admin
                                         .ToList();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load user list. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 AvailableUsers = new List<string>();
             }
         }
@@ -191,8 +197,9 @@ namespace ClashSubManager.Pages.Admin
                     FileExists = false;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load IP records. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 IPRecords = new List<IPRecord>();
                 OriginalCSVContent = string.Empty;
                 CSVContent = string.Empty;
@@ -202,14 +209,17 @@ namespace ClashSubManager.Pages.Admin
 
         private async Task<bool> SetIPsAsync(string csvContent, string? userId)
         {
-            await _semaphore.WaitAsync();
             try
             {
                 var fileSize = Encoding.UTF8.GetByteCount(csvContent);
                 if (fileSize > 10 * 1024 * 1024) // 10MB
+                {
+                    _logger.LogWarning("IP configuration save rejected: content too large. SizeBytes: {SizeBytes}, SelectedUserId: {SelectedUserId}", fileSize, userId);
                     return false;
+                }
 
                 var filePath = GetFilePath(userId);
+                await using var fileLock = await _fileLockProvider.AcquireAsync(filePath);
                 var directory = Path.GetDirectoryName(filePath);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
@@ -228,24 +238,21 @@ namespace ClashSubManager.Pages.Admin
                     System.IO.File.Move(tempPath, filePath);
                 }
 
+                _logger.LogInformation("IP configuration saved successfully. SelectedUserId: {SelectedUserId}, SizeBytes: {SizeBytes}", userId, fileSize);
                 return true;
             }
             catch
             {
                 return false;
             }
-            finally
-            {
-                _semaphore.Release();
-            }
         }
 
         private async Task<bool> DeleteIPsAsync(string? userId)
         {
-            await _semaphore.WaitAsync();
             try
             {
                 var filePath = GetFilePath(userId);
+                await using var fileLock = await _fileLockProvider.AcquireAsync(filePath);
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
@@ -255,10 +262,6 @@ namespace ClashSubManager.Pages.Admin
             catch
             {
                 return false;
-            }
-            finally
-            {
-                _semaphore.Release();
             }
         }
 

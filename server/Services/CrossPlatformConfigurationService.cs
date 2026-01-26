@@ -152,7 +152,7 @@ namespace ClashSubManager.Services
             var template = Environment.GetEnvironmentVariable("SUBSCRIPTION_URL_TEMPLATE");
             if (!string.IsNullOrEmpty(template))
             {
-                _logger.LogDebug("Subscription URL template from environment: {Template}", template);
+                _logger.LogDebug("Subscription URL template from environment: {Template}", MaskUrlLikeValue(template));
                 return template;
             }
 
@@ -160,7 +160,7 @@ namespace ClashSubManager.Services
             template = GetValue<string>("SubscriptionUrlTemplate");
             if (!string.IsNullOrEmpty(template))
             {
-                _logger.LogDebug("Subscription URL template from configuration: {Template}", template);
+                _logger.LogDebug("Subscription URL template from configuration: {Template}", MaskUrlLikeValue(template));
                 return template;
             }
 
@@ -245,7 +245,7 @@ namespace ClashSubManager.Services
         {
             try
             {
-                _logger.LogInformation("Fetching remote subscription from: {SubscriptionUrl}", subscriptionUrl);
+                _logger.LogInformation("Fetching remote subscription from: {SubscriptionUrl}", MaskUrlLikeValue(subscriptionUrl));
                 
                 var response = await _httpClient.GetAsync(subscriptionUrl);
                 response.EnsureSuccessStatusCode();
@@ -257,11 +257,22 @@ namespace ClashSubManager.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching remote subscription from: {Url}", subscriptionUrl);
+                _logger.LogError(ex, "Error fetching remote subscription from: {Url}", MaskUrlLikeValue(subscriptionUrl));
                 
                 // Return empty content as fallback
                 return string.Empty;
             }
+        }
+
+        private static string MaskUrlLikeValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+                return "[REDACTED]";
+
+            return $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
         }
 
         /// <summary>

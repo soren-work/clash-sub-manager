@@ -11,6 +11,7 @@ namespace ClashSubManager.Pages.Admin
     {
         private readonly IConfiguration _configuration;
         private readonly IStringLocalizer<SharedResources> _localizer;
+        private readonly ILogger<LoginModel> _logger;
 
         [BindProperty(SupportsGet = false)]
         public string? Username { get; set; }
@@ -20,10 +21,11 @@ namespace ClashSubManager.Pages.Admin
         
         public string? ErrorMessage { get; set; }
 
-        public LoginModel(IConfiguration configuration, IStringLocalizer<SharedResources> localizer)
+        public LoginModel(IConfiguration configuration, IStringLocalizer<SharedResources> localizer, ILogger<LoginModel> logger)
         {
             _configuration = configuration;
             _localizer = localizer;
+            _logger = logger;
         }
 
         public void OnGet()
@@ -34,17 +36,25 @@ namespace ClashSubManager.Pages.Admin
         {
             if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
             {
+                var remoteIp = HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                _logger.LogWarning("Admin login rejected: missing username or password. RemoteIp: {RemoteIp}", remoteIp);
                 ErrorMessage = _localizer["UsernameAndPasswordRequired"];
                 return Page();
             }
 
             if (!ValidateCredentials(Username, Password))
             {
+                var remoteIp = HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                _logger.LogWarning("Admin login failed. Username: {Username}, RemoteIp: {RemoteIp}", Username, remoteIp);
                 ErrorMessage = _localizer["InvalidCredentials"];
                 return Page();
             }
 
             SetAuthCookie();
+            {
+                var remoteIp = HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                _logger.LogInformation("Admin login succeeded. Username: {Username}, RemoteIp: {RemoteIp}", Username, remoteIp);
+            }
             return RedirectToPage("/Admin/Index");
         }
         

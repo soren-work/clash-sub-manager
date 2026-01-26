@@ -19,6 +19,7 @@ namespace ClashSubManager.Tests.Pages.Admin
         private Mock<CloudflareIPParserService> _mockIpParserService;
         private Mock<ILogger<CloudflareIpModel>> _mockLogger;
         private Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
+        private FileLockProvider _fileLockProvider;
 
         public DefaultIPsTests()
         {
@@ -26,13 +27,14 @@ namespace ClashSubManager.Tests.Pages.Admin
             _mockIpParserService = new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>());
             _mockLogger = new Mock<ILogger<CloudflareIpModel>>();
             _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
+            _fileLockProvider = new FileLockProvider();
             
             // Setup localizer mock to return non-null values
             _mockLocalizer.Setup(l => l[It.IsAny<string>()]).Returns(new LocalizedString("test", "test"));
             _mockLocalizer.Setup(l => l["PleaseSelectFileToUpload"]).Returns(new LocalizedString("PleaseSelectFileToUpload", "Please select a file to upload"));
             _mockLocalizer.Setup(l => l["FileSizeExceedsLimit"]).Returns(new LocalizedString("FileSizeExceedsLimit", "File size exceeds the 10MB limit"));
             
-            _model = new CloudflareIpModel(_mockConfigService.Object, _mockIpParserService.Object, _mockLocalizer.Object, _mockLogger.Object);
+            _model = new CloudflareIpModel(_mockConfigService.Object, _fileLockProvider, _mockIpParserService.Object, _mockLocalizer.Object, _mockLogger.Object);
             _testDataPath = Path.Combine(Path.GetTempPath(), "ClashSubManagerTests", "DefaultIPs");
             Directory.CreateDirectory(_testDataPath);
             

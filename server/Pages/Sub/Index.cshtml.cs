@@ -322,7 +322,7 @@ namespace ClashSubManager.Pages.Sub
             try
             {
                 // Subscription URL already contains the complete user ID through template replacement, use it directly
-                _logger.LogInformation("Validating user ID with subscription service: {ValidationUrl}", subscriptionUrl);
+                _logger.LogInformation("Validating user ID with subscription service: {ValidationUrl}", MaskUrlLikeValue(subscriptionUrl));
 
                 // Send request to subscription service
                 var response = await _httpClient.GetAsync(subscriptionUrl);
@@ -346,6 +346,17 @@ namespace ClashSubManager.Pages.Sub
                 _logger.LogError(ex, "Error validating user ID with subscription service: {UserId}", userId);
                 return false;
             }
+        }
+
+        private static string MaskUrlLikeValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+                return "[REDACTED]";
+
+            return $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
         }
 
         /// <summary>

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using ClashSubManager.Services;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace ClashSubManager.Tests.Services
@@ -13,7 +15,8 @@ namespace ClashSubManager.Tests.Services
 
         public ConfigurationValidatorDefaultConfigTests()
         {
-            _validator = new ConfigurationValidator();
+            var loggerMock = new Mock<ILogger<ConfigurationValidator>>();
+            _validator = new ConfigurationValidator(loggerMock.Object);
         }
 
         [Fact]

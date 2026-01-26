@@ -290,8 +290,9 @@ namespace ClashSubManager.Services
                                 var titleBytes = Convert.FromBase64String(base64String);
                                 profileTitle = Encoding.UTF8.GetString(titleBytes);
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                _logger.LogWarning(ex, "Failed to decode base64 Profile-Title header");
                                 profileTitle = title; // Fallback to original if decoding fails
                             }
                         }
@@ -322,9 +323,20 @@ namespace ClashSubManager.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching original subscription info from: {Url}", subscriptionUrl);
+                _logger.LogError(ex, "Error fetching original subscription info from: {Url}", MaskUrlLikeValue(subscriptionUrl));
                 return null;
             }
+        }
+
+        private static string MaskUrlLikeValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+                return "[REDACTED]";
+
+            return $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
         }
 
         /// <summary>
@@ -373,8 +385,9 @@ namespace ClashSubManager.Services
                             {
                                 expireTime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                _logger.LogWarning(ex, "Failed to parse expire timestamp from subscription-userinfo");
                                 expireTime = DateTime.MinValue;
                             }
                         }

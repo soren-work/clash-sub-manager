@@ -3,6 +3,7 @@ using ClashSubManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace ClashSubManager.Pages.Admin
@@ -13,6 +14,7 @@ namespace ClashSubManager.Pages.Admin
         private readonly IConfigurationService _configurationService;
         private readonly Services.FileService _fileService;
         private readonly IStringLocalizer<SharedResources> _localizer;
+        private readonly ILogger<UserConfigModel> _logger;
 
         [BindProperty(SupportsGet = true)]
         public string? SelectedUserId { get; set; }
@@ -26,16 +28,19 @@ namespace ClashSubManager.Pages.Admin
             IUserManagementService userManagementService,
             IConfigurationService configurationService,
             Services.FileService fileService,
-            IStringLocalizer<SharedResources> localizer)
+            IStringLocalizer<SharedResources> localizer,
+            ILogger<UserConfigModel> logger)
         {
             _userManagementService = userManagementService;
             _configurationService = configurationService;
             _fileService = fileService;
             _localizer = localizer;
+            _logger = logger;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
+            _logger.LogDebug("User config page requested. SelectedUserId: {SelectedUserId}", SelectedUserId);
             await LoadUserListAsync();
             await LoadUserConfigurationAsync();
             return Page();
@@ -45,11 +50,13 @@ namespace ClashSubManager.Pages.Admin
         {
             if (string.IsNullOrEmpty(SelectedUserId))
             {
+                _logger.LogWarning("User configuration delete rejected: no user selected.");
                 ModelState.AddModelError(string.Empty, _localizer["PleaseSelectUser"]);
                 await LoadUserListAsync();
                 return Page();
             }
 
+            _logger.LogInformation("User configuration delete requested. SelectedUserId: {SelectedUserId}", SelectedUserId);
             var result = await _userManagementService.DeleteUserAsync(SelectedUserId);
             
             if (result)
@@ -58,9 +65,11 @@ namespace ClashSubManager.Pages.Admin
                 {
                     TempData["Success"] = _localizer["UserConfigurationDeletedSuccessfully"].ToString();
                 }
+                _logger.LogInformation("User configuration deleted successfully. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 return RedirectToPage();
             }
             
+            _logger.LogWarning("User configuration delete failed. SelectedUserId: {SelectedUserId}", SelectedUserId);
             ModelState.AddModelError(string.Empty, _localizer["FailedToDeleteUserConfiguration"]);
             await LoadUserListAsync();
             await LoadUserConfigurationAsync();
@@ -73,8 +82,9 @@ namespace ClashSubManager.Pages.Admin
             {
                 AvailableUsers = await _userManagementService.GetAllUsersAsync();
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load user list for user config page. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 AvailableUsers = new List<string>();
             }
         }
@@ -141,8 +151,9 @@ namespace ClashSubManager.Pages.Admin
                     YAMLContent = await System.IO.File.ReadAllTextAsync(templateFile, Encoding.UTF8);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load user configuration. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 UserConfig = new UserConfigurationInfo { UserId = SelectedUserId };
             }
         }

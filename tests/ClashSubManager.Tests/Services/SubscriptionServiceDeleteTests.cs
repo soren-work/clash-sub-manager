@@ -27,7 +27,11 @@ namespace ClashSubManager.Tests.Services
             _mockUserManagementService = new Mock<IUserManagementService>();
             var mockConfigService = new Mock<IConfigurationService>();
             mockConfigService.Setup(x => x.GetDataPath()).Returns(Path.GetTempPath());
-            _mockFileService = new Mock<FileService>(mockConfigService.Object, new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>()).Object, Mock.Of<ILogger<FileService>>());
+            _mockFileService = new Mock<FileService>(
+                mockConfigService.Object,
+                new FileLockProvider(),
+                new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>()).Object,
+                Mock.Of<ILogger<FileService>>());
             _mockValidationService = new Mock<ValidationService>(new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>()).Object, Mock.Of<ILogger<ValidationService>>());
             _mockConfigurationService = new Mock<IConfigurationService>();
             _mockLogger = new Mock<ILogger<SubscriptionService>>();
