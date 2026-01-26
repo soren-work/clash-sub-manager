@@ -7,12 +7,19 @@ namespace ClashSubManager.Services
     /// </summary>
     public class CloudflareIPParserService
     {
+        private readonly ILogger<CloudflareIPParserService> _logger;
+        
+        public CloudflareIPParserService(ILogger<CloudflareIPParserService> logger)
+        {
+            _logger = logger;
+        }
+        
         /// <summary>
         /// Parse Cloudflare IP CSV content
-        /// Supported format: IP Address,Sent,Received,Packet Loss Rate,Average Latency,Download Speed
+        /// Supports format: IP Address,Sent,Received,Packet Loss Rate,Average Latency,Download Speed
         /// </summary>
         /// <param name="csvContent">CSV content</param>
-        /// <returns>List of IP records</returns>
+        /// <returns>IP record list</returns>
         public List<IPRecord> ParseCSVContent(string csvContent)
         {
             var ipRecords = new List<IPRecord>();
@@ -46,14 +53,14 @@ namespace ClashSubManager.Services
             catch (Exception ex)
             {
                 // Log error but don't throw exception, return empty list
-                Console.WriteLine($"Error parsing CSV content: {ex.Message}");
+                _logger.LogError(ex, "Error parsing CSV content: {Message}", ex.Message);
             }
 
             return ipRecords;
         }
 
         /// <summary>
-        /// Parse a single CSV line to IP record
+        /// Parse single line CSV data to IP record
         /// </summary>
         /// <param name="line">CSV line data</param>
         /// <returns>IP record or null</returns>
@@ -129,7 +136,7 @@ namespace ClashSubManager.Services
         /// Validate IP address format
         /// </summary>
         /// <param name="ip">IP address string</param>
-        /// <returns>Whether it is a valid IPv4 address</returns>
+        /// <returns>Whether it's a valid IPv4 address</returns>
         private bool IsValidIP(string ip)
         {
             return System.Net.IPAddress.TryParse(ip, out var address) && 

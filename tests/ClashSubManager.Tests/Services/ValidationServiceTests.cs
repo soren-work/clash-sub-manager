@@ -18,7 +18,7 @@ namespace ClashSubManager.Tests.Services
         public ValidationServiceTests()
         {
             _loggerMock = new Mock<ILogger<ValidationService>>();
-            _ipParserMock = new Mock<CloudflareIPParserService>();
+            _ipParserMock = new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>());
             _validationService = new ValidationService(_ipParserMock.Object, _loggerMock.Object);
         }
 

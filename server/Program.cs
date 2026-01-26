@@ -53,9 +53,10 @@ if (isFirstStart)
     {
         await validator.WriteDefaultConfigurationAsync(builder.Configuration, appSettingsPath);
         
-        // Log success message using ILogger
-        var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-        logger.LogInformation("Default configuration has been generated successfully.");
+        // Use ILogger to log success message
+        using var tempProvider = builder.Services.BuildServiceProvider();
+        var tempLogger = tempProvider.GetRequiredService<ILogger<Program>>();
+        tempLogger.LogInformation("Default configuration has been generated successfully.");
         
         // Recreate builder to reload configuration
         builder = WebApplication.CreateBuilder(args);
@@ -71,8 +72,9 @@ if (isFirstStart)
     }
     catch (Exception ex)
     {
-        var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Failed to generate default configuration");
+        using var tempProvider = builder.Services.BuildServiceProvider();
+        var tempLogger = tempProvider.GetRequiredService<ILogger<Program>>();
+        tempLogger.LogError(ex, "Failed to generate default configuration");
     }
 }
 
@@ -82,18 +84,18 @@ try
 {
     finalValidator.Validate(builder.Configuration);
     
-    // Log validation success message using ILogger
-    var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("Configuration validation passed for environment: {EnvironmentType}", environmentType);
+    // Note: Will log validation success after app is built
 }
 catch (ConfigurationException ex)
 {
-    var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "Configuration validation failed: {ValidationErrors}", string.Join(", ", ex.ValidationErrors));
-    logger.LogInformation("Please set the required environment variables or update the configuration file:");
-    logger.LogInformation("- ADMIN_USERNAME: Administrator username");
-    logger.LogInformation("- ADMIN_PASSWORD: Administrator password");
-    logger.LogInformation("- COOKIE_SECRET_KEY: Cookie secret key (minimum 32 characters)");
+    // Create a temporary logger for error logging
+    using var tempProvider = builder.Services.BuildServiceProvider();
+    var tempLogger = tempProvider.GetRequiredService<ILogger<Program>>();
+    tempLogger.LogError(ex, "Configuration validation failed: {ValidationErrors}", string.Join(", ", ex.ValidationErrors));
+    tempLogger.LogInformation("Please set the required environment variables or update the configuration file:");
+    tempLogger.LogInformation("- ADMIN_USERNAME: Administrator username");
+    tempLogger.LogInformation("- ADMIN_PASSWORD: Administrator password");
+    tempLogger.LogInformation("- COOKIE_SECRET_KEY: Cookie secret key (minimum 32 characters)");
     throw;
 }
 
@@ -141,6 +143,10 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 
 var app = builder.Build();
+
+// Log configuration validation success
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Configuration validation passed for environment: {EnvironmentType}", environmentType);
 
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
