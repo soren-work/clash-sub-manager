@@ -413,7 +413,7 @@ invalid.line
         public void ValidateYAMLContent_InvalidYAML_ReturnsFalse(string? yamlContent)
         {
             // Act
-            var result = _validationService.ValidateYAMLContent(yamlContent);
+            var result = _validationService.ValidateYAMLContent(yamlContent!);
 
             // Assert
             Assert.False(result);
@@ -466,10 +466,10 @@ invalid.line
         [InlineData("ftp://example.com/subscribe")]
         [InlineData("mailto:test@example.com")]
         [InlineData("file:///path/to/file")]
-        public void ValidateSubscriptionUrl_WithNullOrInvalidUrl_ReturnsFalse(string url)
+        public void ValidateSubscriptionUrl_WithNullOrInvalidUrl_ReturnsFalse(string? url)
         {
             // Act
-            var result = _validationService.ValidateSubscriptionUrl(url);
+            var result = _validationService.ValidateSubscriptionUrl(url!);
 
             // Assert
             Assert.False(result);
@@ -479,10 +479,10 @@ invalid.line
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public void ValidateYAMLContent_WithEmptyYaml_ReturnsFalse(string yamlContent)
+        public void ValidateYAMLContent_WithEmptyYaml_ReturnsFalse(string? yamlContent)
         {
             // Act
-            var result = _validationService.ValidateYAMLContent(yamlContent);
+            var result = _validationService.ValidateYAMLContent(yamlContent!);
 
             // Assert
             Assert.False(result);
@@ -563,10 +563,10 @@ invalid.line
         public void ParseCSVContent_WithNullContent_ReturnsEmptyList()
         {
             // Arrange
-            string csvContent = null;
+            string? csvContent = null;
 
             // Act
-            var result = _validationService.ParseCSVContent(csvContent);
+            var result = _validationService.ParseCSVContent(csvContent!);
 
             // Assert
             Assert.Empty(result);
@@ -576,10 +576,10 @@ invalid.line
         public void ConvertToCSV_WithNullList_ReturnsEmptyString()
         {
             // Arrange
-            List<IPRecord> ipRecords = null;
+            List<IPRecord>? ipRecords = null;
 
             // Act
-            var result = _validationService.ConvertToCSV(ipRecords);
+            var result = _validationService.ConvertToCSV(ipRecords!);
 
             // Assert
             Assert.Equal(string.Empty, result);

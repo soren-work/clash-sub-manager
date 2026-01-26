@@ -27,11 +27,11 @@ namespace ClashSubManager.Tests.Middleware
         public void UseAdminAuth_NullBuilder_ThrowsException()
         {
             // Arrange
-            IApplicationBuilder builder = null;
+            IApplicationBuilder? builder = null;
 
             // Act & Assert
             // Since extension method has no null check, throws NullReferenceException
-            Assert.Throws<NullReferenceException>(() => builder.UseAdminAuth());
+            Assert.Throws<NullReferenceException>(() => builder!.UseAdminAuth());
         }
     }
 }

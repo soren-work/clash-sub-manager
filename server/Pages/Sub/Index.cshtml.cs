@@ -53,31 +53,22 @@ namespace ClashSubManager.Pages.Sub
                 _logger.LogInformation("Processing subscription request for user: {UserId}", id);
                 
                 // Log HTTP request information and map to httpClient
-                var requestInfo = new
+                if (_logger.IsEnabled(LogLevel.Debug))
                 {
-                    Client = Request.Headers["User-Agent"].ToString(),
-                    Method = Request.Method,
-                    Url = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}",
-                    RemoteIP = Request.HttpContext.Connection.RemoteIpAddress?.ToString(),
-                    Protocol = Request.Protocol,
-                    Timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"),
-                    UserId = id,
-                    Headers = new
+                    var requestInfo = new
                     {
+                        Method = Request.Method,
+                        Url = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}",
+                        RemoteIP = Request.HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Protocol = Request.Protocol,
+                        UserId = id,
                         UserAgent = Request.Headers["User-Agent"].ToString(),
-                        AcceptEncoding = Request.Headers["Accept-Encoding"].ToString(),
-                        AcceptLanguage = Request.Headers["Accept-Language"].ToString(),
-                        Connection = Request.Headers["Connection"].ToString(),
-                        Host = Request.Headers["Host"].ToString()
-                    }
-                };
-                
-                var requestJson = JsonSerializer.Serialize(requestInfo, new JsonSerializerOptions 
-                { 
-                    WriteIndented = true 
-                });
-                
-                _logger.LogInformation("HTTP Request Info: {RequestInfo}", requestJson);
+                        AcceptLanguage = Request.Headers["Accept-Language"].ToString()
+                    };
+
+                    var requestJson = JsonSerializer.Serialize(requestInfo);
+                    _logger.LogDebug("HTTP request info: {RequestInfo}", requestJson);
+                }
                 
                 // Map current HTTP request information to httpClient
                 MapHttpRequestInfoToHttpClient(Request);
@@ -153,7 +144,6 @@ namespace ClashSubManager.Pages.Sub
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing subscription request for user: {UserId}", UserId);
-                _logger.LogError("Error processing subscription request: {Message}", ex.Message);
                 return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
@@ -213,7 +203,6 @@ namespace ClashSubManager.Pages.Sub
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user IPs for user: {UserId}", UserId);
-                _logger.LogError("Error updating user IPs: {Message}", ex.Message);
                 return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
@@ -260,7 +249,6 @@ namespace ClashSubManager.Pages.Sub
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting user config for user: {UserId}", UserId);
-                _logger.LogError("Error deleting user config: {Message}", ex.Message);
                 return CreateErrorResponse(_localizer["InternalServerError"], "INTERNAL_SERVER_ERROR", 500);
             }
         }
@@ -314,7 +302,7 @@ namespace ClashSubManager.Pages.Sub
                 _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Original-User-Agent", 
                     request.Headers["User-Agent"].ToString());
                 
-                _logger.LogInformation("HTTP request headers mapped to httpClient successfully");
+                _logger.LogDebug("HTTP request headers mapped to httpClient successfully");
             }
             catch (Exception ex)
             {
@@ -356,7 +344,6 @@ namespace ClashSubManager.Pages.Sub
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error validating user ID with subscription service: {UserId}", userId);
-                _logger.LogError("Error validating user ID: {Message}", ex.Message);
                 return false;
             }
         }

@@ -31,7 +31,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminPassword"] = "password123",
                     ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long"
@@ -48,7 +48,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long"
@@ -65,7 +65,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -83,7 +83,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -102,7 +102,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",
@@ -121,7 +121,7 @@ namespace ClashSubManager.Tests.Services
         {
             // Arrange
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminPassword"] = "password123",
                     ["CookieSecretKey"] = "short"
@@ -153,7 +153,7 @@ namespace ClashSubManager.Tests.Services
         private IConfiguration CreateValidConfiguration()
         {
             return new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
+                .AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["AdminUsername"] = "admin",
                     ["AdminPassword"] = "password123",

@@ -56,7 +56,7 @@ namespace ClashSubManager.Tests.Middleware
         {
             // Arrange
             var configMock = new Mock<IConfiguration>();
-            configMock.Setup(c => c["CookieSecretKey"]).Returns((string)null);
+            configMock.Setup(c => c["CookieSecretKey"]).Returns((string?)null);
 
             // Act
             var middleware = new AdminAuthMiddleware(_nextMock.Object, configMock.Object);
@@ -116,7 +116,7 @@ namespace ClashSubManager.Tests.Middleware
         {
             // Arrange
             var cookies = new Mock<IRequestCookieCollection>();
-            cookies.Setup(x => x["AdminSession"]).Returns((string)null);
+            cookies.Setup(x => x["AdminSession"]).Returns((string?)null);
             
             var responseMock = new Mock<HttpResponse>();
             responseMock.Setup(x => x.Redirect("/Admin/Login")).Verifiable();
@@ -183,7 +183,7 @@ namespace ClashSubManager.Tests.Middleware
         {
             // Arrange
             var cookies = new Mock<IRequestCookieCollection>();
-            cookies.Setup(x => x["AdminSession"]).Returns((string)null);
+            cookies.Setup(x => x["AdminSession"]).Returns((string?)null);
             
             var responseMock = new Mock<HttpResponse>();
             responseMock.Setup(x => x.Redirect("/Admin/Login")).Verifiable();
@@ -358,7 +358,11 @@ namespace ClashSubManager.Tests.Middleware
             var method = typeof(AdminAuthMiddleware).GetMethod("ValidateSessionCookie", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             
-            return (bool)method.Invoke(middleware, new object[] { cookieValue });
+            if (method == null)
+                throw new InvalidOperationException("Failed to find ValidateSessionCookie method via reflection.");
+
+            var result = method.Invoke(middleware, new object?[] { cookieValue });
+            return result is bool value && value;
         }
 
         private string CreateValidSessionCookie()

@@ -55,7 +55,7 @@ namespace ClashSubManager.Tests.Services
             }
 
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>())
+                .AddInMemoryCollection(new Dictionary<string, string?>())
                 .Build();
 
             try
@@ -112,7 +112,7 @@ namespace ClashSubManager.Tests.Services
             await File.WriteAllTextAsync(testConfigPath, existingJson);
 
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>())
+                .AddInMemoryCollection(new Dictionary<string, string?>())
                 .Build();
 
             try

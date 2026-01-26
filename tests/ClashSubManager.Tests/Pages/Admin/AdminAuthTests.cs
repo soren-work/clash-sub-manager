@@ -88,8 +88,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             
             var result = _loginModel.OnPost();
             
-            Assert.IsType<RedirectToPageResult>(result);
-            var redirectResult = result as RedirectToPageResult;
+            var redirectResult = Assert.IsType<RedirectToPageResult>(result);
             Assert.Equal("/Admin/Index", redirectResult.PageName);
         }
     }
