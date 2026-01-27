@@ -35,6 +35,13 @@ ClashSubManager 通过环境变量进行系统配置，特别是在Docker容器�
 **约束**: 5-1440分钟  
 **示例**: `SESSION_TIMEOUT_MINUTES=60`
 
+### SUBSCRIPTION_URL_TEMPLATE
+**描述**: 上游订阅URL模板（必须包含 `{userId}` 用于订阅接口用户ID验证和订阅生成）  
+**类型**: String  
+**默认值**: (无默认值)  
+**必需**: 是（订阅接口必需）  
+**示例**: `SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}`
+
 ## 系统配置
 
 ### DATA_PATH
@@ -59,6 +66,7 @@ services:
       - COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
       - SESSION_TIMEOUT_MINUTES=30
       - DATA_PATH=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -81,6 +89,8 @@ docker run -d \
   -e ADMIN_PASSWORD=SecurePassword123! \
   -e COOKIE_SECRET_KEY=your-very-long-and-secure-secret-key-for-hmac-signing \
   -e SESSION_TIMEOUT_MINUTES=30 \
+  -e DATA_PATH=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/logs:/app/logs \
   --restart always \
@@ -165,6 +175,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=dev123
 COOKIE_SECRET_KEY=dev-secret-key-for-development-only
 SESSION_TIMEOUT_MINUTES=120
+SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
 ```
 
 **注意**: 开发环境配置仅用于开发测试，生产环境必须使用安全配置。

@@ -35,6 +35,13 @@ ClashSubManager is configured through environment variables, especially in Docke
 **Constraint**: 5-1440 minutes  
 **Example**: `SESSION_TIMEOUT_MINUTES=60`
 
+### SUBSCRIPTION_URL_TEMPLATE
+**Description**: Upstream subscription URL template (must contain `{userId}` for subscription interface user ID validation and subscription generation)  
+**Type**: String  
+**Default**: (no default value)  
+**Required**: Yes (required for subscription interface)  
+**Example**: `SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}`
+
 ## System Configuration
 
 ### DATA_PATH
@@ -59,6 +66,7 @@ services:
       - COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
       - SESSION_TIMEOUT_MINUTES=30
       - DATA_PATH=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -81,6 +89,8 @@ docker run -d \
   -e ADMIN_PASSWORD=SecurePassword123! \
   -e COOKIE_SECRET_KEY=your-very-long-and-secure-secret-key-for-hmac-signing \
   -e SESSION_TIMEOUT_MINUTES=30 \
+  -e DATA_PATH=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/logs:/app/logs \
   --restart always \
@@ -165,6 +175,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=dev123
 COOKIE_SECRET_KEY=dev-secret-key-for-development-only
 SESSION_TIMEOUT_MINUTES=120
+SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
 ```
 
 **Note**: Development environment configuration is for development and testing only. Production environment must use secure configuration.

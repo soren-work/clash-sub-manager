@@ -13,7 +13,7 @@ ClashSubManager is a lightweight Clash subscription configuration management ser
 - **Dynamic Configuration Overwriting**: Completely dynamic parsing and merging of Clash configurations, supporting future version compatibility
 - **Preferred IP Extension**: Automatically extends domain proxies to multiple preferred IP address proxies
 - **Personalized Configuration**: Supports flexible switching between user-specific configurations and default configurations
-- **Admin Management Interface**: Complete web-based management system for IP configurations, Clash templates, and user settings
+- **Admin Management Interface**: Web-based management system for default/user IP lists and Clash templates
 - **Internationalization Support**: Full English and Chinese interface support
 - **Lightweight Architecture**: Single application with minimal resource usage
 
@@ -33,9 +33,12 @@ docker pull clashsubmanager:latest
 # Run container
 docker run -d \
   -p 8080:80 \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_password \
-  -e COOKIE_SECRET_KEY=your_32_char_secret_key \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_password \
+  -e CookieSecretKey=your_32_char_secret_key \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
   -v $(pwd)/data:/app/data \
   clashsubmanager:latest
 ```
@@ -44,7 +47,6 @@ docker run -d \
 ```
 ClashSubManager/
 ├── server/          # Server application
-├── client/          # Client scripts
 ├── doc/            # Project documentation
 └── README.md       # Project description
 ```
@@ -61,7 +63,7 @@ http://your-server:8080/sub/your_user_id
 Access `http://your-server:8080/admin` for configuration management:
 - Preferred IP management
 - Clash template management  
-- User-specific configuration management
+- User list management (recorded automatically)
 
 ### 🔄 API Endpoints
 - `GET /sub/{id}` - Get user Clash subscription configuration
@@ -75,6 +77,7 @@ Access `http://your-server:8080/admin` for configuration management:
 /app/data/
 ├── cloudflare-ip.csv     # Default preferred IPs
 ├── clash.yaml           # Default Clash template
+├── users.txt            # User access records
 └── [userId]/            # User-specific configurations
     ├── cloudflare-ip.csv
     └── clash.yaml
@@ -83,11 +86,14 @@ Access `http://your-server:8080/admin` for configuration management:
 ### 🎛️ Environment Variables
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ADMIN_USERNAME` | Admin username | Required |
-| `ADMIN_PASSWORD` | Admin password | Required |
-| `COOKIE_SECRET_KEY` | Cookie secret key | Required (≥32 characters) |
-| `SESSION_TIMEOUT_MINUTES` | Session timeout | 60 |
-| `DATA_PATH` | Data directory | `/app/data` |
+| `AdminUsername` | Admin username | Required |
+| `AdminPassword` | Admin password | Required |
+| `CookieSecretKey` | Cookie secret key | Required (≥32 characters) |
+| `SessionTimeoutMinutes` | Session timeout | 60 |
+| `DataPath` | Data directory (absolute or relative to executable) | `./data` (standalone) / `/app/data` (Docker) |
+| `SubscriptionUrlTemplate` | Upstream subscription URL template (must contain `{userId}`) | Optional (fallback) |
+| `SUBSCRIPTION_URL_TEMPLATE` | Upstream subscription URL template (overrides `SubscriptionUrlTemplate`) | Required |
+| `LOG_LEVEL` | Log level | Optional |
 
 ## Configuration System
 
@@ -97,10 +103,9 @@ ClashSubManager supports flexible cross-platform configuration management with m
 1. **Command Line Arguments** - Highest priority
 2. **Environment Variables** - Second priority
 3. **User Configuration File** - `appsettings.User.json`
-4. **Environment-Specific Configuration** - `appsettings.{Environment}.json`
-5. **Mode-Specific Configuration** - `appsettings.{Mode}.json`
-6. **Default Configuration File** - `appsettings.json`
-7. **Code Default Values** - Lowest priority
+4. **Environment Type Configuration** - `appsettings.{EnvironmentType}.json` (e.g. Docker/Standalone)
+5. **Default Configuration File** - `appsettings.json`
+6. **Code Default Values** - Lowest priority
 
 ### Automatic Environment Detection
 - **Docker Environment**: Automatically detects container environment, uses `/app/data` as default data path
@@ -112,11 +117,13 @@ ClashSubManager supports flexible cross-platform configuration management with m
 #### Docker Deployment (Recommended)
 ```bash
 docker run -d \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_password \
-  -e COOKIE_SECRET_KEY=your_32_character_minimum_key \
-  -e SESSION_TIMEOUT_MINUTES=30 \
-  -p 8080:8080 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_password \
+  -e CookieSecretKey=your_32_character_minimum_key \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -p 8080:80 \
   clash-sub-manager
 ```
 
@@ -140,7 +147,8 @@ Create `appsettings.User.json` file:
   "AdminPassword": "your_password",
   "CookieSecretKey": "your_32_character_minimum_key",
   "SessionTimeoutMinutes": 30,
-  "DataPath": "/custom/data/path"
+  "DataPath": "/custom/data/path",
+  "SubscriptionUrlTemplate": "https://api.example.com/sub/{userId}"
 }
 ```
 
@@ -151,6 +159,9 @@ The system automatically validates the following required configurations on star
 - `CookieSecretKey` - Cookie secret key (required, minimum 32 characters)
 - `SessionTimeoutMinutes` - Session timeout (5-1440 minutes)
 - `DataPath` - Data path (must be creatable/writable)
+
+### Language Switching
+The UI language is determined by the `.AspNetCore.Culture` cookie (set via the built-in language switcher), with fallback to `en-US`.
 
 ## Performance Characteristics
 
@@ -172,7 +183,7 @@ The system automatically validates the following required configurations on star
 For detailed documentation, see the `doc/` directory:
 - [MVP Outline Design](doc/spec/design/architecture/mvp-outline-cn.md)
 - [Deployment Operations Guide](doc/deployment/deployment-guide-cn.md)
-- [Environment Variable Configuration](doc/deployment/env-config-cn.md)
+- [Environment Variable Configuration](doc/deployment/env-config.md)
 
 ## Contributing
 

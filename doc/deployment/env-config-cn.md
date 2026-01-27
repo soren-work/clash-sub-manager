@@ -8,7 +8,7 @@ ClashSubManager通过环境变量进行系统配置，支持灵活的部署和�
 
 ## 必需环境变量
 
-### ADMIN_USERNAME
+### AdminUsername
 - **说明**：管理员用户名
 - **类型**：字符串
 - **默认值**：无（必须设置）
@@ -16,10 +16,10 @@ ClashSubManager通过环境变量进行系统配置，支持灵活的部署和�
 - **要求**：非空字符串
 
 ```bash
-ADMIN_USERNAME=admin
+AdminUsername=admin
 ```
 
-### ADMIN_PASSWORD
+### AdminPassword
 - **说明**：管理员密码
 - **类型**：字符串
 - **默认值**：无（必须设置）
@@ -27,10 +27,10 @@ ADMIN_USERNAME=admin
 - **要求**：非空字符串，建议使用强密码
 
 ```bash
-ADMIN_PASSWORD=MySecureP@ssw0rd2024!
+AdminPassword=MySecureP@ssw0rd2024!
 ```
 
-### COOKIE_SECRET_KEY
+### CookieSecretKey
 - **说明**：Cookie签名密钥，用于HMACSHA256签名
 - **类型**：字符串
 - **默认值**：无（必须设置）
@@ -38,18 +38,18 @@ ADMIN_PASSWORD=MySecureP@ssw0rd2024!
 - **要求**：至少32字符的随机字符串
 
 ```bash
-COOKIE_SECRET_KEY=32_character_long_secret_key
+CookieSecretKey=32_character_long_secret_key
 ```
 
-### SESSION_TIMEOUT_MINUTES
+### SessionTimeoutMinutes
 - **说明**：会话超时时间（分钟）
 - **类型**：整数
-- **默认值**：30
+- **默认值**：60
 - **示例**：`60`
 - **要求**：5-1440之间的整数
 
 ```bash
-SESSION_TIMEOUT_MINUTES=30
+SessionTimeoutMinutes=60
 ```
 
 ## 可选环境变量
@@ -74,24 +74,31 @@ ASPNETCORE_ENVIRONMENT=Production
 LOG_LEVEL=Information
 ```
 
-### MAX_CONCURRENT_REQUESTS
-- **说明**：最大并发请求数
-- **类型**：整数
-- **默认值**：`50`
-- **要求**：10-100之间的整数
+### DataPath
+- **说明**：数据目录（绝对路径或相对可执行文件路径）
+- **类型**：字符串
+- **默认值**：独立模式 `./data`，Docker ` /app/data`
 
 ```bash
-MAX_CONCURRENT_REQUESTS=50
+DataPath=./data
 ```
 
-### REQUEST_RATE_LIMIT
-- **说明**：请求频率限制（每IP每秒请求数）
-- **类型**：整数
-- **默认值**：`10`
-- **要求**：1-20之间的整数
+### SubscriptionUrlTemplate
+- **说明**：上游订阅URL模板（必须包含`{userId}`）
+- **类型**：字符串
+- **默认值**：无
 
 ```bash
-REQUEST_RATE_LIMIT=10
+SubscriptionUrlTemplate=https://api.example.com/sub/{userId}
+```
+
+### SUBSCRIPTION_URL_TEMPLATE
+- **说明**：上游订阅URL模板（推荐，优先级高于`SubscriptionUrlTemplate`）
+- **类型**：字符串
+- **默认值**：无
+
+```bash
+SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
 ```
 
 ## 配置示例
@@ -99,40 +106,40 @@ REQUEST_RATE_LIMIT=10
 ### 开发环境配置
 ```bash
 # .env.development
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=DevPass123!
-COOKIE_SECRET_KEY=dev_secret_key_32_characters_long
-SESSION_TIMEOUT_MINUTES=120
+AdminUsername=admin
+AdminPassword=DevPass123!
+CookieSecretKey=dev_secret_key_32_characters_long
+SessionTimeoutMinutes=120
 ASPNETCORE_ENVIRONMENT=Development
 LOG_LEVEL=Debug
-MAX_CONCURRENT_REQUESTS=20
-REQUEST_RATE_LIMIT=5
+DataPath=./data
+SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
 ```
 
 ### 生产环境配置
 ```bash
 # .env.production
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=ProdSecureP@ssw0rd2024!
-COOKIE_SECRET_KEY=$(openssl rand -hex 16)
-SESSION_TIMEOUT_MINUTES=30
+AdminUsername=admin
+AdminPassword=ProdSecureP@ssw0rd2024!
+CookieSecretKey=$(openssl rand -hex 16)
+SessionTimeoutMinutes=30
 ASPNETCORE_ENVIRONMENT=Production
 LOG_LEVEL=Information
-MAX_CONCURRENT_REQUESTS=50
-REQUEST_RATE_LIMIT=10
+DataPath=/app/data
+SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
 ```
 
 ### 测试环境配置
 ```bash
 # .env.testing
-ADMIN_USERNAME=test_admin
-ADMIN_PASSWORD=TestPass123!
-COOKIE_SECRET_KEY=test_secret_key_32_characters_long
-SESSION_TIMEOUT_MINUTES=60
+AdminUsername=test_admin
+AdminPassword=TestPass123!
+CookieSecretKey=test_secret_key_32_characters_long
+SessionTimeoutMinutes=60
 ASPNETCORE_ENVIRONMENT=Staging
 LOG_LEVEL=Warning
-MAX_CONCURRENT_REQUESTS=30
-REQUEST_RATE_LIMIT=8
+DataPath=./data
+SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
 ```
 
 ## 安全配置建议
@@ -200,10 +207,12 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - COOKIE_SECRET_KEY=${COOKIE_SECRET_KEY}
-      - SESSION_TIMEOUT_MINUTES=30
+      - AdminUsername=admin
+      - AdminPassword=${AdminPassword}
+      - CookieSecretKey=${CookieSecretKey}
+      - SessionTimeoutMinutes=30
+      - DataPath=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
       - ASPNETCORE_ENVIRONMENT=Production
       - LOG_LEVEL=Information
     restart: unless-stopped
@@ -231,8 +240,8 @@ data:
   session-timeout-minutes: "30"
   aspnetcore-environment: "Production"
   log-level: "Information"
-  max-concurrent-requests: "50"
-  request-rate-limit: "10"
+  data-path: "/app/data"
+  subscription-url-template: "https://api.example.com/sub/{userId}"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -254,26 +263,36 @@ spec:
         ports:
         - containerPort: 80
         env:
-        - name: ADMIN_USERNAME
+        - name: AdminUsername
           valueFrom:
             secretKeyRef:
               name: clashsubmanager-secrets
               key: admin-username
-        - name: ADMIN_PASSWORD
+        - name: AdminPassword
           valueFrom:
             secretKeyRef:
               name: clashsubmanager-secrets
               key: admin-password
-        - name: COOKIE_SECRET_KEY
+        - name: CookieSecretKey
           valueFrom:
             secretKeyRef:
               name: clashsubmanager-secrets
               key: cookie-secret-key
-        - name: SESSION_TIMEOUT_MINUTES
+        - name: SessionTimeoutMinutes
           valueFrom:
             configMapKeyRef:
               name: clashsubmanager-config
               key: session-timeout-minutes
+        - name: DataPath
+          valueFrom:
+            configMapKeyRef:
+              name: clashsubmanager-config
+              key: data-path
+        - name: SUBSCRIPTION_URL_TEMPLATE
+          valueFrom:
+            configMapKeyRef:
+              name: clashsubmanager-config
+              key: subscription-url-template
         - name: ASPNETCORE_ENVIRONMENT
           valueFrom:
             configMapKeyRef:
@@ -284,16 +303,6 @@ spec:
             configMapKeyRef:
               name: clashsubmanager-config
               key: log-level
-        - name: MAX_CONCURRENT_REQUESTS
-          valueFrom:
-            configMapKeyRef:
-              name: clashsubmanager-config
-              key: max-concurrent-requests
-        - name: REQUEST_RATE_LIMIT
-          valueFrom:
-            configMapKeyRef:
-              name: clashsubmanager-config
-              key: request-rate-limit
 ```
 
 ## 配置验证
@@ -302,7 +311,7 @@ spec:
 ```bash
 #!/bin/bash
 # 检查必需环境变量
-required_vars=("ADMIN_USERNAME" "ADMIN_PASSWORD" "COOKIE_SECRET_KEY")
+required_vars=("AdminUsername" "AdminPassword" "CookieSecretKey" "SUBSCRIPTION_URL_TEMPLATE")
 
 for var in "${required_vars[@]}"; do
     if [ -z "${!var}" ]; then
@@ -318,7 +327,7 @@ echo "✅ 所有必需环境变量已设置"
 ```bash
 #!/bin/bash
 # 检查密码强度
-password="$ADMIN_PASSWORD"
+password="$AdminPassword"
 
 if [ ${#password} -lt 12 ]; then
     echo "警告: 密码长度少于12个字符"
@@ -345,10 +354,10 @@ fi
 ```bash
 #!/bin/bash
 # 检查Cookie密钥长度
-key="$COOKIE_SECRET_KEY"
+key="$CookieSecretKey"
 
 if [ ${#key} -lt 32 ]; then
-    echo "错误: COOKIE_SECRET_KEY 长度必须至少32个字符"
+    echo "错误: CookieSecretKey 长度必须至少32个字符"
     exit 1
 fi
 
@@ -377,10 +386,11 @@ NEW_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
 # 更新环境变量
 docker stop clashsubmanager
 docker run -d --name clashsubmanager-new \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=$NEW_PASSWORD \
-  -e COOKIE_SECRET_KEY=$COOKIE_SECRET_KEY \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=$NEW_PASSWORD \
+  -e CookieSecretKey=$CookieSecretKey \
+  -e SessionTimeoutMinutes=30 \
+  -e SUBSCRIPTION_URL_TEMPLATE=$SUBSCRIPTION_URL_TEMPLATE \
   clashsubmanager:latest
 
 # 清理旧容器
@@ -396,7 +406,7 @@ docker exec clashsubmanager env | grep SESSION_TIMEOUT
 # 调整超时时间
 docker stop clashsubmanager
 docker run -d --name clashsubmanager \
-  -e SESSION_TIMEOUT_MINUTES=60 \
+  -e SessionTimeoutMinutes=60 \
   clashsubmanager:latest
 ```
 

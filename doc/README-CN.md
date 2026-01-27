@@ -31,8 +31,8 @@ doc/
 ### 文档列表：
 - [📄 Dockerfile](deployment/Dockerfile) - Docker容器构建文件
 - [📄 docker-compose.yml](deployment/docker-compose.yml) - Docker Compose编排文件
-- [📄 环境变量配置说明.md](deployment/环境变量配置说明.md) - 环境变量详细配置说明
-- [📄 部署运维文档.md](deployment/部署运维文档.md) - 完整部署和运维指南
+- [📄 环境变量配置说明.md](deployment/env-config-cn.md) - 环境变量详细配置说明
+- [📄 部署运维文档.md](deployment/deployment-guide-cn.md) - 完整部署和运维指南
 
 ---
 
@@ -43,17 +43,17 @@ doc/
 #### 🏛️ Architecture - 架构设计
 系统级架构设计和MVP边界定义文档。
 
-- [📄 ClashSubManager-MVP概要设计.md](spec/design/architecture/ClashSubManager-MVP概要设计.md) - **核心文档** - MVP整体架构设计和技术方案
-- [📄 MVP核心功能.md](spec/design/architecture/MVP核心功能.md) - 核心功能定义和实现逻辑
-- [📄 MVP边界定义.md](spec/design/architecture/MVP边界定义.md) - MVP范围边界和排除功能
+- [📄 MVP概要设计.md](spec/design/architecture/mvp-outline-cn.md) - **核心文档** - MVP整体架构设计和技术方案
+- [📄 MVP核心功能.md](spec/design/architecture/mvp-core-features-cn.md) - 核心功能定义和实现逻辑
+- [📄 MVP边界定义.md](spec/design/architecture/mvp-boundary-cn.md) - MVP范围边界和排除功能
 
 #### 🧩 Modules - 模块详细设计
 各功能模块的详细设计文档，包含具体实现细节。
 
-- [📄 管理员认证-MVP详细设计.md](spec/design/modules/管理员认证-MVP详细设计.md) - 管理员认证系统详细设计
-- [📄 Clash模板-MVP详细设计.md](spec/design/modules/Clash模板-MVP详细设计.md) - Clash配置模板管理设计
-- [📄 IP管理-MVP详细设计.md](spec/design/modules/IP管理-MVP详细设计.md) - 优选IP管理功能设计
-- [📄 订阅API-MVP详细设计.md](spec/design/modules/订阅API-MVP详细设计.md) - 订阅接口详细设计
+- [📄 管理员认证-MVP详细设计.md](spec/design/modules/admin-auth-detail-cn.md) - 管理员认证系统详细设计
+- [📄 Clash模板-MVP详细设计.md](spec/design/modules/clash-template-detail-cn.md) - Clash配置模板管理设计
+- [📄 IP管理-MVP详细设计.md](spec/design/modules/ip-management-detail-cn.md) - 优选IP管理功能设计
+- [📄 订阅API-MVP详细设计.md](spec/design/modules/subscription-api-detail-cn.md) - 订阅接口详细设计
 
 #### 📝 Requirements - 需求分析
 客户端和服务端需求分析文档。
@@ -63,7 +63,7 @@ doc/
 
 ### 📅 Plan - MVP开发计划
 
-- [📄 ClashSubManager-MVP开发计划.md](spec/plan/ClashSubManager-MVP开发计划.md) - **核心文档** - 完整MVP开发计划和任务分解
+- [📄 MVP开发计划.md](spec/plan/mvp-development-plan-cn.md) - **核心文档** - 完整MVP开发计划和任务分解
 
 ### 🔍 Review - MVP评审文档
 
@@ -71,7 +71,7 @@ doc/
 
 ### 🧪 Test - MVP测试文档
 
-- [📄 ClashSubManager-MVP单元测试设计.md](spec/test/ClashSubManager-MVP单元测试设计.md) - 单元测试设计和测试用例
+- [📄 MVP单元测试设计.md](spec/test/mvp-unit-test-cn.md) - 单元测试设计和测试用例
 - [📄 cloudflare-ip-test.csv](spec/test/cloudflare-ip-test.csv) - 测试数据文件
 
 ---
@@ -81,20 +81,20 @@ doc/
 ### 开发顺序建议：
 
 1. **📖 首先阅读**：
-   - [ClashSubManager-MVP概要设计.md](spec/design/architecture/ClashSubManager-MVP概要设计.md) - 了解整体架构
-   - [ClashSubManager-MVP开发计划.md](spec/plan/ClashSubManager-MVP开发计划.md) - 了解开发任务
+   - [MVP概要设计.md](spec/design/architecture/mvp-outline-cn.md) - 了解整体架构
+   - [MVP开发计划.md](spec/plan/mvp-development-plan-cn.md) - 了解开发任务
 
 2. **🔧 模块开发**：
-   - 根据[开发计划](spec/plan/ClashSubManager-MVP开发计划.md)按优先级开发
+   - 根据[开发计划](spec/plan/mvp-development-plan-cn.md)按优先级开发
    - 参考对应[模块详细设计](spec/design/modules/)文档进行实现
 
 3. **🧪 测试验证**：
-   - 参考[单元测试设计](spec/test/ClashSubManager-MVP单元测试设计.md)编写测试
+   - 参考[单元测试设计](spec/test/mvp-unit-test-cn.md)编写测试
    - 使用[测试数据](spec/test/cloudflare-ip-test.csv)进行验证
 
 4. **🚀 部署上线**：
-   - 参考[部署运维文档](deployment/部署运维文档.md)进行部署
-   - 配置[环境变量](deployment/环境变量配置说明.md)
+   - 参考[部署运维文档](deployment/deployment-guide-cn.md)进行部署
+   - 配置[环境变量](deployment/env-config-cn.md)
 
 ### 📚 文档优先级：
 

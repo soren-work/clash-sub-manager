@@ -6,7 +6,7 @@
 
 ### 1.1 Core Value Validation Points
 - **Subscription Interface Functionality**: Verify `GET /sub/[id]` dynamic configuration merging capability
-- **Admin Authentication**: Verify environment variable authentication and session management
+- **Admin Authentication**: Verify configuration-based authentication and session management
 - **File Management**: Verify CRUD operations for CSV and YAML files
 - **Complete Dynamic Processing**: Verify YAML field dynamic parsing and merging
 
@@ -279,9 +279,9 @@ public async Task ProcessYaml_FutureFields_PreservesAllFields()
 public async Task Login_ValidCredentials_RedirectsToAdmin()
 {
     // Arrange
-    Environment.SetEnvironmentVariable("ADMIN_USERNAME", "admin");
-    Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "password123");
-    Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", "test-key-32-chars-long");
+    Environment.SetEnvironmentVariable("AdminUsername", "admin");
+    Environment.SetEnvironmentVariable("AdminPassword", "password123");
+    Environment.SetEnvironmentVariable("CookieSecretKey", "test-key-32-chars-long");
     
     var loginData = new Dictionary<string, string>
     {
@@ -318,8 +318,8 @@ public async Task Login_ValidCredentials_RedirectsToAdmin()
 public async Task Login_InvalidCredentials_ReturnsErrorPage(string username, string password)
 {
     // Arrange
-    Environment.SetEnvironmentVariable("ADMIN_USERNAME", "admin");
-    Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "password123");
+    Environment.SetEnvironmentVariable("AdminUsername", "admin");
+    Environment.SetEnvironmentVariable("AdminPassword", "password123");
     
     var loginData = new Dictionary<string, string>
     {
@@ -633,11 +633,11 @@ public class TestFixture : IDisposable
         Directory.CreateDirectory(TestDataPath);
         
         // Set test environment variables
-        Environment.SetEnvironmentVariable("DATA_PATH", TestDataPath);
-        Environment.SetEnvironmentVariable("ADMIN_USERNAME", "test_admin");
-        Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "test_password");
-        Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", "test-key-32-chars-long-for-hmac");
-        Environment.SetEnvironmentVariable("SESSION_TIMEOUT_MINUTES", "30");
+        Environment.SetEnvironmentVariable("DataPath", TestDataPath);
+        Environment.SetEnvironmentVariable("AdminUsername", "test_admin");
+        Environment.SetEnvironmentVariable("AdminPassword", "test_password");
+        Environment.SetEnvironmentVariable("CookieSecretKey", "test-key-32-chars-long-for-hmac");
+        Environment.SetEnvironmentVariable("SessionTimeoutMinutes", "30");
     }
     
     public void Dispose()

@@ -90,7 +90,6 @@ Application Startup
 - `AdminPassword`: Administrator password
 - `CookieSecretKey`: Cookie signing secret key (≥32 characters)
 - `SessionTimeoutMinutes`: Session timeout in minutes
-- `RateLimitPerIp`: Request rate limit per IP
 - `LogLevel`: Logging level
 - `AllowedHosts`: Allowed hosts for binding
 

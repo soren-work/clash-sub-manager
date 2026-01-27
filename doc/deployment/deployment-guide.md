@@ -38,11 +38,12 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=your_secure_password_here
-      - COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
-      - SESSION_TIMEOUT_MINUTES=30
-      - DATA_PATH=/app/data
+      - AdminUsername=admin
+      - AdminPassword=your_secure_password_here
+      - CookieSecretKey=your_hmac_key_at_least_32_chars_long
+      - SessionTimeoutMinutes=30
+      - DataPath=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
@@ -87,10 +88,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   --restart unless-stopped \
   clashsubmanager:latest
 ```
@@ -101,10 +104,11 @@ docker run -d \
 
 | Variable Name | Description | Example Value | Requirements |
 |---------------|-------------|---------------|--------------|
-| `ADMIN_USERNAME` | Admin username | `admin` | Non-empty |
-| `ADMIN_PASSWORD` | Admin password | `SecurePass123!` | Non-empty, strong password recommended |
-| `COOKIE_SECRET_KEY` | Cookie signing key | `32_character_long_secret_key` | ≥32 characters |
-| `SESSION_TIMEOUT_MINUTES` | Session timeout (minutes) | `30` | 5-1440 |
+| `AdminUsername` | Admin username | `admin` | Non-empty |
+| `AdminPassword` | Admin password | `SecurePass123!` | Non-empty, strong password recommended |
+| `CookieSecretKey` | Cookie signing key | `32_character_long_secret_key` | ≥32 characters |
+| `SessionTimeoutMinutes` | Session timeout (minutes) | `30` | 5-1440 |
+| `SUBSCRIPTION_URL_TEMPLATE` | Upstream subscription URL template (must contain `{userId}`) | `https://api.example.com/sub/{userId}` | Required to serve `/sub/{id}` |
 
 ### 3.2 Optional Environment Variables
 
@@ -112,30 +116,30 @@ docker run -d \
 |---------------|-------------|---------------|-------------|
 | `ASPNETCORE_ENVIRONMENT` | Runtime environment | `Production` | Development/Production |
 | `LOG_LEVEL` | Log level | `Information` | Debug/Information/Warning/Error |
-| `MAX_CONCURRENT_REQUESTS` | Maximum concurrent requests | `50` | 10-100 |
-| `REQUEST_RATE_LIMIT` | Request rate limit (per second) | `10` | 1-20 |
+| `DataPath` | Data directory (absolute or relative to executable) | Docker: `/app/data` | Optional |
+| `SubscriptionUrlTemplate` | Upstream subscription URL template fallback (must contain `{userId}`) | `https://api.example.com/sub/{userId}` | Optional (fallback) |
 
 ### 3.3 Security Configuration Recommendations
 
 **Admin Password**
 ```bash
 # Generate strong password (at least 12 characters, including uppercase, lowercase, numbers, special characters)
-ADMIN_PASSWORD=MySecureP@ssw0rd2024!
+AdminPassword=MySecureP@ssw0rd2024!
 ```
 
 **Cookie Key**
 ```bash
 # Generate 32-character random key
-COOKIE_SECRET_KEY=$(openssl rand -hex 16)
+CookieSecretKey=$(openssl rand -hex 16)
 ```
 
 **Session Timeout**
 ```bash
 # Production environment recommends shorter timeout
-SESSION_TIMEOUT_MINUTES=30
+SessionTimeoutMinutes=30
 
 # Management environment can set longer timeout
-SESSION_TIMEOUT_MINUTES=120
+SessionTimeoutMinutes=120
 ```
 
 ## 4. Data Directory Structure
@@ -257,8 +261,8 @@ curl -f http://localhost:8080/health
 # Check container status
 docker ps | grep clashsubmanager
 
-# View container resource usage
-docker stats clashsubmanager
+# View logs
+docker logs clashsubmanager
 ```
 
 ### 6.2 Log Management
@@ -308,10 +312,10 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=your_secure_password_here
-      - COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
-      - SESSION_TIMEOUT_MINUTES=30
+      - AdminUsername=admin
+      - AdminPassword=your_secure_password_here
+      - CookieSecretKey=your_hmac_key_at_least_32_chars_long
+      - SessionTimeoutMinutes=30
     deploy:
       resources:
         limits:
@@ -345,10 +349,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   --user 1000:1000 \
   --read-only \
   --tmpfs /tmp \
@@ -403,7 +409,7 @@ docker port clashsubmanager
 ufw status
 
 # Check environment variables
-docker exec clashsubmanager env | grep ADMIN
+docker exec clashsubmanager env | grep Admin
 ```
 
 **Issue 3: Configuration file loss**
@@ -435,10 +441,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   -e LOG_LEVEL=Debug \
   -e ASPNETCORE_ENVIRONMENT=Development \
   clashsubmanager:latest
@@ -496,10 +504,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   --restart unless-stopped \
   clashsubmanager:latest
 
@@ -542,12 +552,12 @@ echo "=== Migration Complete ==="
 echo "=== Generate Environment Variables ==="
 
 # Generate admin password
-ADMIN_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-12)
-echo "ADMIN_PASSWORD=$ADMIN_PASSWORD"
+AdminPassword=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-12)
+echo "AdminPassword=$AdminPassword"
 
 # Generate cookie key
-COOKIE_SECRET_KEY=$(openssl rand -hex 16)
-echo "COOKIE_SECRET_KEY=$COOKIE_SECRET_KEY"
+CookieSecretKey=$(openssl rand -hex 16)
+echo "CookieSecretKey=$CookieSecretKey"
 
 # Generate session key
 SESSION_SECRET=$(openssl rand -hex 16)
@@ -570,10 +580,12 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
-      - ADMIN_USERNAME=${ADMIN_USERNAME}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - COOKIE_SECRET_KEY=${COOKIE_SECRET_KEY}
-      - SESSION_TIMEOUT_MINUTES=${SESSION_TIMEOUT_MINUTES:-30}
+      - AdminUsername=${AdminUsername}
+      - AdminPassword=${AdminPassword}
+      - CookieSecretKey=${CookieSecretKey}
+      - SessionTimeoutMinutes=${SessionTimeoutMinutes:-30}
+      - DataPath=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=${SUBSCRIPTION_URL_TEMPLATE}
       - LOG_LEVEL=${LOG_LEVEL:-Information}
     restart: unless-stopped
     healthcheck:
