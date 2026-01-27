@@ -31,8 +31,8 @@ Deployment related documents, including Docker containerized deployment and envi
 ### Document List:
 - [📄 Dockerfile](deployment/Dockerfile) - Docker container build file
 - [📄 docker-compose.yml](deployment/docker-compose.yml) - Docker Compose orchestration file
-- [📄 Environment Variable Configuration Guide.md](deployment/环境变量配置说明.md) - Detailed environment variable configuration instructions
-- [📄 Deployment Operations Guide.md](deployment/部署运维文档.md) - Complete deployment and operations guide
+- [📄 Environment Variable Configuration Guide.md](deployment/env-config.md) - Detailed environment variable configuration instructions
+- [📄 Deployment Operations Guide.md](deployment/deployment-guide.md) - Complete deployment and operations guide
 
 ---
 
@@ -43,17 +43,17 @@ Deployment related documents, including Docker containerized deployment and envi
 #### 🏛️ Architecture - Architecture Design
 System-level architecture design and MVP boundary definition documents.
 
-- [📄 ClashSubManager-MVP Outline Design.md](spec/design/architecture/ClashSubManager-MVP概要设计.md) - **Core Document** - MVP overall architecture design and technical solution
-- [📄 MVP Core Features.md](spec/design/architecture/MVP核心功能.md) - Core feature definitions and implementation logic
-- [📄 MVP Boundary Definition.md](spec/design/architecture/MVP边界定义.md) - MVP scope boundaries and excluded features
+- [📄 MVP Outline Design.md](spec/design/architecture/mvp-outline.md) - **Core Document** - MVP overall architecture design and technical solution
+- [📄 MVP Core Features.md](spec/design/architecture/mvp-core-features.md) - Core feature definitions and implementation logic
+- [📄 MVP Boundary Definition.md](spec/design/architecture/mvp-boundary.md) - MVP scope boundaries and excluded features
 
 #### 🧩 Modules - Module Detailed Design
 Detailed design documents for each functional module, containing specific implementation details.
 
-- [📄 Admin Authentication-MVP Detailed Design.md](spec/design/modules/管理员认证-MVP详细设计.md) - Admin authentication system detailed design
-- [📄 Clash Template-MVP Detailed Design.md](spec/design/modules/Clash模板-MVP详细设计.md) - Clash configuration template management design
-- [📄 IP Management-MVP Detailed Design.md](spec/design/modules/IP管理-MVP详细设计.md) - Preferred IP management feature design
-- [📄 Subscription API-MVP Detailed Design.md](spec/design/modules/订阅API-MVP详细设计.md) - Subscription interface detailed design
+- [📄 Admin Authentication-MVP Detailed Design.md](spec/design/modules/admin-auth-detail.md) - Admin authentication system detailed design
+- [📄 Clash Template-MVP Detailed Design.md](spec/design/modules/clash-template-detail.md) - Clash configuration template management design
+- [📄 IP Management-MVP Detailed Design.md](spec/design/modules/ip-management-detail.md) - Preferred IP management feature design
+- [📄 Subscription API-MVP Detailed Design.md](spec/design/modules/subscription-api-detail.md) - Subscription interface detailed design
 
 #### 📝 Requirements - Requirements Analysis
 Client and server requirements analysis documents.
@@ -63,7 +63,7 @@ Client and server requirements analysis documents.
 
 ### 📅 Plan - MVP Development Plan
 
-- [📄 ClashSubManager-MVP Development Plan.md](spec/plan/ClashSubManager-MVP开发计划.md) - **Core Document** - Complete MVP development plan and task breakdown
+- [📄 MVP Development Plan.md](spec/plan/mvp-development-plan.md) - **Core Document** - Complete MVP development plan and task breakdown
 
 ### 🔍 Review - MVP Review Documents
 
@@ -71,7 +71,7 @@ Client and server requirements analysis documents.
 
 ### 🧪 Test - MVP Test Documents
 
-- [📄 ClashSubManager-MVP Unit Test Design.md](spec/test/ClashSubManager-MVP单元测试设计.md) - Unit test design and test cases
+- [📄 MVP Unit Test Design.md](spec/test/mvp-unit-test.md) - Unit test design and test cases
 - [📄 cloudflare-ip-test.csv](spec/test/cloudflare-ip-test.csv) - Test data file
 
 ---
@@ -81,20 +81,20 @@ Client and server requirements analysis documents.
 ### Recommended Development Sequence:
 
 1. **📖 First Read**:
-   - [ClashSubManager-MVP Outline Design.md](spec/design/architecture/ClashSubManager-MVP概要设计.md) - Understand overall architecture
-   - [ClashSubManager-MVP Development Plan.md](spec/plan/ClashSubManager-MVP开发计划.md) - Understand development tasks
+   - [MVP Outline Design.md](spec/design/architecture/mvp-outline.md) - Understand overall architecture
+   - [MVP Development Plan.md](spec/plan/mvp-development-plan.md) - Understand development tasks
 
 2. **🔧 Module Development**:
-   - Develop according to priority in [Development Plan](spec/plan/ClashSubManager-MVP开发计划.md)
+   - Develop according to priority in [Development Plan](spec/plan/mvp-development-plan.md)
    - Reference corresponding [Module Detailed Design](spec/design/modules/) documents for implementation
 
 3. **🧪 Testing and Validation**:
-   - Write tests referencing [Unit Test Design](spec/test/ClashSubManager-MVP单元测试设计.md)
+   - Write tests referencing [Unit Test Design](spec/test/mvp-unit-test.md)
    - Use [test data](spec/test/cloudflare-ip-test.csv) for validation
 
 4. **🚀 Deployment**:
-   - Deploy referencing [Deployment Operations Guide](deployment/部署运维文档.md)
-   - Configure [environment variables](deployment/环境变量配置说明.md)
+   - Deploy referencing [Deployment Operations Guide](deployment/deployment-guide.md)
+   - Configure [environment variables](deployment/env-config.md)
 
 ### 📚 Document Priority:
 

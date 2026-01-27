@@ -13,7 +13,7 @@ ClashSubManager是一个轻量级的Clash订阅配置管理服务，作为Clash�
 - **动态配置覆写**：完全动态解析和合并Clash配置，支持未来版本兼容
 - **优选IP扩展**：自动将域名代理扩展为多个优选IP地址代理
 - **个性化配置**：支持用户专属配置与默认配置的灵活切换
-- **管理员界面**：完整的Web管理系统，支持IP配置、模板管理和用户设置
+- **管理员界面**：Web管理系统，支持默认/用户优选IP与Clash模板管理
 - **国际化支持**：完整的中英文界面支持
 - **轻量化架构**：单体应用，资源占用极小
 
@@ -33,9 +33,12 @@ docker pull clashsubmanager:latest
 # 运行容器
 docker run -d \
   -p 8080:80 \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_password \
-  -e COOKIE_SECRET_KEY=your_32_char_secret_key \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_password \
+  -e CookieSecretKey=your_32_char_secret_key \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
   -v $(pwd)/data:/app/data \
   clashsubmanager:latest
 ```
@@ -44,7 +47,6 @@ docker run -d \
 ```
 ClashSubManager/
 ├── server/          # 服务器端应用
-├── client/          # 客户端脚本
 ├── doc/            # 项目文档
 └── README.md       # 项目说明
 ```
@@ -61,7 +63,7 @@ http://your-server:8080/sub/your_user_id
 访问 `http://your-server:8080/admin` 进行配置管理：
 - 优选IP管理
 - Clash模板管理  
-- 用户专属配置管理
+- 用户列表管理（访问自动记录）
 
 ### 🔄 API接口
 - `GET /sub/{id}` - 获取用户Clash订阅配置
@@ -75,6 +77,7 @@ http://your-server:8080/sub/your_user_id
 /app/data/
 ├── cloudflare-ip.csv     # 默认优选IP
 ├── clash.yaml           # 默认Clash模板
+├── users.txt            # 用户访问记录
 └── [userId]/            # 用户专属配置
     ├── cloudflare-ip.csv
     └── clash.yaml
@@ -83,11 +86,14 @@ http://your-server:8080/sub/your_user_id
 ### 🎛️ 环境变量
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
-| `ADMIN_USERNAME` | 管理员用户名 | 必填 |
-| `ADMIN_PASSWORD` | 管理员密码 | 必填 |
-| `COOKIE_SECRET_KEY` | Cookie密钥 | 必填(≥32字符) |
-| `SESSION_TIMEOUT_MINUTES` | 会话超时时间 | 60 |
-| `DATA_PATH` | 数据目录 | `/app/data` |
+| `AdminUsername` | 管理员用户名 | 必填 |
+| `AdminPassword` | 管理员密码 | 必填 |
+| `CookieSecretKey` | Cookie密钥 | 必填(≥32字符) |
+| `SessionTimeoutMinutes` | 会话超时时间 | 60 |
+| `DataPath` | 数据目录（绝对路径或相对可执行文件路径） | 独立模式`./data` / Docker`/app/data` |
+| `SubscriptionUrlTemplate` | 上游订阅URL模板（必须包含`{userId}`） | 可选（兜底） |
+| `SUBSCRIPTION_URL_TEMPLATE` | 上游订阅URL模板（覆盖`SubscriptionUrlTemplate`） | 必填 |
+| `LOG_LEVEL` | 日志级别 | 可选 |
 
 ## 配置系统
 
@@ -97,10 +103,9 @@ ClashSubManager 支持灵活的跨平台配置管理，支持多种配置方式�
 1. **命令行参数** - 最高优先级
 2. **环境变量** - 次优先级
 3. **用户配置文件** - `appsettings.User.json`
-4. **环境特定配置** - `appsettings.{Environment}.json`
-5. **模式特定配置** - `appsettings.{Mode}.json`
-6. **默认配置文件** - `appsettings.json`
-7. **代码默认值** - 最低优先级
+4. **环境类型配置** - `appsettings.{EnvironmentType}.json`（例如 Docker/Standalone）
+5. **默认配置文件** - `appsettings.json`
+6. **代码默认值** - 最低优先级
 
 ### 环境自动检测
 - **Docker环境**：自动检测容器环境，使用 `/app/data` 作为默认数据路径
@@ -112,11 +117,13 @@ ClashSubManager 支持灵活的跨平台配置管理，支持多种配置方式�
 #### Docker 部署（推荐）
 ```bash
 docker run -d \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_password \
-  -e COOKIE_SECRET_KEY=your_32_character_minimum_key \
-  -e SESSION_TIMEOUT_MINUTES=30 \
-  -p 8080:8080 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_password \
+  -e CookieSecretKey=your_32_character_minimum_key \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -p 8080:80 \
   clash-sub-manager
 ```
 
@@ -140,7 +147,8 @@ docker run -d \
   "AdminPassword": "your_password",
   "CookieSecretKey": "your_32_character_minimum_key",
   "SessionTimeoutMinutes": 30,
-  "DataPath": "/custom/data/path"
+  "DataPath": "/custom/data/path",
+  "SubscriptionUrlTemplate": "https://api.example.com/sub/{userId}"
 }
 ```
 
@@ -151,6 +159,9 @@ docker run -d \
 - `CookieSecretKey` - Cookie密钥（必需，最少32字符）
 - `SessionTimeoutMinutes` - 会话超时时间（5-1440分钟）
 - `DataPath` - 数据路径（必须可创建/可写）
+
+### 语言切换
+界面语言通过 `.AspNetCore.Culture` Cookie 控制（内置语言切换器写入），默认回退 `en-US`。
 
 ## 性能特性
 

@@ -90,7 +90,6 @@
 - `AdminPassword`：管理员密码
 - `CookieSecretKey`：Cookie签名密钥（≥32字符）
 - `SessionTimeoutMinutes`：会话超时时间（分钟）
-- `RateLimitPerIp`：每IP请求频率限制
 - `LogLevel`：日志级别
 - `AllowedHosts`：允许绑定的主机
 

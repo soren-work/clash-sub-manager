@@ -20,7 +20,7 @@
 ### 1.3 技术约束
 - **ASP.NET Core Razor Pages**：仅使用PageModel
 - **单体应用架构**：严禁前后端分离
-- **环境变量认证**：Docker配置管理员凭据
+- **配置读取**：通过IConfiguration读取配置（支持环境变量与配置文件）
 - **Cookie会话**：HttpOnly、Secure、SameSite=Strict
 - **HMACSHA256签名**：防篡改
 - **函数长度**：≤50行
@@ -32,6 +32,8 @@
 ```csharp
 public class LoginModel : PageModel
 {
+    private readonly IConfiguration _configuration;
+
     [BindProperty(SupportsGet = false)]
     public string Username { get; set; }
     
@@ -67,24 +69,24 @@ public class LoginModel : PageModel
     
     private bool ValidateCredentials(string username, string password)
     {
-        var configUsername = Environment.GetEnvironmentVariable("ADMIN_USERNAME");
-        var configPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+        var configUsername = _configuration["AdminUsername"];
+        var configPassword = _configuration["AdminPassword"];
         return username == configUsername && password == configPassword;
     }
     
     private void SetAuthCookie()
     {
         var sessionId = Guid.NewGuid().ToString("N");
-        var timeoutMinutes = int.Parse(Environment.GetEnvironmentVariable("SESSION_TIMEOUT_MINUTES") ?? "30");
+        var timeoutMinutes = int.Parse(_configuration["SessionTimeoutMinutes"] ?? "30");
         var expiresAt = DateTime.UtcNow.AddMinutes(timeoutMinutes);
         
-        var hmacKey = Environment.GetEnvironmentVariable("COOKIE_SECRET_KEY") ?? "default-key";
+        var hmacKey = _configuration["CookieSecretKey"] ?? "default-key";
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(hmacKey));
         var signatureData = $"{sessionId}|{expiresAt:yyyyMMddHHmmss}";
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(signatureData));
         var signature = Convert.ToBase64String(hash);
         
-        var cookieValue = $"{sessionId}:{signature}";
+        var cookieValue = $"{sessionId}:{expiresAt:yyyyMMddHHmmss}:{signature}";
         
         var cookieOptions = new CookieOptions
         {
@@ -92,7 +94,7 @@ public class LoginModel : PageModel
             Secure = true,
             SameSite = SameSiteMode.Strict,
             Expires = expiresAt,
-            Path = "/admin"
+            Path = "/"
         };
         
         Response.Cookies.Append("AdminSession", cookieValue, cookieOptions);
@@ -120,10 +122,10 @@ public class AdminAuthMiddleware
     private readonly RequestDelegate _next;
     private readonly string _hmacKey;
 
-    public AdminAuthMiddleware(RequestDelegate next)
+    public AdminAuthMiddleware(RequestDelegate next, IConfiguration configuration)
     {
         _next = next;
-        _hmacKey = Environment.GetEnvironmentVariable("COOKIE_SECRET_KEY") ?? "default-key";
+        _hmacKey = configuration["CookieSecretKey"] ?? "default-key";
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -228,10 +230,12 @@ public class AdminAuthMiddleware
 
 ### 4.1 Docker环境变量
 ```bash
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your_secure_password_here
-COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
-SESSION_TIMEOUT_MINUTES=30
+AdminUsername=admin
+AdminPassword=your_secure_password_here
+CookieSecretKey=your_hmac_key_at_least_32_chars_long
+SessionTimeoutMinutes=30
+DataPath=/app/data
+SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
 ```
 
 ## 5. MVP约束检查

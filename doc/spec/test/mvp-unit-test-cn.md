@@ -6,7 +6,7 @@
 
 ### 1.1 核心价值验证点
 - **订阅接口功能**：验证`GET /sub/[id]`动态配置合并能力
-- **管理员认证**：验证环境变量认证和会话管理
+- **管理员认证**：验证基于配置的认证和会话管理
 - **文件管理**：验证CSV和YAML文件的增删改查
 - **完全动态处理**：验证YAML字段动态解析和合并
 
@@ -279,9 +279,9 @@ public async Task ProcessYaml_FutureFields_PreservesAllFields()
 public async Task Login_ValidCredentials_RedirectsToAdmin()
 {
     // Arrange
-    Environment.SetEnvironmentVariable("ADMIN_USERNAME", "admin");
-    Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "password123");
-    Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", "test-key-32-chars-long");
+    Environment.SetEnvironmentVariable("AdminUsername", "admin");
+    Environment.SetEnvironmentVariable("AdminPassword", "password123");
+    Environment.SetEnvironmentVariable("CookieSecretKey", "test-key-32-chars-long");
     
     var loginData = new Dictionary<string, string>
     {
@@ -318,8 +318,8 @@ public async Task Login_ValidCredentials_RedirectsToAdmin()
 public async Task Login_InvalidCredentials_ReturnsErrorPage(string username, string password)
 {
     // Arrange
-    Environment.SetEnvironmentVariable("ADMIN_USERNAME", "admin");
-    Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "password123");
+    Environment.SetEnvironmentVariable("AdminUsername", "admin");
+    Environment.SetEnvironmentVariable("AdminPassword", "password123");
     
     var loginData = new Dictionary<string, string>
     {
@@ -633,11 +633,11 @@ public class TestFixture : IDisposable
         Directory.CreateDirectory(TestDataPath);
         
         // 设置测试环境变量
-        Environment.SetEnvironmentVariable("DATA_PATH", TestDataPath);
-        Environment.SetEnvironmentVariable("ADMIN_USERNAME", "test_admin");
-        Environment.SetEnvironmentVariable("ADMIN_PASSWORD", "test_password");
-        Environment.SetEnvironmentVariable("COOKIE_SECRET_KEY", "test-key-32-chars-long-for-hmac");
-        Environment.SetEnvironmentVariable("SESSION_TIMEOUT_MINUTES", "30");
+        Environment.SetEnvironmentVariable("DataPath", TestDataPath);
+        Environment.SetEnvironmentVariable("AdminUsername", "test_admin");
+        Environment.SetEnvironmentVariable("AdminPassword", "test_password");
+        Environment.SetEnvironmentVariable("CookieSecretKey", "test-key-32-chars-long-for-hmac");
+        Environment.SetEnvironmentVariable("SessionTimeoutMinutes", "30");
     }
     
     public void Dispose()

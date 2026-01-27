@@ -30,7 +30,7 @@
 - **DELETE /sub/{id}**: Delete user optimized IP configuration
 
 ### 2.2 GET /sub/[id] Processing Flow
-1. **User validation**: Request real subscription address with Clash User-Agent to validate ID
+1. **User validation**: Generate validation URL from subscription URL template and request it with Clash User-Agent
 2. **Get subscription**: Call subscription service API to get user's original subscription data
 3. **Configuration loading**: Load user-specific → default configuration files by priority
 4. **Dynamic merging**: Completely dynamically parse and merge all fields (template priority)
@@ -39,9 +39,12 @@
 7. **Return YAML**: Content-Type: text/yaml
 
 ### 2.3 User ID Validation Mechanism
-- Request `GET [real subscription address]/[user id]` with clash user-agent
-- Validation successful: Return yaml document and HTTP status code is 200
-- Validation failed: Return other content means user ID is wrong
+- **URL template**: Configure the upstream subscription URL template via `SUBSCRIPTION_URL_TEMPLATE` (preferred) or `SubscriptionUrlTemplate` (fallback)
+- **Placeholder replacement**: Replace `{userId}` with the actual user ID to get the final absolute URL
+- **Validation request**: Request the final URL with Clash User-Agent
+- **Validation successful**: Return yaml document and HTTP status code is 200
+- **Validation failed**: Return other content means user ID is invalid
+- **Important constraint**: The replaced URL is already complete; do not append the user ID again
 
 ### 2.4 Data Overwrite Scope
 

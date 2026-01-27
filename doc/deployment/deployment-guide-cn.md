@@ -36,10 +36,12 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=your_secure_password_here
-      - COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
-      - SESSION_TIMEOUT_MINUTES=30
+      - AdminUsername=admin
+      - AdminPassword=your_secure_password_here
+      - CookieSecretKey=your_hmac_key_at_least_32_chars_long
+      - SessionTimeoutMinutes=30
+      - DataPath=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
@@ -80,10 +82,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   --restart unless-stopped \
   clashsubmanager:latest
 ```
@@ -94,10 +98,11 @@ docker run -d \
 
 | 变量名 | 说明 | 示例值 | 要求 |
 |--------|------|--------|------|
-| `ADMIN_USERNAME` | 管理员用户名 | `admin` | 非空 |
-| `ADMIN_PASSWORD` | 管理员密码 | `SecurePass123!` | 非空，建议强密码 |
-| `COOKIE_SECRET_KEY` | Cookie签名密钥 | `32_character_long_secret_key` | ≥32字符 |
-| `SESSION_TIMEOUT_MINUTES` | 会话超时时间（分钟） | `30` | 5-1440 |
+| `AdminUsername` | 管理员用户名 | `admin` | 非空 |
+| `AdminPassword` | 管理员密码 | `SecurePass123!` | 非空，建议强密码 |
+| `CookieSecretKey` | Cookie签名密钥 | `32_character_long_secret_key` | ≥32字符 |
+| `SessionTimeoutMinutes` | 会话超时时间（分钟） | `30` | 5-1440 |
+| `SUBSCRIPTION_URL_TEMPLATE` | 上游订阅URL模板（必须包含`{userId}`） | `https://api.example.com/sub/{userId}` | 订阅功能必需 |
 
 ### 3.2 可选环境变量
 
@@ -105,30 +110,30 @@ docker run -d \
 |--------|------|--------|------|
 | `ASPNETCORE_ENVIRONMENT` | 运行环境 | `Production` | Development/Production |
 | `LOG_LEVEL` | 日志级别 | `Information` | Debug/Information/Warning/Error |
-| `MAX_CONCURRENT_REQUESTS` | 最大并发请求数 | `50` | 10-100 |
-| `REQUEST_RATE_LIMIT` | 请求频率限制（每秒） | `10` | 1-20 |
+| `DataPath` | 数据目录（绝对路径或相对可执行文件路径） | Docker: `/app/data` | 可选 |
+| `SubscriptionUrlTemplate` | 上游订阅URL模板兜底（必须包含`{userId}`） | `https://api.example.com/sub/{userId}` | 可选（兜底） |
 
 ### 3.3 安全配置建议
 
 **管理员密码**
 ```bash
 # 生成强密码（至少12位，包含大小写字母、数字、特殊字符）
-ADMIN_PASSWORD=MySecureP@ssw0rd2024!
+AdminPassword=MySecureP@ssw0rd2024!
 ```
 
 **Cookie密钥**
 ```bash
 # 生成32字符随机密钥
-COOKIE_SECRET_KEY=$(openssl rand -hex 16)
+CookieSecretKey=$(openssl rand -hex 16)
 ```
 
 **会话超时**
 ```bash
 # 生产环境建议较短超时
-SESSION_TIMEOUT_MINUTES=30
+SessionTimeoutMinutes=30
 
 # 管理环境可设置较长超时
-SESSION_TIMEOUT_MINUTES=120
+SessionTimeoutMinutes=120
 ```
 
 ## 4. 数据目录结构
@@ -301,10 +306,12 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=your_secure_password_here
-      - COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long
-      - SESSION_TIMEOUT_MINUTES=30
+      - AdminUsername=admin
+      - AdminPassword=your_secure_password_here
+      - CookieSecretKey=your_hmac_key_at_least_32_chars_long
+      - SessionTimeoutMinutes=30
+      - DataPath=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
     deploy:
       resources:
         limits:
@@ -338,10 +345,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   --user 1000:1000 \
   --read-only \
   --tmpfs /tmp \
@@ -428,10 +437,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   -e LOG_LEVEL=Debug \
   -e ASPNETCORE_ENVIRONMENT=Development \
   clashsubmanager:latest
@@ -489,10 +500,12 @@ docker run -d \
   -p 8080:80 \
   -v /opt/clashsubmanager/data:/app/data \
   -v /opt/clashsubmanager/logs:/app/logs \
-  -e ADMIN_USERNAME=admin \
-  -e ADMIN_PASSWORD=your_secure_password_here \
-  -e COOKIE_SECRET_KEY=your_hmac_key_at_least_32_chars_long \
-  -e SESSION_TIMEOUT_MINUTES=30 \
+  -e AdminUsername=admin \
+  -e AdminPassword=your_secure_password_here \
+  -e CookieSecretKey=your_hmac_key_at_least_32_chars_long \
+  -e SessionTimeoutMinutes=30 \
+  -e DataPath=/app/data \
+  -e SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId} \
   --restart unless-stopped \
   clashsubmanager:latest
 
@@ -535,12 +548,12 @@ echo "=== 迁移完成 ==="
 echo "=== 生成环境变量 ==="
 
 # 生成管理员密码
-ADMIN_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-12)
-echo "ADMIN_PASSWORD=$ADMIN_PASSWORD"
+AdminPassword=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-12)
+echo "AdminPassword=$AdminPassword"
 
 # 生成Cookie密钥
-COOKIE_SECRET_KEY=$(openssl rand -hex 16)
-echo "COOKIE_SECRET_KEY=$COOKIE_SECRET_KEY"
+CookieSecretKey=$(openssl rand -hex 16)
+echo "CookieSecretKey=$CookieSecretKey"
 
 # 生成会话密钥
 SESSION_SECRET=$(openssl rand -hex 16)
@@ -563,10 +576,12 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
-      - ADMIN_USERNAME=${ADMIN_USERNAME}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - COOKIE_SECRET_KEY=${COOKIE_SECRET_KEY}
-      - SESSION_TIMEOUT_MINUTES=${SESSION_TIMEOUT_MINUTES:-30}
+      - AdminUsername=${AdminUsername}
+      - AdminPassword=${AdminPassword}
+      - CookieSecretKey=${CookieSecretKey}
+      - SessionTimeoutMinutes=${SessionTimeoutMinutes:-30}
+      - DataPath=/app/data
+      - SUBSCRIPTION_URL_TEMPLATE=${SUBSCRIPTION_URL_TEMPLATE}
       - LOG_LEVEL=${LOG_LEVEL:-Information}
     restart: unless-stopped
     healthcheck:
