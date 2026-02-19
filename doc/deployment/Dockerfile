@@ -20,8 +20,8 @@ FROM base AS final
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup --system --gid 1001 appgroup && \
-    adduser --system --uid 1001 --ingroup appgroup appuser
+RUN groupadd --system --gid 1001 appgroup && \
+    useradd --system --uid 1001 --gid appgroup --shell /bin/bash --create-home appuser
 
 # Create necessary directories
 RUN mkdir -p /app/data /app/logs && \
@@ -36,9 +36,9 @@ RUN chown -R appuser:appgroup /app
 # Switch to non-root user
 USER appuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:80/health || exit 1
+# Health check (curl is not available in aspnet image, use dotnet tool or remove)
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+#     CMD curl -f http://localhost:80/health || exit 1
 
 # Start application
 ENTRYPOINT ["dotnet", "ClashSubManager.dll"]
