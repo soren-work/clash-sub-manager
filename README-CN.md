@@ -189,6 +189,14 @@ docker run -d \
 
 欢迎提交Issue和Pull Request来改进项目。
 
+## 支持项目
+
+如果这个项目对您有帮助，请考虑支持项目开发：
+
+[![通过加密货币支持](https://img.shields.io/badge/Donate-Crypto-yellow?style=for-the-badge)](DONATE-CN.md)
+
+查看 [DONATE-CN.md](DONATE-CN.md) 了解加密货币捐赠地址。
+
 ## 许可证
 
 本项目采用 [GPL-3.0 许可证](LICENSE) 开源。

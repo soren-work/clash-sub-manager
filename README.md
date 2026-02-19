@@ -189,6 +189,14 @@ For detailed documentation, see the `doc/` directory:
 
 Issues and Pull Requests are welcome to improve the project.
 
+## Support the Project
+
+If this project has been helpful to you, consider supporting its development:
+
+[![Support via Crypto](https://img.shields.io/badge/Donate-Crypto-yellow?style=for-the-badge)](DONATE.md)
+
+See [DONATE.md](DONATE.md) for cryptocurrency donation addresses.
+
 ## License
 
 This project is licensed under the [GPL-3.0 License](LICENSE). 
