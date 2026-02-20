@@ -1,0 +1,157 @@
+# Advanced Clash Template
+# Suitable for: Enterprise use, complex configuration needs, multi-scenario routing
+
+# Port configuration
+port: 7890
+socks-port: 7891
+allow-lan: true
+mode: rule
+log-level: info
+
+# DNS configuration
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  fallback:
+    - 8.8.8.8
+    - 1.1.1.1
+    - tls://dns.google
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+
+# Proxy group configuration
+proxy-groups:
+  # Main proxy selection
+  - name: "Proxy"
+    type: select
+    proxies:
+      - Auto
+      - US-Auto
+      - HK-Auto
+      - JP-Auto
+      - DIRECT
+
+  # Auto-select (all nodes)
+  - name: "Auto"
+    type: url-test
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    tolerance: 50
+
+  # US nodes auto-select
+  - name: "US-Auto"
+    type: url-test
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    tolerance: 50
+    filter: "(?i)美国|US|United States"
+
+  # HK nodes auto-select
+  - name: "HK-Auto"
+    type: url-test
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    tolerance: 50
+    filter: "(?i)香港|HK|Hong Kong"
+
+  # JP nodes auto-select
+  - name: "JP-Auto"
+    type: url-test
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    tolerance: 50
+    filter: "(?i)日本|JP|Japan"
+
+  # AI services dedicated
+  - name: "AI-Services"
+    type: select
+    proxies:
+      - US-Auto
+      - Proxy
+
+  # Streaming dedicated
+  - name: "Streaming"
+    type: select
+    proxies:
+      - HK-Auto
+      - US-Auto
+      - Proxy
+
+  # Gaming dedicated
+  - name: "Gaming"
+    type: select
+    proxies:
+      - JP-Auto
+      - HK-Auto
+      - Proxy
+
+  # Ad blocking
+  - name: "AdBlock"
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+
+# Rule configuration
+rules:
+  # LAN direct connection
+  - DOMAIN-SUFFIX,local,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+
+  # Ad blocking
+  - DOMAIN-SUFFIX,ad.com,AdBlock
+  - DOMAIN-KEYWORD,adservice,AdBlock
+  - DOMAIN-KEYWORD,analytics,AdBlock
+
+  # AI services
+  - DOMAIN-SUFFIX,openai.com,AI-Services
+  - DOMAIN-SUFFIX,anthropic.com,AI-Services
+  - DOMAIN-SUFFIX,claude.ai,AI-Services
+  - DOMAIN-KEYWORD,chatgpt,AI-Services
+
+  # Streaming services
+  - DOMAIN-SUFFIX,netflix.com,Streaming
+  - DOMAIN-SUFFIX,youtube.com,Streaming
+  - DOMAIN-SUFFIX,spotify.com,Streaming
+  - DOMAIN-SUFFIX,twitch.tv,Streaming
+  - DOMAIN-KEYWORD,youtube,Streaming
+
+  # Gaming platforms
+  - DOMAIN-SUFFIX,steam.com,Gaming
+  - DOMAIN-SUFFIX,steampowered.com,Gaming
+  - DOMAIN-SUFFIX,epicgames.com,Gaming
+  - DOMAIN-KEYWORD,game,Gaming
+
+  # Development tools
+  - DOMAIN-SUFFIX,github.com,Proxy
+  - DOMAIN-SUFFIX,githubusercontent.com,Proxy
+  - DOMAIN-SUFFIX,gitlab.com,Proxy
+  - DOMAIN-SUFFIX,stackoverflow.com,Proxy
+
+  # Social media
+  - DOMAIN-SUFFIX,twitter.com,Proxy
+  - DOMAIN-SUFFIX,facebook.com,Proxy
+  - DOMAIN-SUFFIX,instagram.com,Proxy
+  - DOMAIN-SUFFIX,telegram.org,Proxy
+
+  # China mainland websites direct
+  - DOMAIN-SUFFIX,cn,DIRECT
+  - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,taobao.com,DIRECT
+  - DOMAIN-SUFFIX,qq.com,DIRECT
+  - DOMAIN-SUFFIX,163.com,DIRECT
+  - GEOIP,CN,DIRECT
+
+  # Default rule
+  - MATCH,Proxy

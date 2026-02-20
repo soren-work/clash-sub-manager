@@ -1,5 +1,10 @@
 # ClashSubManager Core Feature Definition
 
+> **📌 Document Status**: MVP completed, this document is retained as architecture reference  
+> **🎯 Target Audience**: Developers, contributors, architecture researchers  
+> **📅 Last Updated**: 2026-02-20  
+> **💡 Tip**: For feature usage, please refer to [Advanced Guide](../../../advanced-guide.md)
+
 **🌐 Language**: [English](mvp-core-features.md) | [中文](mvp-core-features-cn.md)
 
 ## Feature Priority Classification

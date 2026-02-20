@@ -1,5 +1,10 @@
 # ClashSubManager MVP Development Plan
 
+> **📌 Document Status**: MVP completed, this document is retained as historical record  
+> **🎯 Target Audience**: Project history researchers  
+> **📅 MVP Completion Date**: 2026-02-20  
+> **✅ Delivery Status**: All core features implemented and validated
+
 **🌐 Language**: [English](mvp-development-plan.md) | [中文](mvp-development-plan-cn.md)
 
 ## 1. MVP Delivery Goals

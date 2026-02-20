@@ -1,0 +1,32 @@
+# Basic Clash Template
+# Suitable for: Personal use, simple configuration needs
+
+# Proxy group configuration
+proxy-groups:
+  # Auto-select node with lowest latency
+  - name: "Auto"
+    type: url-test
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    tolerance: 50
+
+  # Manual proxy selection
+  - name: "Proxy"
+    type: select
+    proxies:
+      - Auto
+      - DIRECT
+
+# Rule configuration
+rules:
+  # LAN direct connection
+  - DOMAIN-SUFFIX,local,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  
+  # China mainland direct connection
+  - GEOIP,CN,DIRECT
+  
+  # Others use proxy
+  - MATCH,Proxy

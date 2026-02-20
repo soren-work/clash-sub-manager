@@ -1,5 +1,10 @@
 # Cross-Platform Configuration Management MVP Detail Design
 
+> **📌 Document Status**: MVP completed, this document is retained as technical reference  
+> **🎯 Target Audience**: Developers, contributors  
+> **📅 Last Updated**: 2026-02-20  
+> **💡 Tip**: For feature usage, please refer to [Advanced Guide](../../../advanced-guide.md)
+
 **🌐 Language**: [English](./cross-platform-config-mvp-detail.md) | [中文](./cross-platform-config-mvp-detail-cn.md)
 
 ## 1. Module Core Features

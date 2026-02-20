@@ -1,5 +1,10 @@
 # Default Optimized IP Management MVP Detailed Design
 
+> **📌 Document Status**: MVP completed, this document is retained as technical reference  
+> **🎯 Target Audience**: Developers, contributors  
+> **📅 Last Updated**: 2026-02-20  
+> **💡 Tip**: For feature usage, please refer to [Advanced Guide](../../../advanced-guide.md)
+
 **🌐 Language**: [English](ip-management-detail.md) | [中文](ip-management-detail-cn.md)
 
 ## 1. MVP Core Functions

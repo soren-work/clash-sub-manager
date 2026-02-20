@@ -1,5 +1,10 @@
 # ClashSubManager Technical Implementation Boundary Specification
 
+> **📌 Document Status**: MVP completed, this document is retained as architecture reference  
+> **🎯 Target Audience**: Developers, contributors, architecture researchers  
+> **📅 Last Updated**: 2026-02-20  
+> **💡 Tip**: For feature usage, please refer to [Advanced Guide](../../../advanced-guide.md)
+
 **🌐 Language**: [English](mvp-boundary.md) | [中文](mvp-boundary-cn.md)
 
 ## 1. Core Function Module Boundaries
