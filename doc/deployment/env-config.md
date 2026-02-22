@@ -1,6 +1,6 @@
 # Environment Variable Configuration Guide
 
-**🌐 Language**: [English](env-config.md) | [中文](env-config-cn.md)
+**🌐 Language**: [English](env-config.md) | [Chinese](env-config-cn.md)
 
 ## Overview
 
@@ -83,19 +83,11 @@ LOG_LEVEL=Information
 DataPath=./data
 ```
 
-### SubscriptionUrlTemplate
-- **Description**: Upstream subscription URL template (must contain `{userId}`)
-- **Type**: String
-- **Default Value**: None
-
-```bash
-SubscriptionUrlTemplate=https://api.example.com/sub/{userId}
-```
-
 ### SUBSCRIPTION_URL_TEMPLATE
-- **Description**: Upstream subscription URL template (preferred; overrides `SubscriptionUrlTemplate`)
+- **Description**: Upstream subscription URL template (must contain `{userId}` placeholder)
 - **Type**: String
 - **Default Value**: None
+- **Note**: Can also be set via `SubscriptionUrlTemplate` in configuration file, but environment variable takes precedence
 
 ```bash
 SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}
