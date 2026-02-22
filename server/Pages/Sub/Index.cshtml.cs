@@ -134,9 +134,35 @@ namespace ClashSubManager.Pages.Sub
                     Response.Headers.Append("profile-update-interval", subscriptionResponse.UpdateIntervalHours.ToString());
                 }
                 
-                // Add content disposition header
-                var fileNamePrefix = UserId.Length >= 6 ? UserId.Substring(0, 6) : UserId;
-                Response.Headers.Append("content-disposition", $"attachment; filename={fileNamePrefix}");
+                // Add profile web page URL header
+                if (!string.IsNullOrEmpty(subscriptionResponse.ProfileWebPageUrl))
+                {
+                    Response.Headers.Append("profile-web-page-url", subscriptionResponse.ProfileWebPageUrl);
+                }
+                
+                // Add support URL header
+                if (!string.IsNullOrEmpty(subscriptionResponse.SupportUrl))
+                {
+                    Response.Headers.Append("support-url", subscriptionResponse.SupportUrl);
+                }
+                
+                // Add content disposition header with original filename (without quotes)
+                string fileName;
+                if (!string.IsNullOrEmpty(subscriptionResponse.OriginalFileName))
+                {
+                    // Use original filename from subscription source
+                    fileName = subscriptionResponse.OriginalFileName;
+                    _logger.LogDebug("Using original filename: {FileName}", fileName);
+                }
+                else
+                {
+                    // Fallback to user ID prefix if no original filename
+                    fileName = UserId.Length >= 6 ? UserId.Substring(0, 6) : UserId;
+                    _logger.LogDebug("Using fallback filename: {FileName}", fileName);
+                }
+                
+                // Set Content-Disposition header without quotes around filename
+                Response.Headers.Append("content-disposition", $"attachment; filename={fileName}");
                 
                 // Return YAML content
                 return Content(subscriptionResponse.YAMLContent ?? string.Empty, "text/yaml");

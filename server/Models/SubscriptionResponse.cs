@@ -61,6 +61,21 @@ namespace ClashSubManager.Models
         public int UpdateIntervalHours { get; set; } = 24;
 
         /// <summary>
+        /// Original filename from subscription source
+        /// </summary>
+        public string OriginalFileName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Profile web page URL
+        /// </summary>
+        public string ProfileWebPageUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Support URL
+        /// </summary>
+        public string SupportUrl { get; set; } = string.Empty;
+
+        /// <summary>
         /// Create success response
         /// </summary>
         /// <param name="message">Success message</param>
@@ -102,6 +117,9 @@ namespace ClashSubManager.Models
         /// <param name="expireTime">Expire time</param>
         /// <param name="profileTitle">Profile title</param>
         /// <param name="updateIntervalHours">Update interval in hours</param>
+        /// <param name="originalFileName">Original filename from subscription source</param>
+        /// <param name="profileWebPageUrl">Profile web page URL</param>
+        /// <param name="supportUrl">Support URL</param>
         /// <returns>Success response with subscription info</returns>
         public static SubscriptionResponse CreateSuccessWithSubscriptionInfo(
             string yamlContent,
@@ -110,7 +128,10 @@ namespace ClashSubManager.Models
             long totalBytes = 0,
             DateTime expireTime = default,
             string profileTitle = "",
-            int updateIntervalHours = 24)
+            int updateIntervalHours = 24,
+            string originalFileName = "",
+            string profileWebPageUrl = "",
+            string supportUrl = "")
         {
             return new SubscriptionResponse
             {
@@ -122,7 +143,10 @@ namespace ClashSubManager.Models
                 TotalBytes = totalBytes,
                 ExpireTime = expireTime == default ? DateTime.MinValue : expireTime,
                 ProfileTitle = profileTitle ?? string.Empty,
-                UpdateIntervalHours = updateIntervalHours
+                UpdateIntervalHours = updateIntervalHours,
+                OriginalFileName = originalFileName ?? string.Empty,
+                ProfileWebPageUrl = profileWebPageUrl ?? string.Empty,
+                SupportUrl = supportUrl ?? string.Empty
             };
         }
 
