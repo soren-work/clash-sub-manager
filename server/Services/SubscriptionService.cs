@@ -98,7 +98,10 @@ namespace ClashSubManager.Services
                     subscriptionInfo.TotalBytes,
                     subscriptionInfo.ExpireTime,
                     subscriptionInfo.ProfileTitle,
-                    subscriptionInfo.UpdateIntervalHours);
+                    subscriptionInfo.UpdateIntervalHours,
+                    subscriptionInfo.OriginalFileName,
+                    subscriptionInfo.ProfileWebPageUrl,
+                    subscriptionInfo.SupportUrl);
             }
             catch (Exception ex)
             {
@@ -203,7 +206,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Subscription information</returns>
-        private async Task<(long UploadBytes, long DownloadBytes, long TotalBytes, DateTime ExpireTime, string ProfileTitle, int UpdateIntervalHours)> GetSubscriptionInfoAsync(string userId)
+        private async Task<(long UploadBytes, long DownloadBytes, long TotalBytes, DateTime ExpireTime, string ProfileTitle, int UpdateIntervalHours, string OriginalFileName, string ProfileWebPageUrl, string SupportUrl)> GetSubscriptionInfoAsync(string userId)
         {
             try
             {
@@ -212,7 +215,7 @@ namespace ClashSubManager.Services
                 if (string.IsNullOrEmpty(subscriptionUrl))
                 {
                     _logger.LogWarning("Subscription URL not configured for user: {UserId}", userId);
-                    return (0L, 0L, 0L, DateTime.MinValue, string.Empty, 24);
+                    return (0L, 0L, 0L, DateTime.MinValue, string.Empty, 24, string.Empty, string.Empty, string.Empty);
                 }
 
                 // Try to fetch subscription info from original source
@@ -235,7 +238,7 @@ namespace ClashSubManager.Services
                 _logger.LogError(ex, "Error getting subscription info for user: {UserId}", userId);
                 
                 // Return default values on error
-                return (0L, 0L, 0L, DateTime.MinValue, string.Empty, 24);
+                return (0L, 0L, 0L, DateTime.MinValue, string.Empty, 24, string.Empty, string.Empty, string.Empty);
             }
         }
 
@@ -244,7 +247,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="subscriptionUrl">Original subscription URL</param>
         /// <returns>Subscription information or null if failed</returns>
-        private async Task<(long UploadBytes, long DownloadBytes, long TotalBytes, DateTime ExpireTime, string ProfileTitle, int UpdateIntervalHours)?> FetchOriginalSubscriptionInfoAsync(string subscriptionUrl)
+        private async Task<(long UploadBytes, long DownloadBytes, long TotalBytes, DateTime ExpireTime, string ProfileTitle, int UpdateIntervalHours, string OriginalFileName, string ProfileWebPageUrl, string SupportUrl)?> FetchOriginalSubscriptionInfoAsync(string subscriptionUrl)
         {
             try
             {
@@ -264,6 +267,9 @@ namespace ClashSubManager.Services
                 DateTime expireTime = DateTime.MinValue;
                 string profileTitle = string.Empty;
                 int updateIntervalHours = 24;
+                string originalFileName = string.Empty;
+                string profileWebPageUrl = string.Empty;
+                string supportUrl = string.Empty;
 
                 // Parse subscription-userinfo header
                 if (response.Headers.TryGetValues("subscription-userinfo", out var userinfoValues))
@@ -272,6 +278,26 @@ namespace ClashSubManager.Services
                     if (!string.IsNullOrEmpty(userinfo))
                     {
                         ParseSubscriptionUserInfo(userinfo, out uploadBytes, out downloadBytes, out totalBytes, out expireTime);
+                    }
+                }
+
+                // Parse profile-web-page-url header
+                if (response.Headers.TryGetValues("profile-web-page-url", out var webPageUrlValues))
+                {
+                    profileWebPageUrl = webPageUrlValues.FirstOrDefault() ?? string.Empty;
+                    if (!string.IsNullOrEmpty(profileWebPageUrl))
+                    {
+                        _logger.LogDebug("Profile-Web-Page-Url: {WebPageUrl}", profileWebPageUrl);
+                    }
+                }
+
+                // Parse support-url header
+                if (response.Headers.TryGetValues("support-url", out var supportUrlValues))
+                {
+                    supportUrl = supportUrlValues.FirstOrDefault() ?? string.Empty;
+                    if (!string.IsNullOrEmpty(supportUrl))
+                    {
+                        _logger.LogDebug("Support-Url: {SupportUrl}", supportUrl);
                     }
                 }
 
@@ -319,7 +345,39 @@ namespace ClashSubManager.Services
                     }
                 }
 
-                return (uploadBytes, downloadBytes, totalBytes, expireTime, profileTitle, updateIntervalHours);
+                // Parse Content-Disposition header to extract filename
+                if (response.Content.Headers.ContentDisposition != null)
+                {
+                    var contentDisposition = response.Content.Headers.ContentDisposition;
+                    if (!string.IsNullOrEmpty(contentDisposition.FileName))
+                    {
+                        originalFileName = contentDisposition.FileName;
+                        
+                        // Remove surrounding quotes if present
+                        if (originalFileName.StartsWith("\"") && originalFileName.EndsWith("\""))
+                        {
+                            originalFileName = originalFileName.Substring(1, originalFileName.Length - 2);
+                        }
+                        
+                        _logger.LogDebug("Original filename from Content-Disposition: {FileName}", originalFileName);
+                    }
+                }
+
+                // Log all response headers for debugging
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Response headers from subscription source:");
+                    foreach (var header in response.Headers)
+                    {
+                        _logger.LogDebug("  {HeaderName}: {HeaderValue}", header.Key, string.Join(", ", header.Value));
+                    }
+                    foreach (var header in response.Content.Headers)
+                    {
+                        _logger.LogDebug("  {HeaderName}: {HeaderValue}", header.Key, string.Join(", ", header.Value));
+                    }
+                }
+
+                return (uploadBytes, downloadBytes, totalBytes, expireTime, profileTitle, updateIntervalHours, originalFileName, profileWebPageUrl, supportUrl);
             }
             catch (Exception ex)
             {
@@ -401,7 +459,7 @@ namespace ClashSubManager.Services
         /// </summary>
         /// <param name="userId">User ID</param>
         /// <returns>Mock subscription information</returns>
-        private (long UploadBytes, long DownloadBytes, long TotalBytes, DateTime ExpireTime, string ProfileTitle, int UpdateIntervalHours) GenerateMockSubscriptionInfo(string userId)
+        private (long UploadBytes, long DownloadBytes, long TotalBytes, DateTime ExpireTime, string ProfileTitle, int UpdateIntervalHours, string OriginalFileName, string ProfileWebPageUrl, string SupportUrl) GenerateMockSubscriptionInfo(string userId)
         {
             var random = new Random(userId.GetHashCode());
             
@@ -412,11 +470,14 @@ namespace ClashSubManager.Services
             var expireTime = DateTime.UtcNow.AddDays(30); // 30 days from now
             var profileTitle = $"Clash Subscription - {userId}";
             var updateIntervalHours = 24; // Update every 24 hours
+            var originalFileName = string.Empty; // No filename for mock data
+            var profileWebPageUrl = string.Empty; // No web page URL for mock data
+            var supportUrl = string.Empty; // No support URL for mock data
 
             _logger.LogDebug("Generated mock subscription info for user: {UserId}, Upload: {UploadBytes}, Download: {DownloadBytes}", 
                 userId, uploadBytes, downloadBytes);
 
-            return (uploadBytes, downloadBytes, totalBytes, expireTime, profileTitle, updateIntervalHours);
+            return (uploadBytes, downloadBytes, totalBytes, expireTime, profileTitle, updateIntervalHours, originalFileName, profileWebPageUrl, supportUrl);
         }
     }
 }
