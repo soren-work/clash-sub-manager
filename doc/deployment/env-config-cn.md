@@ -83,19 +83,11 @@ LOG_LEVEL=Information
 DataPath=./data
 ```
 
-### SubscriptionUrlTemplate
-- **说明**：上游订阅URL模板（必须包含`{userId}`）
-- **类型**：字符串
-- **默认值**：无
-
-```bash
-SubscriptionUrlTemplate=https://api.example.com/sub/{userId}
-```
-
 ### SUBSCRIPTION_URL_TEMPLATE
-- **说明**：上游订阅URL模板（推荐，优先级高于`SubscriptionUrlTemplate`）
+- **说明**：上游订阅URL模板（必须包含`{userId}`占位符）
 - **类型**：字符串
 - **默认值**：无
+- **备注**：也可以通过配置文件中的 `SubscriptionUrlTemplate` 设置，但环境变量优先级更高
 
 ```bash
 SUBSCRIPTION_URL_TEMPLATE=https://api.example.com/sub/{userId}

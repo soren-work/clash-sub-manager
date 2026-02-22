@@ -466,11 +466,59 @@ namespace ClashSubManager.Services
                             
                             if (isOriginalServerIP)
                             {
-                                // If the original server is an IP address, replace it with Cloudflare IPs
-                                // Create a new proxy configuration for each IP address
-                                for (int index = 0; index < allIPs.Count; index++)
+                                // If the original server is an IP address, keep it as-is without expansion
+                                newProxies.Add(proxyMapping);
+                            }
+                            else
+                            {
+                                // If the original server is a domain name, expand it with Cloudflare IPs
+                                // First, process the original domain node as backup (index = 0, first position)
+                                var originalDomainProxy = CloneProxyNode(proxyMapping);
+                                var originalNameNode = originalDomainProxy.Children.FirstOrDefault(c => 
+                                    (c.Key as YamlScalarNode)?.Value == "name");
+                                
+                                if (originalNameNode.Value is YamlScalarNode originalNameScalar)
                                 {
-                                    var ip = allIPs[index];
+                                    var originalName = originalNameScalar.Value;
+                                    
+                                    // Apply naming template to original domain node (index = 0)
+                                    var variables = _nodeNamingTemplateService.ExtractVariables(proxyMapping, 0, originalServer);
+                                    var context = new NodeNamingContext
+                                    {
+                                        OriginalName = originalName ?? string.Empty,
+                                        Index = 0,
+                                        Server = originalServer ?? string.Empty,
+                                        ServerName = originalServer ?? string.Empty,
+                                        Port = 0, // Keep original port, will be extracted if needed
+                                        CustomProperties = variables!
+                                    };
+                                    
+                                    // Extract original port if exists
+                                    var originalPortNode = originalDomainProxy.Children.FirstOrDefault(c => 
+                                        (c.Key as YamlScalarNode)?.Value == "port");
+                                    if (originalPortNode.Value is YamlScalarNode originalPortScalar && 
+                                        int.TryParse(originalPortScalar.Value, out int originalPort))
+                                    {
+                                        context.Port = originalPort;
+                                    }
+                                    
+                                    var namingTemplate = GetNodeNamingTemplate();
+                                    var newName = _nodeNamingTemplateService.ProcessTemplate(namingTemplate, context);
+                                    
+                                    // If template processing fails, keep original name
+                                    if (!string.IsNullOrEmpty(newName))
+                                    {
+                                        originalNameScalar.Value = newName;
+                                    }
+                                }
+                                
+                                newProxies.Add(originalDomainProxy);
+                                
+                                // Then, create new proxy configurations for each Cloudflare IP
+                                // Start index from 1 to keep the original domain node at first position
+                                for (int index = 1; index <= allIPs.Count; index++)
+                                {
+                                    var ip = allIPs[index - 1];
                                     var newProxy = CloneProxyNode(proxyMapping);
                                     var newServerNode = newProxy.Children.FirstOrDefault(c => 
                                         (c.Key as YamlScalarNode)?.Value == "server");
@@ -495,11 +543,12 @@ namespace ClashSubManager.Services
                                             var originalName = nameScalar.Value;
                                             
                                             // Use new naming template system
+                                            // index starts from 1 for expanded nodes (original domain is at position 0)
                                             var variables = _nodeNamingTemplateService.ExtractVariables(proxyMapping, index, ip.IPAddress);
                                             var context = new NodeNamingContext
                                             {
                                                 OriginalName = originalName ?? string.Empty,
-                                                Index = index + 1,
+                                                Index = index,
                                                 Server = ip.IPAddress,
                                                 ServerName = originalServer ?? string.Empty,
                                                 Port = ip.Port,
@@ -512,7 +561,7 @@ namespace ClashSubManager.Services
                                             // If template processing fails, use original name as fallback
                                             if (string.IsNullOrEmpty(newName))
                                             {
-                                                newName = $"{originalName}-Node-{index + 1}";
+                                                newName = $"{originalName}-Node-{index}";
                                             }
                                             
                                             nameScalar.Value = newName;
@@ -521,11 +570,6 @@ namespace ClashSubManager.Services
                                     
                                     newProxies.Add(newProxy);
                                 }
-                            }
-                            else
-                            {
-                                // If the original server is not an IP address (e.g., domain name), keep the original node
-                                newProxies.Add(proxyMapping);
                             }
                         }
                         else

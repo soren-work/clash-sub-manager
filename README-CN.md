@@ -75,6 +75,10 @@ proxies:
     type: vmess
     server: cdn.example.com
     port: 443
+  - name: "HK-Node"
+    type: vmess
+    server: 1.2.3.4
+    port: 443
 ```
 
 **优选IP列表（cloudflare-ip.csv）：**
@@ -88,11 +92,12 @@ IP Address,Average Latency
 **处理后的节点：**
 ```yaml
 proxies:
-  - name: "US-Node"
+  # 域名节点：保留原节点 + 扩展优选IP
+  - name: "US-Node"                      # 原域名节点（保留作为备用）
     type: vmess
     server: cdn.example.com
     port: 443
-  - name: "US-Node [104.29.125.182]"
+  - name: "US-Node [104.29.125.182]"     # 扩展的优选IP节点
     type: vmess
     server: 104.29.125.182
     port: 443
@@ -104,9 +109,17 @@ proxies:
     type: vmess
     server: 104.20.20.191
     port: 443
+  
+  # IP节点：保持不变
+  - name: "HK-Node"                      # IP节点不进行扩展
+    type: vmess
+    server: 1.2.3.4
+    port: 443
 ```
 
-一个节点自动变成了4个节点（原始域名 + 3个优选IP），你可以在Clash中选择延迟最低的使用。
+**扩展规则：**
+- **域名节点**：自动扩展为 1个原域名节点（排第一位作为备用） + N个优选IP节点
+- **IP节点**：保持不变，不进行扩展
 
 ## 核心功能
 
