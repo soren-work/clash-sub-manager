@@ -1,9 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using ClashSubManager.Models;
+using ClashSubManager.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using ClashSubManager.Services;
-using ClashSubManager.Models;
-using Xunit;
 using Moq;
+using Xunit;
 using YamlDotNet.RepresentationModel;
 
 namespace ClashSubManager.Tests.Services
@@ -24,30 +32,93 @@ namespace ClashSubManager.Tests.Services
             _mockDetector = new MockEnvironmentDetector();
             _mockPathResolver = new MockPathResolver();
             _mockValidator = new MockConfigurationValidator();
-            
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["AdminUsername"] = "admin",
-                    ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
-                    ["SessionTimeoutMinutes"] = "30",
-                    ["DataPath"] = "/test/data"
-                })
-                .Build();
 
+            _configuration = CreateConfiguration();
+            var defaultNamingService = CreateNamingService(_configuration);
+            _service = CreateService(_configuration, defaultNamingService);
+        }
+
+        private IConfiguration CreateConfiguration(Dictionary<string, string?>? overrides = null, bool includeDataPath = true)
+        {
+            var settings = new Dictionary<string, string?>
+            {
+                ["AdminUsername"] = "admin",
+                ["AdminPassword"] = "password123",
+                ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
+                ["SessionTimeoutMinutes"] = "30"
+            };
+
+            if (includeDataPath)
+            {
+                settings["DataPath"] = "/test/data";
+            }
+
+            if (overrides != null)
+            {
+                foreach (var pair in overrides)
+                {
+                    settings[pair.Key] = pair.Value;
+                }
+            }
+
+            return new ConfigurationBuilder()
+                .AddInMemoryCollection(settings)
+                .Build();
+        }
+
+        private PlatformConfigurationService CreateService(
+            IConfiguration configuration,
+            INodeNamingTemplateService namingService,
+            string? remoteConfig = null)
+        {
             var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
-            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
-            
-            _service = new PlatformConfigurationService(
-                _configuration,
+            var handler = new TestHttpMessageHandler(remoteConfig ?? string.Empty);
+            var httpClient = new HttpClient(handler);
+
+            return new PlatformConfigurationService(
+                configuration,
                 logger,
                 _mockDetector,
                 _mockPathResolver,
                 _mockValidator,
                 httpClient,
-                mockNamingService);
+                namingService);
+        }
+
+        private INodeNamingTemplateService CreateNamingService(IConfiguration configuration)
+        {
+            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
+            return new NodeNamingTemplateService(configuration, namingLogger);
+        }
+
+        private YamlSequenceNode ParseProxies(string yaml)
+        {
+            var stream = new YamlStream();
+            using var reader = new StringReader(yaml);
+            stream.Load(reader);
+
+            var root = (YamlMappingNode)stream.Documents[0].RootNode;
+            var proxiesNode = root.Children.FirstOrDefault(c =>
+                (c.Key as YamlScalarNode)?.Value == "proxies").Value as YamlSequenceNode;
+
+            Assert.NotNull(proxiesNode);
+            return proxiesNode!;
+        }
+
+        private static void AssertProxy(YamlMappingNode proxy, string expectedName, string expectedServer, int expectedPort)
+        {
+            string? GetScalarValue(string key)
+            {
+                return proxy.Children.FirstOrDefault(c =>
+                        (c.Key as YamlScalarNode)?.Value == key)
+                    .Value is YamlScalarNode scalar
+                    ? scalar.Value
+                    : null;
+            }
+
+            Assert.Equal(expectedName, GetScalarValue("name"));
+            Assert.Equal(expectedServer, GetScalarValue("server"));
+            Assert.Equal(expectedPort.ToString(), GetScalarValue("port"));
         }
 
         [Fact]
@@ -69,27 +140,9 @@ namespace ClashSubManager.Tests.Services
         public void GetDataPath_ReturnsDefaultPath_WhenDataPathIsNotSet()
         {
             // Arrange
-            var configurationWithoutDataPath = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["AdminUsername"] = "admin",
-                    ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
-                    ["SessionTimeoutMinutes"] = "30"
-                })
-                .Build();
-
-            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
-            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
-            var service = new PlatformConfigurationService(
-                configurationWithoutDataPath,
-                logger,
-                _mockDetector,
-                _mockPathResolver,
-                _mockValidator,
-                httpClient,
-                mockNamingService);
+            var configurationWithoutDataPath = CreateConfiguration(includeDataPath: false);
+            var namingService = CreateNamingService(configurationWithoutDataPath);
+            var service = CreateService(configurationWithoutDataPath, namingService);
 
             var expectedPath = "/default/data";
             _mockPathResolver.SetDefaultDataPathResult(expectedPath);
@@ -203,499 +256,157 @@ namespace ClashSubManager.Tests.Services
         }
 
         [Fact]
-        public async Task GenerateSubscriptionConfigAsync_UsesIndexNaming_WhenUseIpInNodeNameIsFalse()
+        public async Task GenerateSubscriptionConfigAsync_DomainProxyExpanded_WithDefaultIPs()
         {
-            // Arrange
             var template = @"proxies:
-  - name: TestProxy
-    server: 192.168.1.1
+  - name: DomainProxy
+    server: example.com
     port: 443
     type: ss";
 
             var subscriptionUrl = "https://example.com/subscribe";
             var defaultIPs = new List<IPRecord>
             {
-                new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 30, PacketLoss = 0.2m }
+                new() { IPAddress = "1.1.1.1", Port = 8443, Latency = 50, PacketLoss = 0.1m },
+                new() { IPAddress = "2.2.2.2", Port = 9443, Latency = 30, PacketLoss = 0.2m }
             };
-            var dedicatedIPs = new List<IPRecord>();
 
-            // Configure to use index naming (default value)
-            var configWithIndexNaming = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["AdminUsername"] = "admin",
-                    ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
-                    ["SessionTimeoutMinutes"] = "30",
-                    ["DataPath"] = "/test/data",
-                    ["UseIpInNodeName"] = "false"
-                })
-                .Build();
+            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, new List<IPRecord>());
 
-            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
-            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var mockNamingService = new Mock<INodeNamingTemplateService>().Object;
-            var service = new PlatformConfigurationService(
-                configWithIndexNaming,
-                logger,
-                _mockDetector,
-                _mockPathResolver,
-                _mockValidator,
-                httpClient,
-                mockNamingService);
-
-            // Act
-            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert
-            Assert.Contains("TestProxy-Node-1", result);
-            Assert.Contains("TestProxy-Node-2", result);
-            Assert.DoesNotContain("TestProxy-1.1.1.1", result);
-            Assert.DoesNotContain("TestProxy-2.2.2.2", result);
-            // Original IP should be replaced
-            Assert.DoesNotContain("server: 192.168.1.1", result);
-            Assert.Contains("server: 1.1.1.1", result);
-            Assert.Contains("server: 2.2.2.2", result);
+            var proxies = ParseProxies(result);
+            Assert.Equal(3, proxies.Children.Count);
+            AssertProxy((YamlMappingNode)proxies.Children[0], "DomainProxy-Node-1", "example.com", 443);
+            AssertProxy((YamlMappingNode)proxies.Children[1], "DomainProxy-Node-2", "1.1.1.1", 8443);
+            AssertProxy((YamlMappingNode)proxies.Children[2], "DomainProxy-Node-3", "2.2.2.2", 9443);
         }
 
         [Fact]
-        public async Task GenerateSubscriptionConfigAsync_UsesIpNaming_WhenUseIpInNodeNameIsTrue()
+        public async Task GenerateSubscriptionConfigAsync_UsesDedicatedIPsWhenAvailable()
         {
-            // Arrange
             var template = @"proxies:
-  - name: TestProxy
-    server: 192.168.1.1
-    port: 443
-    type: ss";
-
-            var subscriptionUrl = "https://example.com/subscribe";
-            var defaultIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 30, PacketLoss = 0.2m }
-            };
-            var dedicatedIPs = new List<IPRecord>();
-
-            // Configure to use IP naming
-            var configWithIpNaming = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["AdminUsername"] = "admin",
-                    ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
-                    ["SessionTimeoutMinutes"] = "30",
-                    ["DataPath"] = "/test/data",
-                    ["UseIpInNodeName"] = "true"
-                })
-                .Build();
-
-            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
-            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
-            var namingService = new NodeNamingTemplateService(configWithIpNaming, namingLogger);
-            var service = new PlatformConfigurationService(
-                configWithIpNaming,
-                logger,
-                _mockDetector,
-                _mockPathResolver,
-                _mockValidator,
-                httpClient,
-                namingService);
-
-            // Act
-            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert
-            Assert.Contains("TestProxy-1.1.1.1", result);
-            Assert.Contains("TestProxy-2.2.2.2", result);
-            Assert.DoesNotContain("TestProxy-Node-1", result);
-            Assert.DoesNotContain("TestProxy-Node-2", result);
-            // Original IP should be replaced
-            Assert.DoesNotContain("server: 192.168.1.1", result);
-            Assert.Contains("server: 1.1.1.1", result);
-            Assert.Contains("server: 2.2.2.2", result);
-        }
-
-        [Fact]
-        public async Task GenerateSubscriptionConfigAsync_CreatesIndependentNodes_WithDeepClone()
-        {
-            // Arrange
-            var template = @"proxies:
-  - name: TestProxy
-    server: 192.168.1.1
-    port: 443
-    type: ss";
-
-            var subscriptionUrl = "https://example.com/subscribe";
-            var defaultIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 30, PacketLoss = 0.2m },
-                new() { IPAddress = "3.3.3.3", Port = 443, Latency = 40, PacketLoss = 0.3m }
-            };
-            var dedicatedIPs = new List<IPRecord>();
-
-            // Create service with UseIpInNodeName=false configuration
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["AdminUsername"] = "admin",
-                    ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
-                    ["SessionTimeoutMinutes"] = "30",
-                    ["DataPath"] = "/test/data",
-                    ["UseIpInNodeName"] = "false"
-                })
-                .Build();
-
-            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
-            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
-            var namingService = new NodeNamingTemplateService(configuration, namingLogger);
-            
-            var service = new PlatformConfigurationService(
-                configuration,
-                logger,
-                _mockDetector,
-                _mockPathResolver,
-                _mockValidator,
-                httpClient,
-                namingService);
-
-            // Act
-            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert - Verify each node has independent IP address and name
-            Assert.Contains("server: 1.1.1.1", result);
-            Assert.Contains("server: 2.2.2.2", result);
-            Assert.Contains("server: 3.3.3.3", result);
-
-            // Verify names are not duplicated
-            Assert.Contains("TestProxy-Node-1", result);
-            Assert.Contains("TestProxy-Node-2", result);
-            Assert.Contains("TestProxy-Node-3", result);
-
-            // Verify no duplicate accumulation issues
-            Assert.DoesNotContain("TestProxy-Node-1-Node-2", result);
-            Assert.DoesNotContain("TestProxy-Node-1-Node-2-Node-3", result);
-            Assert.DoesNotContain("(50ms/0.1%)(30ms/0.2%)(40ms/0.3%)", result);
-
-            // Original IP should be replaced
-            Assert.DoesNotContain("server: 192.168.1.1", result);
-        }
-
-        [Fact]
-        public async Task GenerateSubscriptionConfigAsync_PreservesOriginalStructure_WithDedicatedIPs()
-        {
-            // Arrange
-            var template = @"proxies:
-  - name: DedicatedProxy
-    server: 10.0.0.100
-    port: 8080
+  - name: DedicatedDomain
+    server: dedicated.example.com
+    port: 8443
     type: vmess";
+
+            var subscriptionUrl = "https://example.com/subscribe";
+            var defaultIPs = new List<IPRecord>
+            {
+                new() { IPAddress = "9.9.9.9", Port = 9000, Latency = 40, PacketLoss = 0.3m }
+            };
+            var dedicatedIPs = new List<IPRecord>
+            {
+                new() { IPAddress = "10.0.0.1", Port = 8080, Latency = 10, PacketLoss = 0.01m },
+                new() { IPAddress = "10.0.0.2", Port = 8081, Latency = 15, PacketLoss = 0.02m }
+            };
+
+            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
+            var proxies = ParseProxies(result);
+
+            Assert.Equal(3, proxies.Children.Count);
+            AssertProxy((YamlMappingNode)proxies.Children[0], "DedicatedDomain-Node-1", "dedicated.example.com", 8443);
+            AssertProxy((YamlMappingNode)proxies.Children[1], "DedicatedDomain-Node-2", "10.0.0.1", 8080);
+            AssertProxy((YamlMappingNode)proxies.Children[2], "DedicatedDomain-Node-3", "10.0.0.2", 8081);
+        }
+
+        [Fact]
+        public async Task GenerateSubscriptionConfigAsync_IpProxyRemainsUnchanged()
+        {
+            var template = @"proxies:
+  - name: RawIp
+    server: 198.51.100.10
+    port: 443
+    type: ss";
 
             var subscriptionUrl = "https://example.com/subscribe";
             var defaultIPs = new List<IPRecord>
             {
                 new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m }
             };
-            var dedicatedIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "10.0.0.1", Port = 8080, Latency = 10, PacketLoss = 0.01m },
-                new() { IPAddress = "10.0.0.2", Port = 8080, Latency = 15, PacketLoss = 0.02m }
-            };
 
-            // Act
-            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
+            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, new List<IPRecord>());
+            var proxies = ParseProxies(result);
 
-            // Assert - Should use dedicated IPs instead of default IPs
-            Assert.Contains("server: 10.0.0.1", result);
-            Assert.Contains("server: 10.0.0.2", result);
-            Assert.DoesNotContain("server: 1.1.1.1", result);
-            // Original IP should be replaced
-            Assert.DoesNotContain("server: 10.0.0.100", result);
-            
-            // Verify port is correctly set
-            Assert.Contains("port: 8080", result);
-            Assert.DoesNotContain("port: 443", result);
+            Assert.Single(proxies.Children);
+            AssertProxy((YamlMappingNode)proxies.Children[0], "RawIp", "198.51.100.10", 443);
         }
 
         [Fact]
-        public async Task GenerateSubscriptionConfigAsync_PreservesDomainProxies_WhenMixedWithIPs()
+        public async Task GenerateSubscriptionConfigAsync_CustomNamingTemplateApplied()
         {
-            // Arrange
+            var template = @"proxies:
+  - name: FancyProxy
+    server: fancy.example.com
+    port: 2053
+    type: ss";
+
+            var overrides = new Dictionary<string, string?>
+            {
+                ["NodeNamingTemplate"] = "{name}-CF-{index}-{server}"
+            };
+
+            var configuration = CreateConfiguration(overrides);
+            var namingService = CreateNamingService(configuration);
+            var service = CreateService(configuration, namingService);
+
+            var subscriptionUrl = "https://example.com/subscribe";
+            var defaultIPs = new List<IPRecord>
+            {
+                new() { IPAddress = "1.1.1.1", Port = 8443, Latency = 10, PacketLoss = 0.01m }
+            };
+
+            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, new List<IPRecord>());
+            var proxies = ParseProxies(result);
+
+            Assert.Equal(2, proxies.Children.Count);
+            AssertProxy((YamlMappingNode)proxies.Children[0], "FancyProxy-CF-1-fancy.example.com", "fancy.example.com", 2053);
+            AssertProxy((YamlMappingNode)proxies.Children[1], "FancyProxy-CF-2-1.1.1.1", "1.1.1.1", 8443);
+        }
+
+        [Fact]
+        public async Task GenerateSubscriptionConfigAsync_DomainAndIpMixedHandledCorrectly()
+        {
             var template = @"proxies:
   - name: DomainProxy
     server: example.com
     port: 443
     type: ss
-  - name: IPProxy
-    server: 1.1.1.1
+  - name: IpProxy
+    server: 203.0.113.10
+    port: 8443
+    type: vmess";
+
+            var subscriptionUrl = "https://example.com/subscribe";
+            var defaultIPs = new List<IPRecord>
+            {
+                new() { IPAddress = "1.1.1.1", Port = 2053, Latency = 20, PacketLoss = 0.05m }
+            };
+
+            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, new List<IPRecord>());
+            var proxies = ParseProxies(result);
+
+            Assert.Equal(3, proxies.Children.Count);
+            AssertProxy((YamlMappingNode)proxies.Children[0], "DomainProxy-Node-1", "example.com", 443);
+            AssertProxy((YamlMappingNode)proxies.Children[1], "DomainProxy-Node-2", "1.1.1.1", 2053);
+            AssertProxy((YamlMappingNode)proxies.Children[2], "IpProxy", "203.0.113.10", 8443);
+        }
+
+        [Fact]
+        public async Task GenerateSubscriptionConfigAsync_NoAvailableIPs_KeepsOriginalDomainNode()
+        {
+            var template = @"proxies:
+  - name: DomainProxy
+    server: example.com
     port: 443
     type: ss";
 
             var subscriptionUrl = "https://example.com/subscribe";
-            var defaultIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "3.3.3.3", Port = 443, Latency = 30, PacketLoss = 0.2m }
-            };
-            var dedicatedIPs = new List<IPRecord>();
 
-            // Create service with UseIpInNodeName=false configuration
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["AdminUsername"] = "admin",
-                    ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
-                    ["SessionTimeoutMinutes"] = "30",
-                    ["DataPath"] = "/test/data",
-                    ["UseIpInNodeName"] = "false"
-                })
-                .Build();
+            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, new List<IPRecord>(), new List<IPRecord>());
+            var proxies = ParseProxies(result);
 
-            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
-            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
-            var namingService = new NodeNamingTemplateService(configuration, namingLogger);
-            
-            var service = new PlatformConfigurationService(
-                configuration,
-                logger,
-                _mockDetector,
-                _mockPathResolver,
-                _mockValidator,
-                httpClient,
-                namingService);
-
-            // Act
-            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert - Domain proxies should be preserved
-            Assert.Contains("server: example.com", result);
-            Assert.Contains("name: DomainProxy", result);
-            
-            // Assert - IP proxies should be replaced with cloudflare IPs
-            Assert.Contains("server: 2.2.2.2", result);
-            Assert.Contains("server: 3.3.3.3", result);
-            Assert.DoesNotContain("server: 1.1.1.1", result); // Original IP should be replaced
-            
-            // Assert - Names should be generated correctly
-            Assert.Contains("IPProxy-Node-1", result);
-            Assert.Contains("IPProxy-Node-2", result);
-            Assert.DoesNotContain("IPProxy-Node-3", result); // Should not have a third one
-            
-            // Assert - Total node count should be 1 domain proxy + 2 cloudflare IP proxies = 3
-            var proxyCount = result.Split('\n').Count(line => line.Trim().StartsWith("- name:"));
-            Assert.Equal(3, proxyCount);
-        }
-
-        [Fact]
-        public async Task GenerateSubscriptionConfigAsync_PureIPConfiguration_ReplacesAllWithCloudflareIPs()
-        {
-            // Arrange - Scenario 1: Pure IP address configuration
-            var template = @"proxies:
-  - name: IPProxy1
-    server: 192.168.1.1
-    port: 443
-    type: ss
-  - name: IPProxy2
-    server: 10.0.0.1
-    port: 8080
-    type: vmess";
-
-            var subscriptionUrl = "https://example.com/subscribe";
-            var defaultIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 30, PacketLoss = 0.2m }
-            };
-            var dedicatedIPs = new List<IPRecord>();
-
-            // Act
-            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert - Original IPs should be replaced
-            Assert.DoesNotContain("server: 192.168.1.1", result);
-            Assert.DoesNotContain("server: 10.0.0.1", result);
-            
-            // Assert - Should contain cloudflare IPs
-            Assert.Contains("server: 1.1.1.1", result);
-            Assert.Contains("server: 2.2.2.2", result);
-            
-            // Assert - Each original IP proxy generates 2 new proxies, total 4
-            Assert.Contains("IPProxy1-Node-1", result);
-            Assert.Contains("IPProxy1-Node-2", result);
-            Assert.Contains("IPProxy2-Node-1", result);
-            Assert.Contains("IPProxy2-Node-2", result);
-            
-            var proxyCount = result.Split('\n').Count(line => line.Trim().StartsWith("- name:"));
-            Assert.Equal(4, proxyCount);
-        }
-
-        [Fact]
-        public async Task GenerateSubscriptionConfigAsync_PureDomainConfiguration_PreservesAll()
-        {
-            // Arrange - Scenario 2: Pure domain configuration
-            var template = @"proxies:
-  - name: DomainProxy1
-    server: example.com
-    port: 443
-    type: ss
-  - name: DomainProxy2
-    server: test.example.org
-    port: 8080
-    type: vmess";
-
-            var subscriptionUrl = "https://example.com/subscribe";
-            var defaultIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 30, PacketLoss = 0.2m }
-            };
-            var dedicatedIPs = new List<IPRecord>();
-
-            // Act
-            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert - All domain proxies should be preserved
-            Assert.Contains("server: example.com", result);
-            Assert.Contains("server: test.example.org", result);
-            Assert.Contains("name: DomainProxy1", result);
-            Assert.Contains("name: DomainProxy2", result);
-            
-            // Assert - Should not contain cloudflare IPs
-            Assert.DoesNotContain("server: 1.1.1.1", result);
-            Assert.DoesNotContain("server: 2.2.2.2", result);
-            
-            // Assert - Total node count should be 2
-            var proxyCount = result.Split('\n').Count(line => line.Trim().StartsWith("- name:"));
-            Assert.Equal(2, proxyCount);
-        }
-
-        [Fact]
-        public async Task GenerateSubscriptionConfigAsync_ComplexMixedConfiguration_HandlesCorrectly()
-        {
-            // Arrange - Scenario 4: Complex mixed configuration
-            var template = @"proxies:
-  - name: DomainProxy1
-    server: example.com
-    port: 443
-    type: ss
-  - name: IPProxy1
-    server: 192.168.1.1
-    port: 443
-    type: ss
-  - name: DomainProxy2
-    server: test.example.org
-    port: 8080
-    type: vmess
-  - name: IPProxy2
-    server: 10.0.0.1
-    port: 8080
-    type: vmess";
-
-            var subscriptionUrl = "https://example.com/subscribe";
-            var defaultIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 30, PacketLoss = 0.2m }
-            };
-            var dedicatedIPs = new List<IPRecord>();
-
-            // Create service with UseIpInNodeName=false configuration
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["AdminUsername"] = "admin",
-                    ["AdminPassword"] = "password123",
-                    ["CookieSecretKey"] = "this-is-a-secret-key-that-is-at-least-32-characters-long",
-                    ["SessionTimeoutMinutes"] = "30",
-                    ["DataPath"] = "/test/data",
-                    ["UseIpInNodeName"] = "false"
-                })
-                .Build();
-
-            var logger = new Mock<ILogger<PlatformConfigurationService>>().Object;
-            var httpClient = new Mock<System.Net.Http.HttpClient>().Object;
-            var namingLogger = new Mock<ILogger<NodeNamingTemplateService>>().Object;
-            var namingService = new NodeNamingTemplateService(configuration, namingLogger);
-            
-            var service = new PlatformConfigurationService(
-                configuration,
-                logger,
-                _mockDetector,
-                _mockPathResolver,
-                _mockValidator,
-                httpClient,
-                namingService);
-
-            // Act
-            var result = await service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert - Domain proxies should be preserved
-            Assert.Contains("server: example.com", result);
-            Assert.Contains("server: test.example.org", result);
-            Assert.Contains("name: DomainProxy1", result);
-            Assert.Contains("name: DomainProxy2", result);
-            
-            // Assert - Original IPs should be replaced
-            Assert.DoesNotContain("server: 192.168.1.1", result);
-            Assert.DoesNotContain("server: 10.0.0.1", result);
-            
-            // Assert - Should contain cloudflare IPs
-            Assert.Contains("server: 1.1.1.1", result);
-            Assert.Contains("server: 2.2.2.2", result);
-            
-            // Assert - Each original IP proxy generates 2 new proxies
-            Assert.Contains("IPProxy1-Node-1", result);
-            Assert.Contains("IPProxy1-Node-2", result);
-            Assert.Contains("IPProxy2-Node-1", result);
-            Assert.Contains("IPProxy2-Node-2", result);
-            
-            // Assert - Total node count should be 2 domain proxies + 4 cloudflare IP proxies = 6
-            var proxyCount = result.Split('\n').Count(line => line.Trim().StartsWith("- name:"));
-            Assert.Equal(6, proxyCount);
-        }
-
-        [Fact]
-        public async Task GenerateSubscriptionConfigAsync_NoServerNode_PreservesAll()
-        {
-            // Arrange - Scenario 5: No server node
-            var template = @"proxies:
-  - name: NoServerProxy
-    port: 443
-    type: ss
-  - name: DomainProxy
-    server: example.com
-    port: 8080
-    type: vmess";
-
-            var subscriptionUrl = "https://example.com/subscribe";
-            var defaultIPs = new List<IPRecord>
-            {
-                new() { IPAddress = "1.1.1.1", Port = 443, Latency = 50, PacketLoss = 0.1m },
-                new() { IPAddress = "2.2.2.2", Port = 443, Latency = 30, PacketLoss = 0.2m }
-            };
-            var dedicatedIPs = new List<IPRecord>();
-
-            // Act
-            var result = await _service.GenerateSubscriptionConfigAsync(template, subscriptionUrl, defaultIPs, dedicatedIPs);
-
-            // Assert - All proxies should be preserved
-            Assert.Contains("name: NoServerProxy", result);
-            Assert.Contains("name: DomainProxy", result);
-            Assert.Contains("server: example.com", result);
-            
-            // Assert - Should not contain cloudflare IPs
-            Assert.DoesNotContain("server: 1.1.1.1", result);
-            Assert.DoesNotContain("server: 2.2.2.2", result);
-            
-            // Assert - Total node count should be 2
-            var proxyCount = result.Split('\n').Count(line => line.Trim().StartsWith("- name:"));
-            Assert.Equal(2, proxyCount);
+            Assert.Single(proxies.Children);
+            AssertProxy((YamlMappingNode)proxies.Children[0], "DomainProxy", "example.com", 443);
         }
     }
 
@@ -814,6 +525,26 @@ namespace ClashSubManager.Tests.Services
         public void SetIsDockerEnvironment(bool isDocker)
         {
             IsDocker = isDocker;
+        }
+    }
+
+    internal class TestHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly string _responseContent;
+
+        public TestHttpMessageHandler(string responseContent)
+        {
+            _responseContent = responseContent;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(_responseContent)
+            };
+
+            return Task.FromResult(response);
         }
     }
 }

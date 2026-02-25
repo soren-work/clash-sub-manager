@@ -12,7 +12,7 @@ namespace ClashSubManager.Pages.Admin
     public class ClashTemplateModel : PageModel
     {
         private readonly IConfigurationService _configurationService;
-        private readonly IFileLockProvider _fileLockProvider;
+        private readonly FileService _fileService;
         private readonly IStringLocalizer<SharedResources> _localizer;
         private readonly ILogger<ClashTemplateModel> _logger;
 
@@ -27,10 +27,10 @@ namespace ClashSubManager.Pages.Admin
         [Required(ErrorMessage = "YAMLContentRequired")]
         public string EditedContent { get; set; } = string.Empty;
 
-        public ClashTemplateModel(IConfigurationService configurationService, IFileLockProvider fileLockProvider, IStringLocalizer<SharedResources> localizer, ILogger<ClashTemplateModel> logger)
+        public ClashTemplateModel(IConfigurationService configurationService, FileService fileService, IStringLocalizer<SharedResources> localizer, ILogger<ClashTemplateModel> logger)
         {
             _configurationService = configurationService;
-            _fileLockProvider = fileLockProvider;
+            _fileService = fileService;
             _localizer = localizer;
             _logger = logger;
         }
@@ -195,17 +195,17 @@ namespace ClashSubManager.Pages.Admin
         {
             try
             {
-                var filePath = GetFilePath(SelectedUserId!);
-                if (System.IO.File.Exists(filePath))
+                var content = await _fileService.LoadClashTemplateAsync(SelectedUserId);
+                if (content != null)
                 {
-                    YAMLContent = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);
-                    EditedContent = YAMLContent; // Set EditedContent to display in editor
+                    YAMLContent = content;
+                    EditedContent = content;
                     FileExists = true;
                 }
                 else
                 {
                     YAMLContent = string.Empty;
-                    EditedContent = string.Empty; // Clear EditedContent
+                    EditedContent = string.Empty;
                     FileExists = false;
                 }
             }
@@ -213,7 +213,7 @@ namespace ClashSubManager.Pages.Admin
             {
                 _logger.LogError(ex, "Failed to load template content. SelectedUserId: {SelectedUserId}", SelectedUserId);
                 YAMLContent = string.Empty;
-                EditedContent = string.Empty; // Clear EditedContent
+                EditedContent = string.Empty;
                 FileExists = false;
             }
         }
@@ -235,28 +235,14 @@ namespace ClashSubManager.Pages.Admin
                     return false;
                 }
 
-                var filePath = GetFilePath(userId);
-                await using var fileLock = await _fileLockProvider.AcquireAsync(filePath);
-                var directory = Path.GetDirectoryName(filePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                var result = await _fileService.SaveClashTemplateAsync(content, userId);
+                
+                if (result)
                 {
-                    Directory.CreateDirectory(directory);
+                    _logger.LogInformation("Template saved successfully. SelectedUserId: {SelectedUserId}, SizeBytes: {SizeBytes}", userId, fileSize);
                 }
-
-                var tempPath = filePath + ".tmp";
-                await System.IO.File.WriteAllTextAsync(tempPath, content, Encoding.UTF8);
-
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Replace(tempPath, filePath, null);
-                }
-                else
-                {
-                    System.IO.File.Move(tempPath, filePath);
-                }
-
-                _logger.LogInformation("Template saved successfully. SelectedUserId: {SelectedUserId}, SizeBytes: {SizeBytes}", userId, fileSize);
-                return true;
+                
+                return result;
             }
             catch (Exception ex)
             {
@@ -267,28 +253,7 @@ namespace ClashSubManager.Pages.Admin
 
         private async Task<bool> DeleteYAMLFileAsync(string userId)
         {
-            try
-            {
-                var filePath = GetFilePath(userId);
-                await using var fileLock = await _fileLockProvider.AcquireAsync(filePath);
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private string GetFilePath(string userId)
-        {
-            var basePath = _configurationService.GetDataPath();
-            return string.IsNullOrEmpty(userId)
-                ? Path.Combine(basePath, "clash.yaml")
-                : Path.Combine(basePath, userId, "clash.yaml");
+            return await _fileService.DeleteClashTemplateAsync(userId);
         }
 
         private bool IsValidYAML(string content)

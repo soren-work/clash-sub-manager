@@ -64,11 +64,11 @@ namespace ClashSubManager.Services
                         "SUBSCRIPTION_URL_TEMPLATE_NOT_CONFIGURED");
                 }
 
-                // Get base template
-                var template = await _fileService.LoadClashTemplateAsync();
+                // Get base template with priority: user-specific > global
+                var template = await _fileService.LoadClashTemplateWithFallbackAsync(userId);
                 if (string.IsNullOrEmpty(template))
                 {
-                    _logger.LogWarning("Clash template not found");
+                    _logger.LogWarning("Clash template not found for user: {UserId}", userId);
                     return SubscriptionResponse.CreateError(
                         _localizer["TemplateNotFound"], 
                         "TEMPLATE_NOT_FOUND");
