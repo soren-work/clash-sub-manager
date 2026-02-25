@@ -96,7 +96,7 @@ namespace ClashSubManager.Tests.Services
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
             _mockUserManagementService.Setup(x => x.GetUserSubscriptionUrlAsync(userId)).ReturnsAsync(subscriptionUrl);
             _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
-            _mockFileService.Setup(x => x.LoadClashTemplateAsync()).ReturnsAsync((string?)null);
+            _mockFileService.Setup(x => x.LoadClashTemplateWithFallbackAsync(userId)).ReturnsAsync((string?)null);
             _mockLocalizer.Setup(x => x["TemplateNotFound"]).Returns(new LocalizedString("TemplateNotFound", "Template not found", false));
 
             // Act
@@ -121,7 +121,7 @@ namespace ClashSubManager.Tests.Services
             _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
             _mockUserManagementService.Setup(x => x.GetUserSubscriptionUrlAsync(userId)).ReturnsAsync(subscriptionUrl);
             _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
-            _mockFileService.Setup(x => x.LoadClashTemplateAsync()).ReturnsAsync(template);
+            _mockFileService.Setup(x => x.LoadClashTemplateWithFallbackAsync(userId)).ReturnsAsync(template);
             _mockFileService.Setup(x => x.LoadDefaultIPsAsync()).ReturnsAsync(defaultIPs);
             _mockFileService.Setup(x => x.LoadUserDedicatedIPsAsync(userId)).ReturnsAsync(dedicatedIPs);
             
@@ -135,6 +135,36 @@ namespace ClashSubManager.Tests.Services
             // Assert
             Assert.True(result.Success);
             Assert.Equal(expectedYaml, result.YAMLContent);
+        }
+
+        [Fact]
+        public async Task GetSubscriptionAsync_UserTemplateExists_UsesUserTemplate()
+        {
+            // Arrange
+            var userId = "test-user";
+            var subscriptionUrl = "https://example.com/sub";
+            var userTemplate = "port: 7890\nproxies:\n  - name: user-proxy";
+            var defaultIPs = new List<IPRecord>();
+            var dedicatedIPs = new List<IPRecord>();
+            
+            _mockValidationService.Setup(x => x.ValidateUserId(userId)).Returns(true);
+            _mockUserManagementService.Setup(x => x.GetUserSubscriptionUrlAsync(userId)).ReturnsAsync(subscriptionUrl);
+            _mockUserManagementService.Setup(x => x.RecordUserAccessAsync(userId)).ReturnsAsync(true);
+            _mockFileService.Setup(x => x.LoadClashTemplateWithFallbackAsync(userId)).ReturnsAsync(userTemplate);
+            _mockFileService.Setup(x => x.LoadDefaultIPsAsync()).ReturnsAsync(defaultIPs);
+            _mockFileService.Setup(x => x.LoadUserDedicatedIPsAsync(userId)).ReturnsAsync(dedicatedIPs);
+            
+            var expectedYaml = "port: 7890\nproxies:\n  - name: user-proxy";
+            _mockConfigurationService.Setup(x => x.GenerateSubscriptionConfigAsync(
+                userTemplate, subscriptionUrl, defaultIPs, dedicatedIPs)).ReturnsAsync(expectedYaml);
+
+            // Act
+            var result = await _subscriptionService.GetSubscriptionAsync(userId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(expectedYaml, result.YAMLContent);
+            _mockFileService.Verify(x => x.LoadClashTemplateWithFallbackAsync(userId), Times.Once);
         }
 
         [Fact]

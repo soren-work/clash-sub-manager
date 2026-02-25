@@ -17,6 +17,7 @@ namespace ClashSubManager.Tests.Pages.Admin
         private Mock<IConfigurationService> _mockConfigService;
         private Mock<ILogger<ClashTemplateModel>> _mockLogger;
         private Mock<IStringLocalizer<SharedResources>> _mockLocalizer;
+        private FileService _fileService;
         private FileLockProvider _fileLockProvider;
 
         public ClashTemplateTests()
@@ -31,6 +32,11 @@ namespace ClashSubManager.Tests.Pages.Admin
             _mockLocalizer = new Mock<IStringLocalizer<SharedResources>>();
             _fileLockProvider = new FileLockProvider();
             
+            // Create FileService instance
+            var mockIpParser = new Mock<CloudflareIPParserService>(Mock.Of<ILogger<CloudflareIPParserService>>());
+            var mockFileServiceLogger = new Mock<ILogger<FileService>>();
+            _fileService = new FileService(_mockConfigService.Object, _fileLockProvider, mockIpParser.Object, mockFileServiceLogger.Object);
+            
             // Setup localizer mock to return non-null values
             _mockLocalizer.Setup(l => l[It.IsAny<string>()]).Returns(new LocalizedString("test", "test"));
             _mockLocalizer.Setup(l => l["InvalidYAMLContent"]).Returns(new LocalizedString("InvalidYAMLContent", "Invalid YAML content"));
@@ -39,7 +45,7 @@ namespace ClashSubManager.Tests.Pages.Admin
             _mockLocalizer.Setup(l => l["PleaseSelectFileToUpload"]).Returns(new LocalizedString("PleaseSelectFileToUpload", "Please select a file to upload"));
             _mockLocalizer.Setup(l => l["InvalidYAMLFile"]).Returns(new LocalizedString("InvalidYAMLFile", "Invalid YAML file format"));
             
-            _model = new ClashTemplateModel(_mockConfigService.Object, _fileLockProvider, _mockLocalizer.Object, _mockLogger.Object);
+            _model = new ClashTemplateModel(_mockConfigService.Object, _fileService, _mockLocalizer.Object, _mockLogger.Object);
         }
 
         public void Dispose()
@@ -301,38 +307,6 @@ unbalanced: [";
             // Assert
             Assert.True(result.HasValue);
             Assert.False(result.Value);
-        }
-
-        [Fact]
-        public void GetFilePath_WithEmptyUserId_ReturnsGlobalPath()
-        {
-            // Arrange
-            var userId = "";
-
-            // Act
-            var getFilePathMethod = typeof(ClashTemplateModel).GetMethod("GetFilePath", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = getFilePathMethod?.Invoke(_model, new object[] { userId }) as string;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(Path.Combine(_testDataPath, "clash.yaml"), result);
-        }
-
-        [Fact]
-        public void GetFilePath_WithUserId_ReturnsUserPath()
-        {
-            // Arrange
-            var userId = "user1";
-
-            // Act
-            var getFilePathMethod = typeof(ClashTemplateModel).GetMethod("GetFilePath", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = getFilePathMethod?.Invoke(_model, new object[] { userId }) as string;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(Path.Combine(_testDataPath, "user1", "clash.yaml"), result);
         }
     }
 }

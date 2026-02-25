@@ -198,9 +198,19 @@ namespace ClashSubManager.Services
         /// <returns>Template content</returns>
         public virtual async Task<string?> LoadClashTemplateAsync()
         {
+            return await LoadClashTemplateAsync(null);
+        }
+
+        /// <summary>
+        /// Load Clash template for specific user or global template
+        /// </summary>
+        /// <param name="userId">User ID, null or empty for global template</param>
+        /// <returns>Template content</returns>
+        public virtual async Task<string?> LoadClashTemplateAsync(string? userId)
+        {
             try
             {
-                var templateFile = Path.Combine(_dataPath, "clash.yaml");
+                var templateFile = GetClashTemplatePath(userId);
                 
                 if (!File.Exists(templateFile))
                     return null;
@@ -209,7 +219,43 @@ namespace ClashSubManager.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading Clash template");
+                _logger.LogError(ex, "Error loading Clash template for user: {UserId}", userId ?? "global");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Load Clash template with fallback priority: user-specific > global
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <returns>Template content</returns>
+        public virtual async Task<string?> LoadClashTemplateWithFallbackAsync(string? userId)
+        {
+            try
+            {
+                // Try user-specific template first
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var userTemplate = await LoadClashTemplateAsync(userId);
+                    if (!string.IsNullOrEmpty(userTemplate))
+                    {
+                        _logger.LogDebug("Loaded user-specific Clash template for user: {UserId}", userId);
+                        return userTemplate;
+                    }
+                }
+                
+                // Fallback to global template
+                var globalTemplate = await LoadClashTemplateAsync(null);
+                if (!string.IsNullOrEmpty(globalTemplate))
+                {
+                    _logger.LogDebug("Loaded global Clash template for user: {UserId}", userId ?? "global");
+                }
+                
+                return globalTemplate;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading Clash template with fallback for user: {UserId}", userId ?? "global");
                 return null;
             }
         }
@@ -221,24 +267,89 @@ namespace ClashSubManager.Services
         /// <returns>Operation result</returns>
         public async Task<bool> SaveClashTemplateAsync(string templateContent)
         {
+            return await SaveClashTemplateAsync(templateContent, null);
+        }
+
+        /// <summary>
+        /// Save Clash template for specific user or global template
+        /// </summary>
+        /// <param name="templateContent">Template content</param>
+        /// <param name="userId">User ID, null or empty for global template</param>
+        /// <returns>Operation result</returns>
+        public async Task<bool> SaveClashTemplateAsync(string templateContent, string? userId)
+        {
             try
             {
-                var templateFile = Path.Combine(_dataPath, "clash.yaml");
+                var templateFile = GetClashTemplatePath(userId);
+                
+                // Ensure directory exists for user-specific templates
+                var directory = Path.GetDirectoryName(templateFile);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
                 
                 // Atomic write
                 var tempFile = templateFile + ".tmp";
                 await using var fileLock = await _fileLockProvider.AcquireAsync(templateFile);
                 await File.WriteAllTextAsync(tempFile, templateContent);
                 
-                File.Move(tempFile, templateFile, true);
+                if (File.Exists(templateFile))
+                {
+                    File.Replace(tempFile, templateFile, null);
+                }
+                else
+                {
+                    File.Move(tempFile, templateFile);
+                }
 
+                _logger.LogInformation("Clash template saved successfully for user: {UserId}", userId ?? "global");
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving Clash template");
+                _logger.LogError(ex, "Error saving Clash template for user: {UserId}", userId ?? "global");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Delete Clash template for specific user or global template
+        /// </summary>
+        /// <param name="userId">User ID, null or empty for global template</param>
+        /// <returns>Operation result</returns>
+        public async Task<bool> DeleteClashTemplateAsync(string? userId)
+        {
+            try
+            {
+                var templateFile = GetClashTemplatePath(userId);
+                await using var fileLock = await _fileLockProvider.AcquireAsync(templateFile);
+                
+                if (File.Exists(templateFile))
+                {
+                    File.Delete(templateFile);
+                    _logger.LogInformation("Clash template deleted successfully for user: {UserId}", userId ?? "global");
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting Clash template for user: {UserId}", userId ?? "global");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get Clash template file path
+        /// </summary>
+        /// <param name="userId">User ID, null or empty for global template</param>
+        /// <returns>Template file path</returns>
+        private string GetClashTemplatePath(string? userId)
+        {
+            return string.IsNullOrEmpty(userId)
+                ? Path.Combine(_dataPath, "clash.yaml")
+                : Path.Combine(_dataPath, userId, "clash.yaml");
         }
     }
 }

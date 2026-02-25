@@ -156,6 +156,168 @@ namespace ClashSubManager.Tests.Services
         }
 
         [Fact]
+        public async Task LoadClashTemplateAsync_WithUserId_ExistingFile_ReturnsContent()
+        {
+            // Arrange
+            var userId = "testuser";
+            var userDir = Path.Combine(_testDirectory, userId);
+            Directory.CreateDirectory(userDir);
+            
+            var templateFile = Path.Combine(userDir, "clash.yaml");
+            var templateContent = "proxies:\n  - name: user-test\n    type: http";
+            await File.WriteAllTextAsync(templateFile, templateContent);
+
+            // Act
+            var result = await _fileService.LoadClashTemplateAsync(userId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(templateContent, result);
+        }
+
+        [Fact]
+        public async Task LoadClashTemplateAsync_WithUserId_NonExistingFile_ReturnsNull()
+        {
+            // Arrange
+            var userId = "nonexistent";
+
+            // Act
+            var result = await _fileService.LoadClashTemplateAsync(userId);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task SaveClashTemplateAsync_WithUserId_ValidContent_ReturnsTrue()
+        {
+            // Arrange
+            var userId = "testuser";
+            var templateContent = "proxies:\n  - name: user-test\n    type: http";
+
+            // Act
+            var result = await _fileService.SaveClashTemplateAsync(templateContent, userId);
+
+            // Assert
+            Assert.True(result);
+            
+            var userDir = Path.Combine(_testDirectory, userId);
+            var templateFile = Path.Combine(userDir, "clash.yaml");
+            Assert.True(File.Exists(templateFile));
+            
+            var savedContent = await File.ReadAllTextAsync(templateFile);
+            Assert.Equal(templateContent, savedContent);
+        }
+
+        [Fact]
+        public async Task DeleteClashTemplateAsync_ExistingGlobalTemplate_ReturnsTrue()
+        {
+            // Arrange
+            var templateFile = Path.Combine(_testDirectory, "clash.yaml");
+            await File.WriteAllTextAsync(templateFile, "proxies: []");
+
+            // Act
+            var result = await _fileService.DeleteClashTemplateAsync(null);
+
+            // Assert
+            Assert.True(result);
+            Assert.False(File.Exists(templateFile));
+        }
+
+        [Fact]
+        public async Task DeleteClashTemplateAsync_ExistingUserTemplate_ReturnsTrue()
+        {
+            // Arrange
+            var userId = "testuser";
+            var userDir = Path.Combine(_testDirectory, userId);
+            Directory.CreateDirectory(userDir);
+            
+            var templateFile = Path.Combine(userDir, "clash.yaml");
+            await File.WriteAllTextAsync(templateFile, "proxies: []");
+
+            // Act
+            var result = await _fileService.DeleteClashTemplateAsync(userId);
+
+            // Assert
+            Assert.True(result);
+            Assert.False(File.Exists(templateFile));
+        }
+
+        [Fact]
+        public async Task LoadClashTemplateWithFallbackAsync_UserTemplateExists_ReturnsUserTemplate()
+        {
+            // Arrange
+            var userId = "testuser";
+            var globalTemplate = "proxies:\n  - name: global\n    type: http";
+            var userTemplate = "proxies:\n  - name: user\n    type: http";
+            
+            // Create global template
+            var globalFile = Path.Combine(_testDirectory, "clash.yaml");
+            await File.WriteAllTextAsync(globalFile, globalTemplate);
+            
+            // Create user template
+            var userDir = Path.Combine(_testDirectory, userId);
+            Directory.CreateDirectory(userDir);
+            var userFile = Path.Combine(userDir, "clash.yaml");
+            await File.WriteAllTextAsync(userFile, userTemplate);
+
+            // Act
+            var result = await _fileService.LoadClashTemplateWithFallbackAsync(userId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(userTemplate, result);
+        }
+
+        [Fact]
+        public async Task LoadClashTemplateWithFallbackAsync_UserTemplateNotExists_ReturnsGlobalTemplate()
+        {
+            // Arrange
+            var userId = "testuser";
+            var globalTemplate = "proxies:\n  - name: global\n    type: http";
+            
+            // Create global template only
+            var globalFile = Path.Combine(_testDirectory, "clash.yaml");
+            await File.WriteAllTextAsync(globalFile, globalTemplate);
+
+            // Act
+            var result = await _fileService.LoadClashTemplateWithFallbackAsync(userId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(globalTemplate, result);
+        }
+
+        [Fact]
+        public async Task LoadClashTemplateWithFallbackAsync_NoTemplateExists_ReturnsNull()
+        {
+            // Arrange
+            var userId = "testuser";
+
+            // Act
+            var result = await _fileService.LoadClashTemplateWithFallbackAsync(userId);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task LoadClashTemplateWithFallbackAsync_NullUserId_ReturnsGlobalTemplate()
+        {
+            // Arrange
+            var globalTemplate = "proxies:\n  - name: global\n    type: http";
+            var globalFile = Path.Combine(_testDirectory, "clash.yaml");
+            await File.WriteAllTextAsync(globalFile, globalTemplate);
+
+            // Act
+            var result = await _fileService.LoadClashTemplateWithFallbackAsync(null);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(globalTemplate, result);
+        }
+
+        [Fact]
         public async Task LoadUserDedicatedIPsAsync_ExistingFile_ReturnsIPRecords()
         {
             // Arrange
